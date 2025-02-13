@@ -1,0 +1,108 @@
+/* Card Styles */
+.stat-card {
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Filter Button Styles */
+.filter-btn.active {
+    @apply ring-2 ring-white ring-offset-2 ring-offset-gray-900 transform scale-105;
+}
+
+/* Booking Row Styles */
+.booking-row {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.booking-row.hidden {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.expired-booking {
+    @apply bg-red-900/20 !important;
+}
+
+.expired-booking td {
+    @apply text-red-400/80 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(31, 41, 55, 0.5);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.5);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(59, 130, 246, 0.7);
+}
+
+/* Loading Animation */
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .filter-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+        width: calc(50% - 0.5rem);
+    }
+}
+
+/* Aturan untuk membungkus teks di kolom "Nama" agar tidak meluber */
+.table-cell-name-wrap {
+    max-width: 300px !important;  /* Sesuaikan nilai sesuai desain */
+    white-space: normal !important;  /* Izinkan teks membungkus ke baris baru */
+    word-wrap: break-word;
+    overflow: visible !important;
+}
+
+/* Tambahan pengaturan container agar tidak ada background putih "mengambang" */
+#dashboard {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.overflow-x-auto {
+    width: 100%;
+}
+
+/* Jika diperlukan, atur z-index untuk main-content dan sidebar */
+.main-content {
+    position: relative;
+    z-index: 10;
+}
+
+.sidebar {
+    position: relative;
+    z-index: 20;
+}
+
+/* Optional: Untuk memastikan container tabel tidak terlihat mengambang */
+.bg-white.rounded-xl.shadow-sm {
+    margin: 0 auto;
+    /* Tambahkan padding atau margin jika diperlukan */
+}

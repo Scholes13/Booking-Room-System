@@ -1,0 +1,106 @@
+/* File: resources/css/calendar.css */
+
+/* Base Calendar Styles */
+#calendar {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    #calendar {
+        font-size: 14px;
+    }
+
+    /* Header Container */
+    .fc .fc-toolbar {
+        background: rgba(15, 23, 42, 0.95) !important;
+        border-radius: 16px !important;
+        padding: 16px !important;
+        margin-bottom: 16px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    /* Title Section */
+    .fc .fc-toolbar-title {
+        font-size: 1.5em !important;
+        font-weight: 600 !important;
+        color: white !important;
+        text-align: center !important;
+        padding: 8px 0 16px 0 !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        margin-bottom: 16px !important;
+    }
+
+    /* Navigation Buttons */
+    .fc .fc-button {
+        padding: 8px 20px !important;
+        font-size: 14px !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+        border-radius: 20px !important;
+        background: rgba(30, 58, 138, 0.4) !important;
+        border: 1px solid rgba(59, 130, 246, 0.3) !important;
+        color: white !important;
+    }
+
+    /* List View Styles */
+    .fc .fc-list-view {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .fc .fc-list-event {
+        background: rgba(15, 23, 42, 0.6) !important;
+        margin: 4px 0;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
+
+    /* Event Styling */
+    .fc-daygrid-event {
+        margin: 2px !important;
+        padding: 6px 8px !important;
+        background: rgba(30, 58, 138, 0.8) !important;
+        border-radius: 8px !important;
+    }
+
+    /* Popover Styling */
+    .fc-popover {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        max-height: 80vh !important;
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        background: rgba(15, 23, 42, 0.98) !important;
+        backdrop-filter: blur(10px) !important;
+        border-radius: 16px !important;
+        z-index: 9999 !important;
+    }
+}
+
+/* Desktop Styles */
+@media (min-width: 769px) {
+    .fc-daygrid-event {
+        display: flex !important;
+        flex-direction: column !important;
+        padding: 6px 8px !important;
+        background: rgba(30, 30, 30, 0.85) !important;
+        border-radius: 6px !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .fc-event-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .fc-event-time {
+        font-size: 0.9em;
+        font-weight: bold;
+        color: white;
+    }
+}
