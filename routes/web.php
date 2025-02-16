@@ -6,6 +6,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ActivityController;
 
 // Halaman kalender
 Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar.index');
@@ -15,6 +16,11 @@ Route::get('/calendar/events', [CalendarController::class, 'events'])->name('cal
 Route::get('/', [BookingController::class, 'create'])->name('booking.create');
 Route::post('/booking', [BookingController::class, 'store'])->name('booking.store');
 Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('available.times');
+
+// Route untuk Activity Management (user side)
+Route::get('/activity/create', [ActivityController::class, 'create'])->name('activity.create');
+Route::post('/activity/store', [ActivityController::class, 'store'])->name('activity.store');
+Route::get('/activity', [ActivityController::class, 'create'])->name('activity.index');
 
 // Route untuk admin: login & logout
 Route::get('/admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
@@ -42,31 +48,29 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
         Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('admin.departments.delete');
     });
     
-   // Bookings Management
-Route::prefix('bookings')->group(function () {
-    Route::get('/', [BookingController::class, 'index'])->name('admin.bookings.index');
-    Route::get('/export', [BookingController::class, 'export'])->name('admin.bookings.export');
-    Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('admin.bookings.statistics');
-    Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('admin.bookings.available-times');
-    Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
-    Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
-    
-    // Ubah di sini:
-    Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('admin.bookings.delete');
-});
+    // Bookings Management
+    Route::prefix('bookings')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('admin.bookings.index');
+        Route::get('/export', [BookingController::class, 'export'])->name('admin.bookings.export');
+        Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('admin.bookings.statistics');
+        Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('admin.bookings.available-times');
+        Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
+        Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
+        
+        // Ubah di sini:
+        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('admin.bookings.delete');
+    });
 
-    
     // Employees Management
     // Di dalam group admin middleware
-Route::prefix('employees')->group(function () {
-    Route::get('/', [EmployeeController::class, 'index'])->name('admin.employees');
-    Route::get('/create', [EmployeeController::class, 'create'])->name('admin.employees.create');
-    Route::post('/', [EmployeeController::class, 'store'])->name('admin.employees.store');
-    Route::get('/export', [EmployeeController::class, 'export'])->name('admin.employees.export');
-    Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('admin.employees.edit');
-    Route::put('/{id}', [EmployeeController::class, 'update'])->name('admin.employees.update');
-    Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('admin.employees.delete');
-
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('admin.employees');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('admin.employees.create');
+        Route::post('/', [EmployeeController::class, 'store'])->name('admin.employees.store');
+        Route::get('/export', [EmployeeController::class, 'export'])->name('admin.employees.export');
+        Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('admin.employees.edit');
+        Route::put('/{id}', [EmployeeController::class, 'update'])->name('admin.employees.update');
+        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('admin.employees.delete');
     });
 
     // Reports Management

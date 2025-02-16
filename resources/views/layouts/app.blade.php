@@ -4,7 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Booking Ruangan')</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Stack Styles: agar CSS dari child view (misal Flatpickr) termuat -->
+    @stack('styles')
+
     <style>
         /* Background */
         body {
@@ -51,7 +57,7 @@
             position: relative;
         }
 
-        /* Logo */
+        /* Logo (Tengah) */
         .navbar-center img {
             height: 40px;
             width: auto;
@@ -61,6 +67,7 @@
         .navbar-right {
             display: flex;
             gap: 15px;
+            align-items: center;
         }
 
         .navbar-right a {
@@ -71,6 +78,58 @@
 
         .navbar-right a:hover {
             color: #00c3ff;
+        }
+
+        /* Dropdown Styling */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* 
+           Ubah background dropdown menjadi gelap agar tidak terlalu kontras.
+           Menggunakan rgba(0, 0, 0, 0.8) agar sedikit transparan. 
+        */
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            min-width: 150px;
+            border-radius: 0.25rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            overflow: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-in-out;
+            z-index: 100;
+        }
+
+        .dropdown-content a {
+            display: block;
+            padding: 8px 12px;
+            font-size: 14px;
+            text-decoration: none;
+            color: #fff; /* Teks putih agar terbaca di latar gelap */
+        }
+
+        /* Sedikit efek hover lebih terang */
+        .dropdown-content a:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* Mode Desktop */
@@ -134,7 +193,7 @@
             }
         }
 
-        /* Fullscreen Menu */
+        /* Fullscreen Menu (Mobile) */
         .fullscreen-menu {
             display: none;
             position: fixed;
@@ -179,6 +238,11 @@
             cursor: pointer;
             color: white;
         }
+
+        /* Pastikan Flatpickr muncul di atas elemen lainnya */
+        .flatpickr-calendar {
+            z-index: 9999 !important;
+        }
     </style>
 </head>
 <body class="relative text-white">
@@ -202,6 +266,18 @@
             <!-- Kanan: Menu Navigasi (Desktop) -->
             <div class="navbar-right">
                 <a href="/">Home</a>
+
+                <!-- Dropdown untuk Form -->
+                <div class="dropdown">
+                    <button class="dropdown-button">
+                        Form
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="{{ route('booking.create') }}">Form Booking</a>
+                        <a href="{{ route('activity.create') }}">Activity</a>
+                    </div>
+                </div>
+
                 <a href="/calendar">Calendar Room</a>
                 <a href="/admin/login">Login</a>
             </div>
@@ -215,10 +291,18 @@
         </div>
     </nav>
 
-    <!-- Fullscreen Menu -->
+    <!-- Fullscreen Menu (Mobile) -->
     <div class="fullscreen-menu" id="fullscreenMenu">
         <span class="close-menu" id="closeMenu">&times;</span>
         <a href="/">Home</a>
+        <!-- Menu Form dengan submenu -->
+        <div class="text-2xl">
+            <span>Form</span>
+            <div class="mt-2">
+                <a href="{{ route('booking.create') }}" class="block py-1">Form Booking</a>
+                <a href="{{ route('activity.create') }}" class="block py-1">Activity</a>
+            </div>
+        </div>
         <a href="/calendar">Calendar Room</a>
         <a href="/admin/login">Login</a>
     </div>
@@ -228,19 +312,17 @@
     </div>
 
     <script>
-        // Ambil elemen-elemen yang diperlukan
+        // Toggle Mobile Fullscreen Menu
         const mobileMenu = document.getElementById("mobile-menu");
         const fullscreenMenu = document.getElementById("fullscreenMenu");
         const closeMenu = document.getElementById("closeMenu");
         const mainContent = document.getElementById("mainContent");
 
-        // Fungsi untuk membuka fullscreen menu
         mobileMenu.addEventListener("click", () => {
             fullscreenMenu.classList.add("active");
             mainContent.style.opacity = "0";
         });
 
-        // Fungsi untuk menutup fullscreen menu
         closeMenu.addEventListener("click", () => {
             fullscreenMenu.classList.remove("active");
             mainContent.style.opacity = "1";
