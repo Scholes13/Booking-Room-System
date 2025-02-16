@@ -46,7 +46,6 @@ class ActivityExportManager {
             this.confirmBtn.disabled = true;
             this.confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
 
-            // Perbaikan endpoint sesuai dengan route Laravel
             const response = await fetch(`${window.location.origin}/admin/activity/export`, {
                 method: 'POST',
                 headers: {
@@ -65,10 +64,15 @@ class ActivityExportManager {
             const a = document.createElement('a');
             a.href = url;
 
-            // Perbaikan nama file dengan menambahkan report type
+            // Tentukan ekstensi berdasarkan format
+            let ext = 'xlsx';
+            if (params.format === 'pdf') ext = 'pdf';
+            if (params.format === 'csv') ext = 'csv';
+
+            // Generate nama file
             const reportType = params.report_type || 'activity';
-            const timestamp = new Date().toISOString().split('T')[0];
-            a.download = `${reportType}_report_${timestamp}.${params.format}`;
+            const timestamp = Date.now(); // Menggunakan timestamp untuk unik
+            a.download = `${reportType}_report_${timestamp}.${ext}`;
             
             document.body.appendChild(a);
             a.click();
@@ -98,15 +102,3 @@ class ActivityExportManager {
         }
     }
 }
-
-// Pastikan untuk menambahkan di view:
-/*
-@push('scripts')
-    <script src="{{ asset('js/admin/activityreports/export-manager.js') }}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const activityExportManager = new ActivityExportManager(window.activityFilterManager);
-        });
-    </script>
-@endpush
-*/
