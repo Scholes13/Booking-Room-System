@@ -4,12 +4,21 @@
 
 @section('content')
 <div class="container mx-auto py-6 px-4 md:px-12">
-    <!-- Filter Departemen -->
-    <div class="mb-6">
+    <!-- Filter Departemen dan Ruangan dalam satu baris -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <!-- Filter Departemen -->
         <select id="departmentFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full md:w-64">
             <option value="">All Departments</option>
             @foreach($departments as $dept)
                 <option value="{{ $dept }}">{{ $dept }}</option>
+            @endforeach
+        </select>
+
+        <!-- Filter Ruangan -->
+        <select id="roomFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full md:w-64">
+            <option value="">All Rooms</option>
+            @foreach($rooms as $room)
+                <option value="{{ $room }}">{{ $room }}</option>
             @endforeach
         </select>
     </div>
@@ -74,31 +83,25 @@
         align-items: center;
         gap: 10px;
     }
-
     /* Perkecil font-size judul agar tidak memakan ruang berlebihan */
     .fc-toolbar-title {
         font-size: 1rem; 
     }
-
     /* Izinkan scroll horizontal hanya di tampilan month view */
     .fc-dayGridMonth-view {
-        min-width: 500px;  /* Agar kolom tanggal tidak terlalu sempit */
+        min-width: 500px;
     }
-
     /* Tambahkan scroll horizontal agar grid tidak terpotong */
     #calendar {
         overflow-x: auto;
     }
-
     /* Jarak ke bawah dan penataan sel di mobile */
     #calendar-container {
-        margin-bottom: 1.5rem; /* Jarak ke bawah */
+        margin-bottom: 1.5rem;
     }
     .fc-daygrid-day-frame {
-        min-height: 90px; /* Tinggi minimum sel di month view */
-        padding: 0.5rem;  /* Spasi di dalam sel */
-
-        /* === Penambahan snippet untuk menempatkan "+ more" di bawah === */
+        min-height: 90px;
+        padding: 0.5rem;
         display: flex;
         flex-direction: column; 
         justify-content: flex-start;
@@ -106,11 +109,11 @@
         position: relative;
     }
     .fc-daygrid-day-top {
-        margin-bottom: auto; /* Dorong event & more link ke bawah */
+        margin-bottom: auto;
     }
     .fc-daygrid-day-bottom {
         margin-top: auto;
-        margin-bottom: 4px; /* Sedikit jarak dari dasar sel */
+        margin-bottom: 4px;
     }
 }
 
@@ -303,7 +306,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inisialisasi FullCalendar
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        // Menggunakan locale 'id' agar axis & date format menyesuaikan
         locale: 'id',
         initialView: 'dayGridMonth',
         headerToolbar: {
@@ -311,10 +313,8 @@ document.addEventListener('DOMContentLoaded', function() {
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        // Menampilkan rentang waktu 00:00 - 24:00 di week/day view
         slotMinTime: '00:00:00',
         slotMaxTime: '24:00:00',
-        // Label jam di axis juga 24 jam
         slotLabelFormat: {
             hour: '2-digit',
             minute: '2-digit',
@@ -324,28 +324,36 @@ document.addEventListener('DOMContentLoaded', function() {
             dayGridMonth: {
                 dayMaxEvents: 2,
                 dayMaxEventRows: true,
-                moreLinkClick: 'popover',
+                moreLinkClick: 'popover'
             }
         },
-        // Ambil data event dari route
         events: function(info, successCallback, failureCallback) {
-            fetch("{{ route('calendar.events') }}")
+            // Membangun URL dengan query parameter tanggal dan filter (jika ada)
+            let url = new URL("{{ route('calendar.events') }}");
+            url.searchParams.append('start', info.startStr);
+            url.searchParams.append('end', info.endStr);
+            
+            // Ambil nilai filter
+            const selectedDept = document.getElementById('departmentFilter').value;
+            const selectedRoom = document.getElementById('roomFilter').value;
+            if (selectedDept) {
+                url.searchParams.append('department', selectedDept);
+            }
+            if (selectedRoom) {
+                url.searchParams.append('room', selectedRoom);
+            }
+
+            fetch(url)
                 .then(response => response.json())
                 .then(events => {
-                    const selectedDept = document.getElementById('departmentFilter').value;
-                    const filteredEvents = selectedDept 
-                        ? events.filter(event => event.extendedProps.department === selectedDept)
-                        : events;
-                    successCallback(filteredEvents);
+                    successCallback(events);
                 })
                 .catch(error => {
                     console.error('Error fetching events:', error);
                     failureCallback(error);
                 });
         },
-        // Saat event di-klik, tampilkan modal
         eventClick: showEventModal,
-        // Custom render event (untuk menampilkan jam 24 jam di label event)
         eventContent: function(arg) {
             let startTime = arg.event.start 
                 ? arg.event.start.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false }) 
@@ -369,8 +377,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Filter department
+    // Event listener untuk filter departemen
     document.getElementById('departmentFilter').addEventListener('change', function() {
+        calendar.refetchEvents();
+    });
+
+    // Event listener untuk filter ruangan
+    document.getElementById('roomFilter').addEventListener('change', function() {
         calendar.refetchEvents();
     });
 

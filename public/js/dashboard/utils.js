@@ -20,7 +20,8 @@
                 try {
                     return JSON.parse(item);
                 } catch {
-                    return item; // Return sebagai string jika bukan JSON yang valid
+                    // Jika parsing JSON gagal, kembalikan sebagai string
+                    return item;
                 }
             } catch (e) {
                 console.warn('Error reading from localStorage:', e);
@@ -47,14 +48,24 @@
             };
         },
 
+        /**
+         * Konfirmasi penghapusan dengan SweetAlert2
+         * - Warna tombol disesuaikan (merah & abu-abu)
+         * - Latar belakang popup pakai Tailwind Gray-100 (#f3f4f6)
+         * - Warna teks pakai Tailwind Gray-800 (#111827)
+         */
         confirmDelete() {
-            // Menggunakan SweetAlert2 untuk konfirmasi penghapusan
             return Swal.fire({
-                title: 'Anda yakin?',
-                text: 'Data akan dihapus!',
+                title: 'Konfirmasi Hapus',
+                text: 'Apakah Anda yakin ingin menghapus data ini?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Ya, hapus!'
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#d33',     // Tombol konfirmasi: merah
+                cancelButtonColor: '#6b7280',   // Tombol batal: abu-abu
+                background: '#f3f4f6',          // Tailwind Gray-100
+                color: '#111827'               // Tailwind Gray-800
             });
         },
 
@@ -79,21 +90,23 @@
             return new Date(endTime) < new Date();
         },
 
+        /**
+         * Menampilkan pesan error dengan SweetAlert2
+         * - Disesuaikan warna tombol, background, dll.
+         */
         showError(message) {
             return Swal.fire({
                 title: 'Error!',
                 text: message,
-                icon: 'error'
+                icon: 'error',
+                confirmButtonColor: '#d33',
+                background: '#f3f4f6',
+                color: '#111827'
             });
         },
 
         /**
          * Menganimasikan perubahan nilai angka pada sebuah elemen HTML.
-         *
-         * @param {HTMLElement} element - Elemen untuk menampilkan angka.
-         * @param {number} start - Nilai awal.
-         * @param {number} end - Nilai akhir.
-         * @param {number} duration - Durasi animasi dalam milidetik.
          */
         animateValue(element, start, end, duration) {
             let startTime = null;

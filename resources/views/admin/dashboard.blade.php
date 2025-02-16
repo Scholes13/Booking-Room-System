@@ -64,7 +64,7 @@
     </div>
     
     <!-- Table Container -->
-    <div class="bg-white rounded-xl shadow-sm relative max-w-full overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm relative max-w-full overflow-x-auto">
         <!-- Loading Overlay -->
         <div id="loadingOverlay" class="hidden absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex items-center justify-center">
             <div class="flex flex-col items-center gap-3">
@@ -72,74 +72,115 @@
                 <p class="text-blue-500 font-medium">Memuat data...</p>
             </div>
         </div>
-        <!-- Horizontal Scroll Wrapper -->
-        <div class="overflow-x-auto">
-            <table id="bookingTable" class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departemen</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam Mulai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam Selesai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruang Meeting</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($bookings as $booking)
-                    <tr class="hover:bg-gray-50 booking-row" data-endtime="{{ $booking->date }} {{ $booking->end_time }}">
-                        <!-- Kolom "Nama" dengan kelas khusus agar teks membungkus -->
-                        <td class="px-6 py-4 text-sm text-gray-900 table-cell-name-wrap">
-                            {{ $booking->nama }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $booking->department }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 booking-date">{{ $booking->date }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 booking-time">{{ $booking->start_time }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 booking-endtime">{{ $booking->end_time }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $booking->meetingRoom->name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">{{ $booking->description }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex gap-2">
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-edit"></i> Edit
-                                </a>
-                                <form action="{{ route('admin.bookings.delete', $booking->id) }}" method="POST" class="inline delete-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash"></i> Hapus
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
-                            <div class="flex flex-col items-center py-8">
-                                <i class="fas fa-inbox text-gray-400 text-4xl mb-4"></i>
-                                <p class="text-lg font-medium">Tidak ada data booking</p>
-                                <p class="text-sm text-gray-400">Silakan tambahkan booking baru</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+
+        <!-- Tabel Booking -->
+        <table id="bookingTable" 
+               class="min-w-full table-fixed divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <!-- Tentukan lebar kolom, misalnya w-48 untuk Nama -->
+                    <th class="px-6 py-3 w-48 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nama
+                    </th>
+                    <th class="px-6 py-3 w-32 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Departemen
+                    </th>
+                    <th class="px-6 py-3 w-32 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Tanggal
+                    </th>
+                    <th class="px-6 py-3 w-32 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jam Mulai
+                    </th>
+                    <th class="px-6 py-3 w-32 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Jam Selesai
+                    </th>
+                    <!-- Ruang Meeting juga bisa panjang -->
+                    <th class="px-6 py-3 w-48 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ruang Meeting
+                    </th>
+                    <!-- Deskripsi sering panjang, beri lebar lebih besar -->
+                    <th class="px-6 py-3 w-64 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Deskripsi
+                    </th>
+                    <th class="px-6 py-3 w-32 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Aksi
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                @forelse($bookings as $booking)
+                <tr class="hover:bg-gray-50 booking-row" data-endtime="{{ $booking->date }} {{ $booking->end_time }}">
+                    <!-- Kolom "Nama" -->
+                    <td class="px-6 py-4 text-sm text-gray-900 
+                               whitespace-normal break-words">
+                        {{ $booking->nama }}
+                    </td>
+                    <!-- Departemen -->
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ $booking->department }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900 booking-date">
+                        {{ $booking->date }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900 booking-time">
+                        {{ $booking->start_time }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900 booking-endtime">
+                        {{ $booking->end_time }}
+                    </td>
+                    <!-- Ruang Meeting -->
+                    <td class="px-6 py-4 text-sm text-gray-900 
+                               whitespace-normal break-words">
+                        {{ $booking->meetingRoom->name }}
+                    </td>
+                    <!-- Deskripsi -->
+                    <td class="px-6 py-4 text-sm text-gray-900 
+                               whitespace-normal break-words">
+                        {{ $booking->description }}
+                    </td>
+                    <!-- Aksi -->
+                    <td class="px-6 py-4 text-sm font-medium">
+                        <div class="flex gap-2">
+                            <a href="{{ route('admin.bookings.edit', $booking->id) }}" 
+                               class="text-blue-600 hover:text-blue-900">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form action="{{ route('admin.bookings.delete', $booking->id) }}" 
+                                  method="POST" 
+                                  class="inline delete-form">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-trash"></i> Hapus
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                        <div class="flex flex-col items-center py-8">
+                            <i class="fas fa-inbox text-gray-400 text-4xl mb-4"></i>
+                            <p class="text-lg font-medium">Tidak ada data booking</p>
+                            <p class="text-sm text-gray-400">Silakan tambahkan booking baru</p>
+                        </div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection
 
 @push('scripts')
-<!-- Load utilities first (yang sudah mencakup DashboardUtils) -->
+<!-- Load utilities first (DashboardUtils, dsb.) -->
 <script src="{{ asset('js/dashboard/utils.js') }}"></script>
-<!-- Kemudian file dependensi lainnya -->
 <script src="{{ asset('js/dashboard/constants.js') }}"></script>
 <script src="{{ asset('js/dashboard/stats.js') }}"></script>
 <script src="{{ asset('js/dashboard/filters.js') }}"></script>
+<!-- Main.js yang menangani handleDelete -->
 <script src="{{ asset('js/dashboard/main.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {

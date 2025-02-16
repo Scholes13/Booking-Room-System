@@ -19,8 +19,8 @@
             document.getElementById(Constants.FILTERS.MONTH)?.addEventListener('click', () => Filters.filterThisMonth());
             document.getElementById('btnReset')?.addEventListener('click', () => Filters.resetFilter());
 
-            // Event untuk form delete
-            document.querySelectorAll('form.delete-form').forEach(form => {
+            // Hanya form.delete-form dalam #bookingTable yang terikat event delete
+            document.querySelectorAll('#bookingTable form.delete-form').forEach(form => {
                 form.addEventListener('submit', this.handleDelete.bind(this));
             });
 
@@ -98,10 +98,12 @@
             tbody.style.opacity = '1';
         },
 
+        // Bagian penting: handleDelete
         async handleDelete(event) {
             event.preventDefault();
             const form = event.target;
 
+            // Konfirmasi hapus (SweetAlert dengan warna latar & tombol disesuaikan)
             const result = await DashboardUtils.confirmDelete();
             if (result.isConfirmed) {
                 try {
@@ -115,19 +117,23 @@
 
                     if (!response.ok) throw new Error('Delete failed');
 
+                    // Hapus baris di tabel
                     const row = form.closest('tr');
                     row.style.opacity = '0';
                     await new Promise(resolve => setTimeout(resolve, 300));
                     row.remove();
 
+                    // Update stats
                     Stats.updateBookingStats();
 
+                    // Notifikasi sukses (warna lebih ramah)
                     await Swal.fire({
-                        title: 'Berhasil!',
-                        text: 'Data booking telah dihapus',
+                        title: 'Data Terhapus',
+                        text: 'Booking berhasil dihapus dari sistem.',
                         icon: 'success',
-                        background: '#1f2937',
-                        color: '#fff'
+                        confirmButtonColor: '#3b82f6', // Tailwind Blue-500
+                        background: '#f3f4f6',         // Tailwind Gray-100
+                        color: '#111827'              // Tailwind Gray-800
                     });
                 } catch (error) {
                     console.error('Delete error:', error);

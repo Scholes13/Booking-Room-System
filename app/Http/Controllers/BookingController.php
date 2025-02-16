@@ -17,9 +17,11 @@ class BookingController extends Controller
    public function create()
    {
        $departments = Department::all();
-       $meetingRooms = MeetingRoom::all();
-       $employees = Employee::with('department')->get();
-
+       $meetingRooms = MeetingRoom::orderBy('name', 'asc')->get();
+       $employees = Employee::with('department')
+                            ->orderBy('name', 'asc')
+                            ->get();
+   
        return view('booking.booking', compact('departments', 'meetingRooms', 'employees'));
    }
 
@@ -28,7 +30,7 @@ class BookingController extends Controller
    {
        // Validasi input
        $request->validate([
-           'nama' => 'required|string|max:255',
+           'nama' => 'required|exists:employees,name',
            'department' => 'required|exists:departments,name', 
            'meeting_room_id' => 'required|exists:meeting_rooms,id',
            'date' => 'required|date',
@@ -73,24 +75,26 @@ class BookingController extends Controller
 
    // Form edit booking
    public function edit($id)
-   {
-       // Ambil data booking berdasarkan ID
-       $booking = Booking::findOrFail($id);
-       
-       // Ambil data departments dan meeting rooms untuk dropdown
-       $departments = Department::all();
-       $meetingRooms = MeetingRoom::all();
-       $employees = Employee::with('department')->get();
-       
-       return view('admin.edit_booking', compact('booking', 'departments', 'meetingRooms', 'employees'));
-   }
-
+{
+    // Ambil data booking berdasarkan ID
+    $booking = Booking::findOrFail($id);
+    
+    // Ambil data departments dan meeting rooms untuk dropdown
+    $departments = Department::all();
+    $meetingRooms = MeetingRoom::orderBy('name', 'asc')->get();
+    // Urutkan karyawan berdasarkan nama secara ascending
+    $employees = Employee::with('department')
+                         ->orderBy('name', 'asc')
+                         ->get();
+    
+    return view('admin.edit_booking', compact('booking', 'departments', 'meetingRooms', 'employees'));
+}
    // Update booking
    public function update(Request $request, $id)
    {
        // Validasi input
        $request->validate([
-           'nama' => 'required|string|max:255',
+           'nama' => 'required|exists:employees,name',
            'department' => 'required|exists:departments,name',
            'meeting_room_id' => 'required|exists:meeting_rooms,id',
            'date' => 'required|date',

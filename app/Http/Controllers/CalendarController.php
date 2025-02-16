@@ -17,26 +17,46 @@ class CalendarController extends Controller
             ->sort()
             ->values();
 
-        return view('calendar.index', compact('departments'));
+        // Ambil unique nama ruangan dari relasi meetingRoom
+        $rooms = Booking::with('meetingRoom')
+            ->get()
+            ->pluck('meetingRoom.name')
+            ->filter() // Menghapus nilai null
+            ->unique()
+            ->sort()
+            ->values();
+
+        return view('calendar.index', compact('departments', 'rooms'));
     }
 
     public function events(Request $request)
     {
         try {
             // Parse tanggal dari request
-            $start = $request->query('start') ? Carbon::parse($request->query('start')) : Carbon::now()->startOfMonth();
-            $end = $request->query('end') ? Carbon::parse($request->query('end')) : Carbon::now()->endOfMonth();
+            $start = $request->query('start') 
+                ? Carbon::parse($request->query('start')) 
+                : Carbon::now()->startOfMonth();
+            $end = $request->query('end') 
+                ? Carbon::parse($request->query('end')) 
+                : Carbon::now()->endOfMonth();
 
             // Query dasar untuk booking
             $query = Booking::with('meetingRoom')
                 ->whereBetween('date', [
-                    $start->format('Y-m-d'), 
+                    $start->format('Y-m-d'),
                     $end->format('Y-m-d')
                 ]);
 
             // Filter berdasarkan department jika ada
             if ($request->has('department') && $request->department !== '') {
                 $query->where('department', $request->department);
+            }
+
+            // Filter berdasarkan ruangan jika ada
+            if ($request->has('room') && $request->room !== '') {
+                $query->whereHas('meetingRoom', function ($q) use ($request) {
+                    $q->where('name', $request->room);
+                });
             }
 
             $bookings = $query->get();
@@ -52,10 +72,10 @@ class CalendarController extends Controller
                     'start' => $startDateTime->toIso8601String(),
                     'end' => $endDateTime->toIso8601String(),
                     'extendedProps' => [
-                        'room_name' => $booking->meetingRoom ? $booking->meetingRoom->name : 'Undefined Room',
+                        'room_name'   => $booking->meetingRoom ? $booking->meetingRoom->name : 'Undefined Room',
                         'description' => $booking->description,
-                        'created_by' => $booking->nama,
-                        'department' => $booking->department // Menambahkan department ke extendedProps
+                        'created_by'  => $booking->nama,
+                        'department'  => $booking->department
                     ]
                 ];
             });
@@ -64,7 +84,7 @@ class CalendarController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to load calendar events',
+                'error'   => 'Failed to load calendar events',
                 'message' => $e->getMessage()
             ], 500);
         }

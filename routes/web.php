@@ -42,16 +42,19 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
         Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('admin.departments.delete');
     });
     
-    // Bookings Management
-    Route::prefix('bookings')->group(function () {
-        Route::get('/', [BookingController::class, 'index'])->name('admin.bookings.index');
-        Route::get('/export', [BookingController::class, 'export'])->name('admin.bookings.export');
-        Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('admin.bookings.statistics');
-        Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('admin.bookings.available-times');
-        Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
-        Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
-        Route::delete('/{id}', [BookingController::class, 'delete'])->name('admin.bookings.delete');
-    });
+   // Bookings Management
+Route::prefix('bookings')->group(function () {
+    Route::get('/', [BookingController::class, 'index'])->name('admin.bookings.index');
+    Route::get('/export', [BookingController::class, 'export'])->name('admin.bookings.export');
+    Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('admin.bookings.statistics');
+    Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('admin.bookings.available-times');
+    Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
+    Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
+    
+    // Ubah di sini:
+    Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('admin.bookings.delete');
+});
+
     
     // Employees Management
     // Di dalam group admin middleware

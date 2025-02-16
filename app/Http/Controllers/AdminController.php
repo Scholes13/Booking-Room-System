@@ -6,17 +6,20 @@ use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Department;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
-    // Tampilkan halaman login admin
+    /**
+     * Menampilkan halaman login admin.
+     */
     public function showLogin()
     {
         return view('admin.login');
     }
 
-    // Proses login admin sederhana (contoh menggunakan session)
+    /**
+     * Proses login admin sederhana (contoh menggunakan session).
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -24,6 +27,7 @@ class AdminController extends Controller
             'password' => 'required',
         ]);
 
+        // Contoh super sederhana (username=admin, password=admin).
         if ($credentials['username'] === 'admin' && $credentials['password'] === 'admin') {
             session(['admin' => true]);
             return redirect()->route('admin.dashboard');
@@ -32,32 +36,41 @@ class AdminController extends Controller
         return redirect()->back()->with('error', 'Username atau password salah');
     }
 
-    // Logout admin
+    /**
+     * Logout admin.
+     */
     public function logout()
     {
         session()->forget('admin');
         return redirect()->route('admin.login');
     }
 
-    // Dashboard admin: Tampilkan report booking
+    /**
+     * Dashboard admin: Tampilkan daftar booking.
+     */
     public function dashboard()
     {
+        // Ambil semua booking beserta relasi MeetingRoom
         $bookings = Booking::with('meetingRoom')
-            ->orderBy('date', 'asc') // Urutkan berdasarkan tanggal terdekat (terlama ke terbaru)
-            ->orderBy('start_time', 'asc') // Urutkan berdasarkan jam mulai (paling pagi lebih dulu)
+            ->orderBy('date', 'asc')       // Urutkan berdasarkan tanggal terdekat
+            ->orderBy('start_time', 'asc') // Urutkan berdasarkan jam mulai
             ->get();
     
         return view('admin.dashboard', compact('bookings'));
     }
 
-    // Tampilkan halaman pengelolaan meeting room
+    /**
+     * Tampilkan halaman pengelolaan meeting room.
+     */
     public function meetingRooms()
     {
         $rooms = MeetingRoom::all();
         return view('admin.meeting_rooms', compact('rooms'));
     }
 
-    // Simpan meeting room baru
+    /**
+     * Simpan meeting room baru.
+     */
     public function storeMeetingRoom(Request $request)
     {
         $validated = $request->validate([
@@ -69,18 +82,13 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Ruang meeting berhasil ditambahkan.');
     }
 
-    // Hapus meeting room
-    public function deleteMeetingRoom($id)
-    {
-        MeetingRoom::destroy($id);
-        return redirect()->back()->with('success', 'Ruang meeting berhasil dihapus.');
-    }
-    
-    // =============================================
-    // Fitur Tambahan: Kelola Booking (Edit/Update/Hapus)
-    // =============================================
+    // ----------------------------------------------------------------
+    //                      K E L O L A   B O O K I N G
+    // ----------------------------------------------------------------
 
-    // Tampilkan formulir edit booking
+    /**
+     * Tampilkan formulir edit booking.
+     */
     public function editBooking($id)
     {
         $booking = Booking::findOrFail($id);
@@ -88,7 +96,9 @@ class AdminController extends Controller
         return view('admin.edit_booking', compact('booking', 'meetingRooms'));
     }
 
-    // Proses update booking
+    /**
+     * Proses update booking.
+     */
     public function updateBooking(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
@@ -114,27 +124,48 @@ class AdminController extends Controller
             ->exists();
 
         if ($conflict) {
-            return redirect()->back()->withInput()->with('error', 'Maaf, ruangan sudah dibooking pada waktu tersebut.');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Maaf, ruangan sudah dibooking pada waktu tersebut.');
         }
 
         $booking->update($validated);
         return redirect()->route('admin.dashboard')->with('success', 'Booking berhasil diperbarui.');
     }
 
-    // Hapus booking
+    /**
+     * Hapus booking (dipanggil via AJAX method DELETE).
+     * Pastikan route memanggil AdminController@deleteBooking.
+     */
     public function deleteBooking($id)
     {
         $booking = Booking::findOrFail($id);
         $booking->delete();
-        return redirect()->route('admin.dashboard')->with('success', 'Booking berhasil dihapus.');
+
+        // Kembalikan JSON, bukan redirect,
+        // agar tidak menimbulkan error 405 saat AJAX method DELETE men-follow redirect.
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking berhasil dihapus.'
+        ]);
     }
 
+    // ----------------------------------------------------------------
+    //                    K E L O L A   D E P A R T E M E N
+    // ----------------------------------------------------------------
+
+    /**
+     * Menampilkan daftar departemen.
+     */
     public function departments()
     {
         $departments = Department::all();
         return view('admin.departments', compact('departments'));
     }
     
+    /**
+     * Simpan departemen baru.
+     */
     public function storeDepartment(Request $request)
     {
         $validated = $request->validate([
@@ -145,12 +176,13 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Departemen berhasil ditambahkan.');
     }
     
+    /**
+     * Hapus departemen (metode biasa, pakai redirect).
+     * Tidak dipanggil via AJAX, jadi redirect diperbolehkan.
+     */
     public function deleteDepartment($id)
     {
         Department::destroy($id);
         return redirect()->back()->with('success', 'Departemen berhasil dihapus.');
     }
-
-    
-    
 }
