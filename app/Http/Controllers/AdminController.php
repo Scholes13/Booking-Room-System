@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Department;
+use App\Models\User; // Tambahkan import model User
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -18,59 +20,119 @@ class AdminController extends Controller
     }
 
     /**
-     * Proses login admin sederhana (contoh menggunakan session).
+     * Proses login admin/superadmin menggunakan Auth.
+     * Input login bisa berupa username atau email.
      */
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'username' => 'required',
+        $request->validate([
+            'login'    => 'required',
             'password' => 'required',
         ]);
 
-        // Contoh super sederhana (username=admin, password=admin).
-        if ($credentials['username'] === 'admin' && $credentials['password'] === 'admin') {
-            session(['admin' => true]);
-            return redirect()->route('admin.dashboard');
+        $login    = $request->input('login');
+        $password = $request->input('password');
+
+        // Tentukan apakah input login merupakan email atau username
+        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name';
+
+        // Gunakan Auth::attempt() untuk verifikasi user + password
+        if (Auth::attempt([$field => $login, 'password' => $password])) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+
+            // Pisahkan admin & superadmin
+            if ($user->role === 'superadmin') {
+                return redirect()->route('superadmin.dashboard');
+            } elseif ($user->role === 'admin') {
+                return redirect()->route('admin.dashboard');
+            }
+
+            // Jika role tidak sesuai, logout dan kembalikan error
+            Auth::logout();
+            return redirect()->back()->with('error', 'Anda tidak memiliki akses ke area admin.');
         }
 
-        return redirect()->back()->with('error', 'Username atau password salah');
+        return redirect()->back()->with('error', 'Login gagal. Periksa kembali login dan password anda.');
     }
 
     /**
-     * Logout admin.
+     * Logout admin/superadmin.
      */
     public function logout()
     {
-        session()->forget('admin');
+        Auth::logout();
         return redirect()->route('admin.login');
     }
 
     /**
-     * Dashboard admin: Tampilkan daftar booking.
+     * Dashboard untuk admin.
+     * Misalnya: Tampilkan daftar booking.
      */
     public function dashboard()
     {
-        // Ambil semua booking beserta relasi MeetingRoom
         $bookings = Booking::with('meetingRoom')
-            ->orderBy('date', 'asc')       // Urutkan berdasarkan tanggal terdekat
-            ->orderBy('start_time', 'asc') // Urutkan berdasarkan jam mulai
+            ->orderBy('date', 'asc')
+            ->orderBy('start_time', 'asc')
             ->get();
-    
+
         return view('admin.dashboard', compact('bookings'));
     }
 
     /**
-     * Tampilkan halaman pengelolaan meeting room.
+     * Dashboard untuk superadmin.
+     * Pastikan file resources/views/superadmin/dashboard.blade.php sudah ada.
      */
+    public function superAdminDashboard()
+    {
+        // Jika ingin menampilkan data lain, tambahkan di sini
+        return view('superadmin.dashboard');
+    }
+
+    /**
+     * Tampilkan form untuk membuat Admin baru (khusus superadmin).
+     */
+    public function createAdmin()
+    {
+        // Pastikan file resources/views/superadmin/create_admin.blade.php tersedia
+        return view('superadmin.create_admin');
+    }
+
+    /**
+     * Simpan Admin baru dan redirect ke dashboard superadmin.
+     */
+    public function storeAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+        ]);
+
+        // Buat user baru dengan role = 'admin'
+        User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            // Jika di model User ada cast 'password' => 'hashed',
+            // password akan otomatis di-hash.
+            'password' => $validated['password'],
+            'role'     => 'admin',
+        ]);
+
+        return redirect()->route('superadmin.dashboard')
+                         ->with('success', 'Admin baru berhasil dibuat!');
+    }
+
+    // ----------------------------------------------------------------
+    //                      K E L O L A   M E E T I N G   R O O M
+    // ----------------------------------------------------------------
+
     public function meetingRooms()
     {
         $rooms = MeetingRoom::all();
         return view('admin.meeting_rooms', compact('rooms'));
     }
 
-    /**
-     * Simpan meeting room baru.
-     */
     public function storeMeetingRoom(Request $request)
     {
         $validated = $request->validate([
@@ -82,13 +144,19 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'Ruang meeting berhasil ditambahkan.');
     }
 
+    public function deleteMeetingRoom($id)
+    {
+        $room = MeetingRoom::findOrFail($id);
+        $room->delete();
+    
+        return redirect()->route('admin.meeting_rooms')
+                         ->with('success', 'Meeting room berhasil dihapus.');
+    }
+
     // ----------------------------------------------------------------
     //                      K E L O L A   B O O K I N G
     // ----------------------------------------------------------------
 
-    /**
-     * Tampilkan formulir edit booking.
-     */
     public function editBooking($id)
     {
         $booking = Booking::findOrFail($id);
@@ -96,9 +164,6 @@ class AdminController extends Controller
         return view('admin.edit_booking', compact('booking', 'meetingRooms'));
     }
 
-    /**
-     * Proses update booking.
-     */
     public function updateBooking(Request $request, $id)
     {
         $booking = Booking::findOrFail($id);
@@ -133,17 +198,11 @@ class AdminController extends Controller
         return redirect()->route('admin.dashboard')->with('success', 'Booking berhasil diperbarui.');
     }
 
-    /**
-     * Hapus booking (dipanggil via AJAX method DELETE).
-     * Pastikan route memanggil AdminController@deleteBooking.
-     */
     public function deleteBooking($id)
     {
         $booking = Booking::findOrFail($id);
         $booking->delete();
 
-        // Kembalikan JSON, bukan redirect,
-        // agar tidak menimbulkan error 405 saat AJAX method DELETE men-follow redirect.
         return response()->json([
             'success' => true,
             'message' => 'Booking berhasil dihapus.'
@@ -154,32 +213,22 @@ class AdminController extends Controller
     //                    K E L O L A   D E P A R T E M E N
     // ----------------------------------------------------------------
 
-    /**
-     * Menampilkan daftar departemen.
-     */
     public function departments()
     {
         $departments = Department::all();
         return view('admin.departments', compact('departments'));
     }
-    
-    /**
-     * Simpan departemen baru.
-     */
+
     public function storeDepartment(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
         ]);
-    
+
         Department::create($validated);
         return redirect()->back()->with('success', 'Departemen berhasil ditambahkan.');
     }
-    
-    /**
-     * Hapus departemen (metode biasa, pakai redirect).
-     * Tidak dipanggil via AJAX, jadi redirect diperbolehkan.
-     */
+
     public function deleteDepartment($id)
     {
         Department::destroy($id);

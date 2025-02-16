@@ -21,12 +21,18 @@
     <form action="{{ route('admin.login.submit') }}" method="POST">
       @csrf
 
-      <!-- Username -->
+      <!-- Username / Email -->
       <div class="mb-4">
-        <label class="block mb-1 text-gray-300">Username</label>
+        <label class="block mb-1 text-gray-300">Username / Email</label>
         <div class="relative">
           <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-          <input type="text" name="username" class="w-full pl-10 pr-3 py-2 bg-white/20 text-white border border-white/30 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none" placeholder="Enter your username" required>
+          <input 
+            type="text" 
+            name="login" 
+            class="w-full pl-10 pr-3 py-2 bg-white/20 text-white border border-white/30 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none" 
+            placeholder="Enter your username or email" 
+            required
+          >
         </div>
       </div>
 
@@ -35,11 +41,17 @@
         <label class="block mb-1 text-gray-300">Password</label>
         <div class="relative">
           <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-          <input type="password" name="password" class="w-full pl-10 pr-3 py-2 bg-white/20 text-white border border-white/30 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none" placeholder="Enter your password" required>
+          <input 
+            type="password" 
+            name="password" 
+            class="w-full pl-10 pr-3 py-2 bg-white/20 text-white border border-white/30 rounded focus:ring-2 focus:ring-blue-400 focus:outline-none" 
+            placeholder="Enter your password" 
+            required
+          >
         </div>
       </div>
 
-      <!-- Remember Me & Forgot Password -->
+      <!-- Remember Me -->
       <div class="flex items-center justify-between text-gray-300 text-sm mb-4">
         <label class="flex items-center">
           <input type="checkbox" name="remember" class="mr-2 rounded">
@@ -48,12 +60,18 @@
       </div>
 
       <!-- Submit Button -->
-      <button type="submit" class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-lg hover:scale-105 transition transform duration-300">
+      <button 
+        type="submit" 
+        class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-2 rounded-lg hover:scale-105 transition transform duration-300"
+      >
         Login
       </button>
 
       <!-- Back to Home Button -->
-      <a href="/" class="block text-center w-full mt-4 text-white bg-gradient-to-r from-gray-700 to-gray-900 py-2 rounded-lg flex items-center justify-center space-x-2 hover:scale-105 transition transform duration-300">
+      <a 
+        href="/" 
+        class="block text-center w-full mt-4 text-white bg-gradient-to-r from-gray-700 to-gray-900 py-2 rounded-lg flex items-center justify-center space-x-2 hover:scale-105 transition transform duration-300"
+      >
         <i class="fas fa-arrow-left"></i>
         <span>Back to Home</span>
       </a>

@@ -45,37 +45,83 @@
             </div>
             
             <nav class="mt-6 px-4 space-y-2">
+                <!-- Dashboard -->
                 <a href="{{ route('admin.dashboard') }}" 
-                   class="flex items-center gap-3 p-3 rounded-lg {{ Request::routeIs('admin.dashboard') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
+                   class="flex items-center gap-3 p-3 rounded-lg 
+                   {{ Request::routeIs('admin.dashboard') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
                     <i class="fas fa-chart-line"></i>
                     Dashboard
                 </a>
 
+                <!-- Ruang Meeting -->
                 <a href="{{ route('admin.meeting_rooms') }}" 
-                   class="flex items-center gap-3 p-3 rounded-lg {{ Request::routeIs('admin.meeting_rooms') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
+                   class="flex items-center gap-3 p-3 rounded-lg 
+                   {{ Request::routeIs('admin.meeting_rooms') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
                     <i class="fas fa-door-open"></i>
                     Ruang Meeting
                 </a>
 
+                <!-- Departemen -->
                 <a href="{{ route('admin.departments') }}" 
-                   class="flex items-center gap-3 p-3 rounded-lg {{ Request::routeIs('admin.departments') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
+                   class="flex items-center gap-3 p-3 rounded-lg 
+                   {{ Request::routeIs('admin.departments') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
                     <i class="fas fa-building"></i>
                     Departemen
                 </a>
 
+                <!-- Karyawan -->
                 <a href="{{ route('admin.employees') }}" 
-                   class="flex items-center gap-3 p-3 rounded-lg {{ Request::routeIs('admin.employees') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
+                   class="flex items-center gap-3 p-3 rounded-lg 
+                   {{ Request::routeIs('admin.employees') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
                     <i class="fas fa-users"></i>
                     Karyawan
                 </a>
 
-                <a href="{{ route('admin.reports') }}" 
-                   class="flex items-center gap-3 p-3 rounded-lg {{ Request::routeIs('admin.reports*') ? 'bg-primary/20 text-primary' : 'hover:bg-white/10' }}">
-                    <i class="fas fa-file-alt"></i>
-                    Reports
-                </a>
+                <!-- Reports (Submenu) -->
+                <div class="relative group">
+                    <!-- Menu Induk Reports -->
+                    <div 
+                        class="flex items-center gap-3 p-3 rounded-lg 
+                        {{ 
+                            Request::routeIs('admin.reports.*') || 
+                            Request::routeIs('admin.activity.*')
+                                ? 'bg-primary/20 text-primary' 
+                                : 'hover:bg-white/10' 
+                        }} 
+                        cursor-pointer">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Reports</span>
+                    </div>
+
+                    <!-- Submenu Reports (Hidden by default, appears on hover) -->
+                    <div class="ml-9 mt-1 space-y-1 hidden group-hover:block">
+                        <!-- Booking Reports -->
+                        <a href="{{ route('admin.reports') }}" 
+                           class="block py-2 text-sm pl-2 
+                           {{ 
+                               Request::routeIs('admin.reports*') && 
+                               !Request::routeIs('admin.activity.*') 
+                                   ? 'text-primary font-semibold' 
+                                   : 'text-gray-200 hover:text-white' 
+                           }}">
+                            <i class="fas fa-angle-right mr-1"></i> Booking Reports
+                        </a>
+
+                        <!-- Activity Reports -->
+                        <a href="{{ route('admin.activity.index') }}" 
+                           class="block py-2 text-sm pl-2 
+                           {{ 
+                               Request::routeIs('admin.activity.*') 
+                                   ? 'text-primary font-semibold' 
+                                   : 'text-gray-200 hover:text-white' 
+                           }}">
+                            <i class="fas fa-angle-right mr-1"></i> Activity Reports
+                        </a>
+                    </div>
+                </div>
             </nav>
 
+            <!-- Logout di bagian bawah -->
             <div class="absolute bottom-0 w-full p-4">
                 <a href="{{ route('admin.logout') }}" 
                    class="flex items-center gap-3 p-3 text-red-400 hover:bg-red-500/10 rounded-lg">
@@ -87,13 +133,16 @@
 
         <!-- Main Content -->
         <main class="main-content flex-1 ml-64 p-8 relative z-10 overflow-x-auto">
-          @yield('content')
-      </main>
-      
+            @yield('content')
+        </main>
     </div>
 
     <script>
-        window.Laravel = {!! json_encode(['csrfToken' => csrf_token(), 'baseUrl' => url('/'), 'currentRoute' => Route::currentRouteName()]) !!};
+        window.Laravel = {!! json_encode([
+            'csrfToken' => csrf_token(), 
+            'baseUrl' => url('/'), 
+            'currentRoute' => Route::currentRouteName()
+        ]) !!};
     </script>
     @stack('scripts')
 </body>
