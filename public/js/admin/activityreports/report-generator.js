@@ -138,7 +138,7 @@ class ActivityReportGenerator {
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.department || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.start_time || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.end_time || '-'}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${act.total_days || '-'} days</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${act.total_days || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.category || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.description || '-'}</td>
                                 </tr>

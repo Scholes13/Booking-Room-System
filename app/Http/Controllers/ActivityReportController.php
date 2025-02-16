@@ -67,15 +67,29 @@ class ActivityReportController extends Controller
                         'activities.department',
                         'activities.start_datetime AS start_time',
                         'activities.end_datetime AS end_time',
-                        'activities.activity_type AS category',
+                        'activities.activity_type AS category',  // Use activity_type as category
                         'activities.description'
                     )->get();
 
                 // Calculate total days for each activity
                 $activities = $activities->map(function($activity) {
-                    $startDate = Carbon::parse($activity->start_time)->startOfDay();
-                    $endDate = Carbon::parse($activity->end_time)->startOfDay();
-                    $activity->total_days = $startDate->diffInDays($endDate) + 1;
+                    $startDate = Carbon::parse($activity->start_time);
+                    $endDate = Carbon::parse($activity->end_time);
+
+                    // If the activity lasts less than 24 hours, show it in hours
+                    if ($startDate->isSameDay($endDate)) {
+                        $hours = $startDate->diffInHours($endDate);
+                        $activity->total_days = $hours . ' hours';
+                    } else {
+                        $totalHours = $startDate->diffInHours($endDate);
+
+                        if ($totalHours <= 48) {
+                            $activity->total_days = '1 day';
+                        } else {
+                            $activity->total_days = ceil($totalHours / 24) . ' day' . (ceil($totalHours / 24) > 1 ? 's' : '');
+                        }
+                    }
+
                     return $activity;
                 });
 
@@ -91,13 +105,48 @@ class ActivityReportController extends Controller
             } elseif ($reportType === 'department_activity') {
                 Log::debug('Report Type: department_activity');
 
-                $activities = $query->select(
-                    'department',
-                    'start_datetime',
-                    'end_datetime',
-                    'activity_type'
-                )->get();
+                $activities = $query
+                    ->select(
+                        'department',
+                        'start_datetime',
+                        'end_datetime',
+                        'activity_type AS category'  // Use activity_type as category
+                    )
+                    ->get();
 
+                // Calculate total days and hours for department activities
+                $activities = $activities->map(function($activity) {
+                    $startDate = Carbon::parse($activity->start_datetime ?? 'now'); // Menggunakan nilai default 'now' jika null
+                    $endDate = Carbon::parse($activity->end_datetime ?? 'now'); // Menggunakan nilai default 'now' jika null
+
+                    // Pastikan start_datetime dan end_datetime valid sebelum dihitung
+                    if ($startDate && $endDate) {
+                        $totalHours = $startDate->diffInHours($endDate);
+
+                        // Pastikan totalHours adalah angka valid sebelum melakukan operasi
+                        if (is_numeric($totalHours)) {
+                            // Menjaga total_days tetap berupa angka
+                            if ($totalHours < 24) {
+                                $activity->total_days = $totalHours;
+                            } elseif ($totalHours >= 24 && $totalHours < 48) {
+                                $activity->total_days = 1;
+                            } else {
+                                $activity->total_days = ceil($totalHours / 24);
+                            }
+
+                            // Assign hours used
+                            $activity->hours_used = $totalHours;
+                        } else {
+                            Log::error('Invalid hours calculated', ['start_datetime' => $activity->start_datetime, 'end_datetime' => $activity->end_datetime]);
+                        }
+                    } else {
+                        Log::error('Invalid datetime values', ['start_datetime' => $activity->start_datetime, 'end_datetime' => $activity->end_datetime]);
+                    }
+
+                    return $activity;
+                });
+
+                // Handle stats generation
                 $categoryStats = $this->getCategoryStats($activities);
                 $departmentsData = $this->getDepartmentStats($activities);
 
@@ -124,47 +173,79 @@ class ActivityReportController extends Controller
         }
     }
 
-    public function export(Request $request)
-    {
-        try {
-            // Validate input
-            $request->validate([
-                'report_type' => 'required|in:employee_activity,department_activity',
-                'time_period' => 'required|in:monthly,quarterly,yearly',
-                'year'         => 'required|integer',
-                'month'        => 'nullable|integer|between:1,12',
-                'quarter'      => 'nullable|integer|between:1,4',
-                'format'       => 'required|in:excel,pdf,csv', // Added format
-            ]);
-
-            Log::info("Export Request Parameters:", $request->all());
-
-            // Compute date range
-            $dateRange = $this->getDateRange($request->time_period, $request->year, $request->month, $request->quarter);
-
-            Log::info("Export Date Range", [
-                'start' => $dateRange['start']->toDateString(),
-                'end'   => $dateRange['end']->toDateString()
-            ]);
-
-            // Get data and headers for export
-            $data = $this->getExportData($request->report_type, $dateRange);
-            $headers = $this->getExportHeaders($request->report_type);
-            $filename = $this->generateExportFilename($request->report_type, $request->time_period, $request->format);
-
-            Log::info("Exporting file: " . $filename);
-
-            // Call the ReportExportService to export the data
-            return $this->exportService->export($data, $headers, $filename, $request->format);
-        } catch (\Exception $e) {
-            Log::error('Export error: ' . $e->getMessage());
-            return response()->json(['error' => 'Export failed'], 500);
-        }
-    }
-
     /* === HELPER METHODS === */
 
-    // Get the date range based on the selected period
+    private function getCategoryStats($activities)
+    {
+        $categoryStats = [
+            'Meeting'    => ['count' => 0, 'percentage' => 0],
+            'Invitation' => ['count' => 0, 'percentage' => 0],
+            'Survey'     => ['count' => 0, 'percentage' => 0],
+        ];
+
+        foreach ($activities as $act) {
+            // Check if category exists before accessing it
+            if (isset($categoryStats[$act->category])) {
+                $categoryStats[$act->category]['count']++;
+            }
+        }
+
+        $total = $activities->count();
+        if ($total > 0) {
+            foreach ($categoryStats as $cat => &$stat) {
+                $stat['percentage'] = round(($stat['count'] / $total) * 100);
+            }
+        }
+
+        return $categoryStats;
+    }
+
+    private function getDepartmentStats($activities)
+    {
+        $departmentsData = [];
+        foreach ($activities as $act) {
+            $dept = $act->department ?: 'Unknown';
+            if (!isset($departmentsData[$dept])) {
+                $departmentsData[$dept] = [
+                    'name'             => $dept,
+                    'total_activities' => 0,
+                    'hours_used'       => 0,
+                    'total_days'       => 0
+                ];
+            }
+            $departmentsData[$dept]['total_activities']++;
+
+            // Pastikan start_datetime dan end_datetime valid sebelum dihitung
+            $startDate = Carbon::parse($act->start_datetime ?? 'now'); // Menggunakan nilai default 'now' jika null
+            $endDate = Carbon::parse($act->end_datetime ?? 'now'); // Menggunakan nilai default 'now' jika null
+
+            if ($startDate && $endDate) {
+                $totalHours = $startDate->diffInHours($endDate);
+
+                // Pastikan totalHours adalah angka valid sebelum melakukan operasi
+                if (is_numeric($totalHours)) {
+                    // Menjaga total_days tetap berupa angka
+                    if ($totalHours < 24) {
+                        $departmentsData[$dept]['total_days'] += $totalHours;
+                    } elseif ($totalHours >= 24 && $totalHours < 48) {
+                        $departmentsData[$dept]['total_days'] += 1;
+                    } else {
+                        $departmentsData[$dept]['total_days'] += ceil($totalHours / 24);
+                    }
+
+                    // Assign hours used for the department's activity
+                    $departmentsData[$dept]['hours_used'] += $totalHours;
+                } else {
+                    Log::error('Invalid hours calculated', ['start_datetime' => $act->start_datetime, 'end_datetime' => $act->end_datetime]);
+                }
+            } else {
+                Log::error('Invalid datetime values', ['start_datetime' => $act->start_datetime, 'end_datetime' => $act->end_datetime]);
+            }
+        }
+
+        return array_values($departmentsData);
+    }
+
     private function getDateRange($timePeriod, $year, $month = null, $quarter = null)
     {
         $startDate = Carbon::create($year);
@@ -187,166 +268,5 @@ class ActivityReportController extends Controller
         }
 
         return ['start' => $startDate, 'end' => $endDate];
-    }
-
-    // Get the category stats from the activities data
-    private function getCategoryStats($activities)
-    {
-        $categoryStats = [
-            'Meeting'    => ['count' => 0, 'percentage' => 0],
-            'Invitation' => ['count' => 0, 'percentage' => 0],
-            'Survey'     => ['count' => 0, 'percentage' => 0],
-        ];
-
-        foreach ($activities as $act) {
-            if (isset($categoryStats[$act->category])) {
-                $categoryStats[$act->category]['count']++;
-            }
-        }
-
-        $total = $activities->count();
-        if ($total > 0) {
-            foreach ($categoryStats as $cat => &$stat) {
-                $stat['percentage'] = round(($stat['count'] / $total) * 100);
-            }
-        }
-
-        return $categoryStats;
-    }
-
-    // Get department stats from the activities data
-    private function getDepartmentStats($activities)
-    {
-        $departmentsData = [];
-        foreach ($activities as $act) {
-            $dept = $act->department ?: 'Unknown';
-            if (!isset($departmentsData[$dept])) {
-                $departmentsData[$dept] = [
-                    'name'             => $dept,
-                    'total_activities' => 0,
-                    'hours_used'       => 0,
-                    'total_days'       => 0
-                ];
-            }
-            $departmentsData[$dept]['total_activities']++;
-
-            // Calculate total days
-            $startDate = Carbon::parse($act->start_datetime)->startOfDay();
-            $endDate = Carbon::parse($act->end_datetime)->startOfDay();
-            $days = $startDate->diffInDays($endDate) + 1;
-            $departmentsData[$dept]['total_days'] += $days;
-
-            // Calculate hours used
-            $start = strtotime($act->start_datetime);
-            $end   = strtotime($act->end_datetime);
-            $diff  = ($end - $start) / 3600;
-            if ($diff > 0) {
-                $departmentsData[$dept]['hours_used'] += $diff;
-            }
-        }
-
-        return array_values($departmentsData);
-    }
-
-    // Get data for export based on report type
-    private function getExportData($reportType, $dateRange)
-    {
-        switch ($reportType) {
-            case 'employee_activity':
-                return $this->getEmployeeActivityExportData($dateRange);
-            case 'department_activity':
-                return $this->getDepartmentActivityExportData($dateRange);
-            default:
-                return [];
-        }
-    }
-
-    // Generate the headers for export based on report type
-    private function getExportHeaders($reportType)
-    {
-        switch ($reportType) {
-            case 'employee_activity':
-                return ['Name', 'Department', 'Start Time', 'End Time', 'Total Days', 'Category', 'Description'];
-            case 'department_activity':
-                return ['Department', 'Total Activities', 'Hours Used', 'Total Days'];
-            default:
-                return [];
-        }
-    }
-
-    // Generate filename for export
-    private function generateExportFilename($reportType, $timePeriod, $format)
-    {
-        $timestamp = now()->format('Ymd_His');
-        $extension = ($format === 'pdf') ? 'pdf'
-            : (($format === 'csv') ? 'csv' : 'xlsx');
-
-        return "{$reportType}_report_{$timePeriod}_{$timestamp}.{$extension}";
-    }
-
-    // Get employee activity export data
-    private function getEmployeeActivityExportData($dateRange)
-    {
-        $activities = DB::table('activities')
-            ->leftJoin('employees', 'activities.nama', '=', 'employees.name')
-            ->select(
-                'activities.nama as name',
-                'activities.department',
-                'activities.start_datetime AS start_time',
-                'activities.end_datetime AS end_time',
-                'activities.activity_type AS category',
-                'activities.description'
-            )
-            ->whereBetween('start_datetime', [$dateRange['start'], $dateRange['end']])
-            ->get();
-
-        $data = [];
-        foreach ($activities as $activity) {
-            $startDate = Carbon::parse($activity->start_time)->startOfDay();
-            $endDate = Carbon::parse($activity->end_time)->startOfDay();
-            $totalDays = $startDate->diffInDays($endDate) + 1;
-
-            $data[] = [
-                'Name'        => $activity->name,
-                'Department'  => $activity->department,
-                'Start Time'  => $activity->start_time,
-                'End Time'    => $activity->end_time,
-                'Total Days'  => $totalDays . ' days',
-                'Category'    => $activity->category,
-                'Description' => $activity->description,
-            ];
-        }
-
-        return $data;
-    }
-
-    // Get department activity export data
-    private function getDepartmentActivityExportData($dateRange)
-    {
-        $activities = DB::table('activities')
-            ->select('department', 'activity_type', 'start_datetime', 'end_datetime')
-            ->whereBetween('start_datetime', [$dateRange['start'], $dateRange['end']])
-            ->get();
-
-        $data = [];
-        foreach ($activities as $activity) {
-            $startDate = Carbon::parse($activity->start_datetime)->startOfDay();
-            $endDate = Carbon::parse($activity->end_datetime)->startOfDay();
-            $days = $startDate->diffInDays($endDate) + 1;
-
-            // Calculate hours_used
-            $start = strtotime($activity->start_datetime);
-            $end = strtotime($activity->end_datetime);
-            $hoursUsed = ($end - $start) / 3600;
-
-            $data[] = [
-                'Department'     => $activity->department,
-                'Total Activities' => 1,
-                'Hours Used'     => round($hoursUsed, 2),
-                'Total Days'     => $days,
-            ];
-        }
-
-        return $data;
     }
 }
