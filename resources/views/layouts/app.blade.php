@@ -273,7 +273,7 @@
                         Form
                     </button>
                     <div class="dropdown-content">
-                        <a href="{{ route('booking.create') }}">Form Booking</a>
+                        <a href="{{ route('booking.create') }}">Booking</a>
                         <a href="{{ route('activity.create') }}">Activity</a>
                     </div>
                 </div>
