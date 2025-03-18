@@ -25,11 +25,17 @@ class ActivityExportManager {
             if (e.target === this.exportModal) this.hideModal();
         });
         this.confirmBtn?.addEventListener('click', () => this.handleExport());
+        
+        // Add event listener for format selection change
+        this.formatSelect?.addEventListener('change', () => this.updateFormatDescription());
     }
 
     showModal() {
         this.exportModal?.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        
+        // Initialize the format description based on the default selected option
+        this.updateFormatDescription();
     }
 
     hideModal() {
@@ -41,6 +47,26 @@ class ActivityExportManager {
         const params = this.filterManager.getFilterParams();
         params.format = this.formatSelect?.value || 'xlsx';
         params.include_charts = this.includeChartsCheckbox?.checked || false;
+
+        // Handle detailed activity reports separately using our custom exporter
+        if (params.report_type === 'detailed_activity') {
+            this.hideModal();
+            
+            // Use the report generator's detailed export method
+            if (window.activityReportManagers && window.activityReportManagers.report) {
+                await window.activityReportManagers.report.exportDetailedReport(params.format);
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Export Failed',
+                    text: 'Could not find report generator instance.',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+            }
+            
+            return;
+        }
 
         try {
             this.confirmBtn.disabled = true;
@@ -99,6 +125,21 @@ class ActivityExportManager {
         } finally {
             this.confirmBtn.disabled = false;
             this.confirmBtn.innerHTML = 'Export';
+        }
+    }
+
+    // New method to update the format description
+    updateFormatDescription() {
+        const format = this.formatSelect?.value || 'xlsx';
+        const descriptions = document.querySelectorAll('#export_description p');
+        
+        // Hide all descriptions
+        descriptions.forEach(desc => desc.classList.add('hidden'));
+        
+        // Show the relevant description
+        const activeDesc = document.querySelector(`.${format}_description`);
+        if (activeDesc) {
+            activeDesc.classList.remove('hidden');
         }
     }
 }

@@ -21,7 +21,7 @@ class ActivityReportController extends Controller
     public function index()
     {
         Log::debug('ActivityReportController@index called');
-        return view('admin.activityreports.index');
+        return view('admin.activity-reports.index');
     }
 
     public function getData(Request $request)
@@ -150,10 +150,75 @@ class ActivityReportController extends Controller
                 $categoryStats = $this->getCategoryStats($activities);
                 $departmentsData = $this->getDepartmentStats($activities);
 
+                // Calculate total hours across all departments
+                $totalHours = 0;
+                foreach ($departmentsData as $dept) {
+                    $totalHours += $dept['hours_used'];
+                }
+                
                 return response()->json([
+                    'department_stats' => array_values($departmentsData),
                     'total_activities' => $activities->count(),
-                    'category_stats'   => $categoryStats,
-                    'departments'      => $departmentsData,
+                    'total_hours'      => $totalHours,
+                ]);
+            } elseif ($reportType === 'location_activity') {
+                Log::debug('Report Type: location_activity');
+
+                $activities = $query
+                    ->select(
+                        'city',
+                        'province',
+                        'start_datetime',
+                        'end_datetime',
+                        'activity_type AS category',
+                        'description'
+                    )
+                    ->get();
+
+                // Group activities by location (city, province)
+                $locationData = [];
+                foreach ($activities as $act) {
+                    $locationKey = ($act->city && $act->province) ? 
+                                  $act->city . ', ' . $act->province : 
+                                  ($act->city ?: $act->province ?: 'Unknown');
+                    
+                    if (!isset($locationData[$locationKey])) {
+                        $locationData[$locationKey] = [
+                            'location' => $locationKey,
+                            'total_activities' => 0,
+                            'hours_used' => 0,
+                            'activities_by_type' => [
+                                'Meeting' => 0,
+                                'Invitation' => 0,
+                                'Survey' => 0
+                            ]
+                        ];
+                    }
+                    
+                    $locationData[$locationKey]['total_activities']++;
+                    
+                    // Count by activity type
+                    if (isset($act->category)) {
+                        $locationData[$locationKey]['activities_by_type'][$act->category] = 
+                            ($locationData[$locationKey]['activities_by_type'][$act->category] ?? 0) + 1;
+                    }
+                    
+                    // Calculate hours
+                    $startDate = Carbon::parse($act->start_datetime ?? 'now');
+                    $endDate = Carbon::parse($act->end_datetime ?? 'now');
+                    
+                    if ($startDate && $endDate) {
+                        $totalHours = $startDate->diffInHours($endDate);
+                        $locationData[$locationKey]['hours_used'] += $totalHours;
+                    }
+                }
+                
+                $total = $activities->count();
+                
+                return response()->json([
+                    'location_stats' => array_values($locationData),
+                    'total_activities' => $total,
+                    'total_locations' => count($locationData)
                 ]);
             } else {
                 Log::debug('Unsupported report type', ['report_type' => $reportType]);
@@ -169,6 +234,97 @@ class ActivityReportController extends Controller
             return response()->json([
                 'error' => true,
                 'message' => 'An error occurred while processing the report'
+            ], 500);
+        }
+    }
+
+    public function getDetailedData(Request $request)
+    {
+        Log::debug('ActivityReportController@getDetailedData input', $request->all());
+
+        $timePeriod = $request->input('time_period');
+        $year       = $request->input('year');
+        $month      = $request->input('month');
+        $quarter    = $request->input('quarter');
+
+        try {
+            // Build the date range based on selected time period
+            $dateRange = $this->buildDateRange($timePeriod, $year, $month, $quarter);
+            if (!$dateRange) {
+                return response()->json([
+                    'no_data' => true,
+                    'message' => 'Invalid time period parameters.'
+                ]);
+            }
+
+            $startDate = $dateRange['start'];
+            $endDate = $dateRange['end'];
+
+            // Query for detailed activity data
+            $activities = DB::table('activities')
+                ->whereBetween('start_datetime', [$startDate, $endDate])
+                ->orWhereBetween('end_datetime', [$startDate, $endDate])
+                ->select(
+                    'nama',
+                    'department',
+                    'province',
+                    'city',
+                    'activity_type',
+                    'description',
+                    'start_datetime',
+                    'end_datetime'
+                )
+                ->orderBy('start_datetime', 'desc')
+                ->get();
+
+            // Format activity data for display
+            $formattedActivities = $activities->map(function($activity) {
+                $startDate = Carbon::parse($activity->start_datetime);
+                $endDate = Carbon::parse($activity->end_datetime);
+                
+                $duration = $startDate->diffInHours($endDate);
+                $durationText = $duration == 1 ? '1 hour' : $duration . ' hours';
+                
+                // Format dates for display
+                $formattedStartDate = $startDate->format('d M Y, H:i');
+                $formattedEndDate = $endDate->format('d M Y, H:i');
+                
+                // Create location string
+                $location = $activity->city && $activity->province 
+                    ? $activity->city . ', ' . $activity->province 
+                    : ($activity->city ?: $activity->province ?: 'Unknown location');
+                
+                return [
+                    'nama' => $activity->nama,
+                    'department' => $activity->department,
+                    'location' => $location,
+                    'activity_type' => $activity->activity_type,
+                    'description' => $activity->description,
+                    'time_range' => $formattedStartDate . ' - ' . $formattedEndDate,
+                    'duration' => $durationText,
+                    'start_date' => $startDate->format('Y-m-d'),
+                    'end_date' => $endDate->format('Y-m-d'),
+                    'activity_color' => $this->getActivityTypeColor($activity->activity_type)
+                ];
+            });
+
+            return response()->json([
+                'activities' => $formattedActivities,
+                'total_activities' => $formattedActivities->count(),
+                'date_range' => [
+                    'start' => Carbon::parse($startDate)->format('d M Y'),
+                    'end' => Carbon::parse($endDate)->format('d M Y')
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in getDetailedData', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'no_data' => true,
+                'message' => 'Error getting activity data: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -267,6 +423,56 @@ class ActivityReportController extends Controller
                 break;
         }
 
+        return ['start' => $startDate, 'end' => $endDate];
+    }
+
+    private function getActivityTypeColor($activityType)
+    {
+        $colors = [
+            'Meeting' => '#4F46E5', // Indigo
+            'Invitation' => '#10B981', // Emerald
+            'Survey' => '#F59E0B', // Amber
+        ];
+        
+        return $colors[$activityType] ?? '#6B7280'; // Gray as default
+    }
+
+    private function buildDateRange($timePeriod, $year, $month = null, $quarter = null)
+    {
+        if (!$year) {
+            $year = date('Y');
+        }
+        
+        switch ($timePeriod) {
+            case 'monthly':
+                if (!$month) {
+                    $month = date('m');
+                }
+                $startDate = Carbon::create($year, $month, 1)->startOfMonth()->format('Y-m-d H:i:s');
+                $endDate = Carbon::create($year, $month, 1)->endOfMonth()->format('Y-m-d H:i:s');
+                break;
+                
+            case 'quarterly':
+                if (!$quarter) {
+                    // Default to current quarter
+                    $currentMonth = date('m');
+                    $quarter = ceil($currentMonth / 3);
+                }
+                
+                $startMonth = (($quarter - 1) * 3) + 1;
+                $startDate = Carbon::create($year, $startMonth, 1)->startOfMonth()->format('Y-m-d H:i:s');
+                $endDate = Carbon::create($year, $startMonth + 2, 1)->endOfMonth()->format('Y-m-d H:i:s');
+                break;
+                
+            case 'yearly':
+                $startDate = Carbon::create($year, 1, 1)->startOfYear()->format('Y-m-d H:i:s');
+                $endDate = Carbon::create($year, 12, 31)->endOfYear()->format('Y-m-d H:i:s');
+                break;
+                
+            default:
+                return null;
+        }
+        
         return ['start' => $startDate, 'end' => $endDate];
     }
 }
