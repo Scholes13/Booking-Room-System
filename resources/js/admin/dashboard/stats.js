@@ -86,7 +86,7 @@ const updateRoomUsageCard = (stats) => {
     const usagePercentage = Math.round((maxUsage / 10) * 100);
     
     document.getElementById('roomUsage').textContent = `${usagePercentage}%`;
-    document.getElementById('mostUsedRoom').textContent = `Ruangan terbanyak: ${mostUsedRoom || '-'}`;
+    document.getElementById('mostUsedRoom').textContent = `${mostUsedRoom || '-'}`;
 }
 
 const updateWeeklyCard = (stats) => {

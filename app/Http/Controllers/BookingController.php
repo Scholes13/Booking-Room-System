@@ -22,7 +22,7 @@ class BookingController extends Controller
                             ->orderBy('name', 'asc')
                             ->get();
    
-       return view('booking.booking', compact('departments', 'meetingRooms', 'employees'));
+       return view('public.booking.index', compact('departments', 'meetingRooms', 'employees'));
    }
 
    // Simpan booking
@@ -36,6 +36,8 @@ class BookingController extends Controller
            'date' => 'required|date',
            'start_time' => 'required|date_format:H:i',
            'end_time' => 'required|date_format:H:i|after:start_time',
+           'booking_type' => 'required|in:internal,external',
+           'external_description' => 'nullable|required_if:booking_type,external',
        ]);
 
        // Ambil semua booking yang sudah ada untuk ruangan dan tanggal yang sama
@@ -68,6 +70,8 @@ class BookingController extends Controller
            'start_time' => $newStartTime->format('H:i:s'),
            'end_time' => $newEndTime->format('H:i:s'),
            'description' => $request->input('description'),
+           'booking_type' => $request->input('booking_type'),
+           'external_description' => $request->input('external_description'),
        ]);
 
        return redirect()->route('booking.create')->with('success', 'Booking berhasil dibuat!');
@@ -75,20 +79,21 @@ class BookingController extends Controller
 
    // Form edit booking
    public function edit($id)
-{
-    // Ambil data booking berdasarkan ID
-    $booking = Booking::findOrFail($id);
-    
-    // Ambil data departments dan meeting rooms untuk dropdown
-    $departments = Department::all();
-    $meetingRooms = MeetingRoom::orderBy('name', 'asc')->get();
-    // Urutkan karyawan berdasarkan nama secara ascending
-    $employees = Employee::with('department')
-                         ->orderBy('name', 'asc')
-                         ->get();
-    
-    return view('admin.edit_booking', compact('booking', 'departments', 'meetingRooms', 'employees'));
-}
+   {
+       // Ambil data booking berdasarkan ID
+       $booking = Booking::findOrFail($id);
+       
+       // Ambil data departments dan meeting rooms untuk dropdown
+       $departments = Department::all();
+       $meetingRooms = MeetingRoom::orderBy('name', 'asc')->get();
+       // Urutkan karyawan berdasarkan nama secara ascending
+       $employees = Employee::with('department')
+                            ->orderBy('name', 'asc')
+                            ->get();
+       
+       return view('admin.bookings.edit', compact('booking', 'departments', 'meetingRooms', 'employees'));
+   }
+
    // Update booking
    public function update(Request $request, $id)
    {
@@ -100,22 +105,22 @@ class BookingController extends Controller
            'date' => 'required|date',
            'start_time' => 'required|date_format:H:i',
            'end_time' => 'required|date_format:H:i|after:start_time',
+           'booking_type' => 'required|in:internal,external',
+           'external_description' => 'nullable|required_if:booking_type,external',
        ]);
 
-       // Ambil booking yang akan diupdate
+       // Get the booking
        $booking = Booking::findOrFail($id);
 
-       // Cek konflik jadwal dengan booking lain (kecuali booking yang sedang diupdate)
+       // Check for time conflicts
        $existingBookings = Booking::where('meeting_room_id', $request->meeting_room_id)
            ->where('date', $request->date)
            ->where('id', '!=', $id)
            ->get();
 
-       // Konversi waktu yang dipilih menjadi format Carbon
        $newStartTime = Carbon::createFromFormat('H:i', $request->input('start_time'));
        $newEndTime = Carbon::createFromFormat('H:i', $request->input('end_time'));
 
-       // Cek tumpang tindih booking
        foreach ($existingBookings as $existingBooking) {
            $existingStartTime = Carbon::parse($existingBooking->start_time);
            $existingEndTime = Carbon::parse($existingBooking->end_time);
@@ -127,7 +132,7 @@ class BookingController extends Controller
            }
        }
 
-       // Update booking
+       // Update the booking
        $booking->update([
            'nama' => $request->input('nama'),
            'department' => $request->input('department'),
@@ -136,9 +141,11 @@ class BookingController extends Controller
            'start_time' => $newStartTime->format('H:i:s'),
            'end_time' => $newEndTime->format('H:i:s'),
            'description' => $request->input('description'),
+           'booking_type' => $request->input('booking_type'),
+           'external_description' => $request->input('external_description'),
        ]);
 
-       return redirect()->route('admin.dashboard')->with('success', 'Booking berhasil diupdate!');
+       return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil diperbarui!');
    }
 
    // Get available times (AJAX)
@@ -267,5 +274,39 @@ class BookingController extends Controller
        
        return redirect()->back()->with('success', 'Booking berhasil dihapus!');
    }
-    
+
+   // Tampilkan halaman daftar booking (admin)
+   public function index(Request $request)
+   {
+       $query = Booking::with('meetingRoom')
+           ->orderBy('date', 'desc')
+           ->orderBy('start_time', 'asc');
+       
+       // Filter by search term if provided
+       if ($request->has('search')) {
+           $search = $request->search;
+           $query->where(function($q) use ($search) {
+               $q->where('nama', 'like', "%{$search}%")
+                 ->orWhere('department', 'like', "%{$search}%")
+                 ->orWhere('description', 'like', "%{$search}%")
+                 ->orWhereHas('meetingRoom', function($q) use ($search) {
+                     $q->where('name', 'like', "%{$search}%");
+                 });
+           });
+       }
+       
+       // Filter by date range if provided
+       if ($request->has('start_date')) {
+           $query->whereDate('date', '>=', $request->start_date);
+       }
+       
+       if ($request->has('end_date')) {
+           $query->whereDate('date', '<=', $request->end_date);
+       }
+       
+       // Get paginated results
+       $bookings = $query->paginate(10);
+       
+       return view('admin.bookings.index', compact('bookings'));
+   }
 }

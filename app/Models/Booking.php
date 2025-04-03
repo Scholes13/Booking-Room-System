@@ -17,6 +17,8 @@ class Booking extends Model
         'end_time',
         'description',
         'meeting_room_id',
+        'booking_type',
+        'external_description',
     ];
 
     public function meetingRoom()

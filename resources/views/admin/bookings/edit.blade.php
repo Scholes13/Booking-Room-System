@@ -119,6 +119,28 @@
                           class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">{{ old('description', $booking->description) }}</textarea>
             </div>
 
+            <!-- Booking Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select name="booking_type" 
+                        id="booking_type"
+                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        required>
+                    <option value="internal" {{ old('booking_type', $booking->booking_type) == 'internal' ? 'selected' : '' }}>Internal</option>
+                    <option value="external" {{ old('booking_type', $booking->booking_type) == 'external' ? 'selected' : '' }}>Eksternal</option>
+                </select>
+            </div>
+
+            <!-- External Description -->
+            <div id="external_description_container" class="{{ old('booking_type', $booking->booking_type) == 'external' ? '' : 'hidden' }}">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Eksternal</label>
+                <textarea name="external_description" 
+                          id="external_description"
+                          rows="3"
+                          class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                          placeholder="Silakan isi detail terkait booking eksternal...">{{ old('external_description', $booking->external_description) }}</textarea>
+            </div>
+
             <!-- Submit Button -->
             <div class="flex justify-end">
                 <button type="submit" 
@@ -219,6 +241,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initial check
     checkAvailability();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const bookingTypeSelect = document.getElementById('booking_type');
+    const externalDescContainer = document.getElementById('external_description_container');
+    const externalDescTextarea = document.getElementById('external_description');
+
+    // Show/hide external description based on booking type
+    function toggleExternalDescription() {
+        if (bookingTypeSelect.value === 'external') {
+            externalDescContainer.classList.remove('hidden');
+        } else {
+            externalDescContainer.classList.add('hidden');
+            externalDescTextarea.value = ''; // Clear the value when hidden
+        }
+    }
+
+    // Listen for changes
+    bookingTypeSelect.addEventListener('change', toggleExternalDescription);
 });
 </script>
 @endpush

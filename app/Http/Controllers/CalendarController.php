@@ -4,29 +4,20 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Booking;
+use App\Models\MeetingRoom;
 use Carbon\Carbon;
 
 class CalendarController extends Controller
 {
     public function index()
     {
-        // Ambil unique departments dari booking
-        $departments = Booking::distinct()
-            ->whereNotNull('department')
-            ->pluck('department')
-            ->sort()
-            ->values();
-
-        // Ambil unique nama ruangan dari relasi meetingRoom
-        $rooms = Booking::with('meetingRoom')
-            ->get()
-            ->pluck('meetingRoom.name')
-            ->filter() // Menghapus nilai null
-            ->unique()
-            ->sort()
-            ->values();
-
-        return view('calendar.index', compact('departments', 'rooms'));
+        // Get unique departments from bookings
+        $departments = Booking::select('department')->distinct()->pluck('department');
+        
+        // Get all room names
+        $rooms = MeetingRoom::pluck('name');
+        
+        return view('public.calendar.index', compact('departments', 'rooms'));
     }
 
     public function events(Request $request)
@@ -75,7 +66,9 @@ class CalendarController extends Controller
                         'room_name'   => $booking->meetingRoom ? $booking->meetingRoom->name : 'Undefined Room',
                         'description' => $booking->description,
                         'created_by'  => $booking->nama,
-                        'department'  => $booking->department
+                        'department'  => $booking->department,
+                        'booking_type' => $booking->booking_type,
+                        'external_description' => $booking->external_description
                     ]
                 ];
             });

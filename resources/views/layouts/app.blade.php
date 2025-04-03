@@ -278,7 +278,15 @@
                     </div>
                 </div>
 
-                <a href="/calendar">Calendar Room</a>
+                <div class="dropdown">
+                    <button class="dropdown-button">
+                        Calendar
+                    </button>
+                    <div class="dropdown-content">
+                        <a href="{{ route('calendar.index') }}">Room Booking</a>
+                        <a href="{{ route('activity.calendar') }}">Activity</a>
+                    </div>
+                </div>
                 <a href="/admin/login">Login</a>
             </div>
 
@@ -303,7 +311,14 @@
                 <a href="{{ route('activity.create') }}" class="block py-1">Activity</a>
             </div>
         </div>
-        <a href="/calendar">Calendar Room</a>
+        <!-- Calendar Menu with submenu -->
+        <div class="text-2xl">
+            <span>Calendar</span>
+            <div class="mt-2">
+                <a href="{{ route('calendar.index') }}" class="block py-1">Room Booking</a>
+                <a href="{{ route('activity.calendar') }}" class="block py-1">Activity</a>
+            </div>
+        </div>
         <a href="/admin/login">Login</a>
     </div>
 

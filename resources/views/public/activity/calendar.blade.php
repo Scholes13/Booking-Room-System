@@ -4,19 +4,19 @@
 
 @section('content')
 <div class="container mx-auto py-6 px-4 md:px-12">
-    <!-- Filter Departemen dan Ruangan -->
+    <!-- Filter Departemen dan Jenis Aktivitas -->
     <div class="flex flex-col md:flex-row gap-4 mb-6">
         <select id="departmentFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full md:w-64">
             <option value="">All Departments</option>
             @foreach($departments as $dept)
-                <option value="{{ $dept }}">{{ $dept }}</option>
+                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
             @endforeach
         </select>
 
-        <select id="roomFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full md:w-64">
-            <option value="">All Rooms</option>
-            @foreach($rooms as $room)
-                <option value="{{ $room }}">{{ $room }}</option>
+        <select id="activityTypeFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full md:w-64">
+            <option value="">All Activity Types</option>
+            @foreach($activityTypes as $type)
+                <option value="{{ $type }}">{{ $type }}</option>
             @endforeach
         </select>
     </div>
@@ -41,20 +41,20 @@
         </div>
         <div class="space-y-4">
             <div class="text-gray-300">
-                <p class="font-semibold">Time:</p>
-                <p id="modalTime" class="ml-2"></p>
+                <p class="font-semibold">Department:</p>
+                <p id="modalDepartment" class="ml-2"></p>
             </div>
             <div class="text-gray-300">
-                <p class="font-semibold">Room:</p>
-                <p id="modalRoom" class="ml-2"></p>
+                <p class="font-semibold">Activity Type:</p>
+                <p id="modalActivityType" class="ml-2"></p>
+            </div>
+            <div class="text-gray-300">
+                <p class="font-semibold">Location:</p>
+                <p id="modalLocation" class="ml-2"></p>
             </div>
             <div class="text-gray-300">
                 <p class="font-semibold">Description:</p>
                 <p id="modalDescription" class="ml-2"></p>
-            </div>
-            <div class="text-gray-300">
-                <p class="font-semibold">Created By:</p>
-                <p id="modalCreatedBy" class="ml-2"></p>
             </div>
         </div>
     </div>
@@ -108,7 +108,7 @@
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
-.fc-daygrid-event:hover .fc-event-room {
+.fc-daygrid-event:hover .fc-event-activity-type {
     color: #000 !important;
 }
 
@@ -162,7 +162,7 @@
     box-shadow: 0 6px 12px rgba(0,0,0,0.3) !important;
 }
 
-.fc-popover .fc-daygrid-event:hover .fc-event-room {
+.fc-popover .fc-daygrid-event:hover .fc-event-activity-type {
     color: #000 !important;
 }
 
@@ -215,12 +215,12 @@
     cursor: pointer;
 }
 
-.fc-timeGridWeek-view .fc-event:hover .fc-event-room,
-.fc-timeGridDay-view .fc-event:hover .fc-event-room {
+.fc-timeGridWeek-view .fc-event:hover .fc-event-activity-type,
+.fc-timeGridDay-view .fc-event:hover .fc-event-activity-type {
     color: #000 !important;
 }
 
-/* Konten event: jam, room, dsb. */
+/* Konten event: jam, activity type, dsb. */
 .fc-event-content {
     display: flex;
     flex-direction: column;
@@ -232,7 +232,7 @@
     font-weight: 600;
 }
 
-.fc-event-room {
+.fc-event-activity-type {
     font-size: 0.85em;
     font-weight: 600;
     margin: 2px 0;
@@ -270,21 +270,17 @@
 }
 </style>
 
-@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Helper Functions
-    function getLightColorForRoom(roomName) {
+    function getLightColorForActivityType(activityType) {
         let colors = {
-            "Meeting Room Besar": "#EF5350",
-            "Dorme": "#66BB6A",
-            "Meeting Room Kecil": "#42A5F5",
-            "Command Center": "#FFA726",
-            "Ruang Rapat Direksi": "#AB47BC",
-            "ACS Room": "#26C6DA",
+            "Meeting": "#EF5350",
+            "Invitation": "#66BB6A",
+            "Survey": "#42A5F5",
             "default": "#FFEE58"
         };
-        return colors[roomName] || colors["default"];
+        return colors[activityType] || colors["default"];
     }
 
     function formatTimeRange(start, end) {
@@ -382,9 +378,10 @@ document.addEventListener('DOMContentLoaded', function() {
                                 id: evt.id,
                                 title: evt.title,
                                 time: formatTimeRange(evt.originalStart, evt.originalEnd),
-                                room_name: evt.extendedProps?.room_name,
-                                description: evt.extendedProps?.description,
-                                created_by: evt.extendedProps?.created_by
+                                department: evt.extendedProps?.department,
+                                activity_type: evt.extendedProps?.activity_type,
+                                location: evt.extendedProps?.location,
+                                description: evt.extendedProps?.description
                             }))
                         }
                     });
@@ -405,10 +402,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function showEventModal(evt) {
         document.getElementById('modalTitle').textContent = evt.title || 'No Title';
-        document.getElementById('modalTime').textContent = evt.time || '';
-        document.getElementById('modalRoom').textContent = evt.room_name || 'Meeting Room';
+        document.getElementById('modalDepartment').textContent = evt.department || '';
+        document.getElementById('modalActivityType').textContent = evt.activity_type || '';
+        document.getElementById('modalLocation').textContent = evt.location || '';
         document.getElementById('modalDescription').textContent = evt.description || '';
-        document.getElementById('modalCreatedBy').textContent = evt.created_by || '';
 
         eventModal.classList.remove('hidden');
         eventModal.classList.add('flex');
@@ -442,28 +439,30 @@ document.addEventListener('DOMContentLoaded', function() {
             card.addEventListener('mouseenter', () => {
                 card.style.background = 'rgba(255,204,0,0.95)';
                 card.style.color = '#000';
-                let roomNameEl = card.querySelector('.room-name');
-                if (roomNameEl) {
-                    roomNameEl.style.color = '#000';
+                let activityTypeEl = card.querySelector('.activity-type');
+                if (activityTypeEl) {
+                    activityTypeEl.style.color = '#000';
                 }
             });
 
             card.addEventListener('mouseleave', () => {
                 card.style.background = 'rgba(18,18,18,0.9)';
                 card.style.color = '#fff';
-                let roomNameEl = card.querySelector('.room-name');
-                if (roomNameEl) {
-                    let originalColor = getLightColorForRoom(ev.room_name || '');
-                    roomNameEl.style.color = originalColor;
+                let activityTypeEl = card.querySelector('.activity-type');
+                if (activityTypeEl) {
+                    let originalColor = getLightColorForActivityType(ev.activity_type || '');
+                    activityTypeEl.style.color = originalColor;
                 }
             });
 
-            let roomColor = getLightColorForRoom(ev.room_name || '');
+            let activityColor = getLightColorForActivityType(ev.activity_type || '');
             card.innerHTML = `
                 <div class="font-bold text-sm">${ev.title} (${ev.time})</div>
-                <div class="text-xs room-name" style="color: ${roomColor};">
-                    Room: ${ev.room_name || 'Meeting Room'}
+                <div class="text-xs activity-type" style="color: ${activityColor};">
+                    Activity: ${ev.activity_type || 'Unknown'}
                 </div>
+                <div class="text-xs">Dept: ${ev.department || ''}</div>
+                <div class="text-xs">Location: ${ev.location || 'No location'}</div>
                 <div class="text-xs text-gray-300">${ev.description || ''}</div>
             `;
 
@@ -515,24 +514,43 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         events: function(info, successCallback, failureCallback) {
-            let url = new URL("{{ route('calendar.events') }}");
+            let url = new URL("{{ route('activity.calendar.events') }}");
             url.searchParams.append('start', info.startStr);
             url.searchParams.append('end', info.endStr);
 
             const selectedDept = document.getElementById('departmentFilter').value;
-            const selectedRoom = document.getElementById('roomFilter').value;
-            if (selectedDept) url.searchParams.append('department', selectedDept);
-            if (selectedRoom) url.searchParams.append('room', selectedRoom);
+            const selectedActivityType = document.getElementById('activityTypeFilter').value;
+            
+            // Perbaikan parameter yang dikirim ke backend
+            if (selectedDept) url.searchParams.append('department_id', selectedDept);
+            if (selectedActivityType) url.searchParams.append('activity_type', selectedActivityType);
 
             fetch(url)
                 .then(response => response.json())
                 .then(rawEvents => {
+                    // Transform events untuk calendar
+                    const transformedEvents = rawEvents.map(event => ({
+                        id: event.id,
+                        title: event.title,
+                        start: new Date(), // Gunakan tanggal hari ini sebagai default
+                        allDay: true,
+                        backgroundColor: getLightColorForActivityType(event.extendedProps.activity_type),
+                        borderColor: 'transparent',
+                        textColor: '#000000',
+                        extendedProps: {
+                            department: event.extendedProps.department,
+                            activity_type: event.extendedProps.activity_type,
+                            location: event.extendedProps.location,
+                            description: event.extendedProps.description
+                        }
+                    }));
+
                     let isTimeGrid = (calendar.view.type === 'timeGridWeek' || calendar.view.type === 'timeGridDay');
                     if (isTimeGrid) {
-                        let transformed = transformEventsForTimeGrid(rawEvents);
+                        let transformed = transformEventsForTimeGrid(transformedEvents);
                         successCallback(transformed);
                     } else {
-                        successCallback(rawEvents);
+                        successCallback(transformedEvents);
                     }
                 })
                 .catch(err => {
@@ -564,9 +582,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 showEventModal({
                     title: info.event.title,
                     time: timeStr,
-                    room_name: props.room_name,
-                    description: props.description,
-                    created_by: props.created_by
+                    department: props.department,
+                    activity_type: props.activity_type,
+                    location: props.location,
+                    description: props.description
                 });
             }
         },
@@ -586,16 +605,20 @@ document.addEventListener('DOMContentLoaded', function() {
             let endTime = arg.event.end 
                 ? arg.event.end.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false })
                 : '';
-            let roomName = arg.event.extendedProps.room_name || 'Meeting Room';
+            let activityType = arg.event.extendedProps.activity_type || 'Unknown';
+            let department = arg.event.extendedProps.department || '';
+            let location = arg.event.extendedProps.location || '';
             let description = arg.event.extendedProps.description || '';
-            let roomColor = getLightColorForRoom(roomName);
+            let activityColor = getLightColorForActivityType(activityType);
 
             let timeHtml = endTime ? `${startTime} - ${endTime}` : startTime;
             return {
                 html: `
                     <div class="fc-event-content">
                         <div class="fc-event-time">${timeHtml}</div>
-                        <div class="fc-event-room" style="color: ${roomColor};">${roomName}</div>
+                        <div class="fc-event-activity-type" style="color: ${activityColor};">${activityType}</div>
+                        <div class="text-xs">Dept: ${department}</div>
+                        <div class="text-xs">Location: ${location}</div>
                         <div class="fc-event-description">${description}</div>
                     </div>
                 `
@@ -607,7 +630,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('departmentFilter').addEventListener('change', function() {
         calendar.refetchEvents();
     });
-    document.getElementById('roomFilter').addEventListener('change', function() {
+    document.getElementById('activityTypeFilter').addEventListener('change', function() {
         calendar.refetchEvents();
     });
 

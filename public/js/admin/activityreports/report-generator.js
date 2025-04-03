@@ -150,8 +150,8 @@ class ActivityReportGenerator {
                                 <tr>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.name || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.department || '-'}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${act.start_time || '-'}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${act.end_time || '-'}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${this.formatDateTime(act.start_datetime) || '-'}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${this.formatDateTime(act.end_datetime) || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.total_days || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.category || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${act.description || '-'}</td>
@@ -166,12 +166,13 @@ class ActivityReportGenerator {
  
     generateDepartmentActivityReport(data) {
         const catStats = data.category_stats || {};
- 
+        const departmentStats = data.department_stats || [];
+
         return `
             <div class="space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     ${this.createStatCard('Total Activities', data.total_activities || 0, 'bg-blue-50 text-blue-900')}
- 
+
                     ${this.createStatCard(
                         'Meeting',
                         this.formatCount(catStats?.Meeting?.count, catStats?.Meeting?.percentage),
@@ -188,7 +189,7 @@ class ActivityReportGenerator {
                         'bg-orange-100 text-orange-900'
                     )}
                 </div>
- 
+
                 <div class="table-container mt-8">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Department Activities</h3>
                     <table class="min-w-full divide-y divide-gray-200">
@@ -201,12 +202,12 @@ class ActivityReportGenerator {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            ${data.departments.map(dept => `
+                            ${departmentStats.map(dept => `
                                 <tr>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${dept.name || '-'}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${dept.department || '-'}</td>
                                     <td class="px-6 py-4 text-sm text-gray-900">${dept.total_activities || 0}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${Math.round(dept.hours_used) || '-'} hours</td>
-                                    <td class="px-6 py-4 text-sm text-gray-900">${dept.total_days || '-'} days</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${dept.hours_used || 0} hours</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${dept.total_days || 0} days</td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -217,61 +218,46 @@ class ActivityReportGenerator {
     }
  
     generateLocationActivityReport(data) {
-        const { location_stats, total_activities, total_locations } = data;
-        
-        // Generate summary cards
-        let html = `<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">`;
-        
-        // Add summary statistics cards
-        html += this.createStatCard('Total Activities', total_activities, 'bg-blue-500');
-        html += this.createStatCard('Total Locations', total_locations, 'bg-green-500');
-        
-        html += `</div>`;
+        const locationStats = data.location_stats || [];
+        const totalActivities = data.total_activities || 0;
 
-        // Generate location data table
-        html += `
-        <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <h3 class="text-lg font-semibold mb-4">Activities by Location</h3>
-            <div class="overflow-x-auto">
-                <table class="min-w-full bg-white">
-                    <thead>
-                        <tr class="bg-gray-100 text-gray-700 [&>th]:py-2 [&>th]:px-4 text-left">
-                            <th>Location</th>
-                            <th>Total Activities</th>
-                            <th>Hours Used</th>
-                            <th>Meeting</th>
-                            <th>Invitation</th>
-                            <th>Survey</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-        `;
+        return `
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    ${this.createStatCard('Total Activities', totalActivities, 'bg-blue-50 text-blue-900')}
+                    ${this.createStatCard('Unique Locations', this.countUniqueValues(locationStats, 'location'), 'bg-purple-100 text-purple-900')}
+                    ${this.createStatCard('Total Hours', data.total_hours || 0, 'bg-indigo-100 text-indigo-900')}
+                </div>
 
-        // Sort locations by total activities (descending)
-        location_stats.sort((a, b) => b.total_activities - a.total_activities);
-
-        // Generate table rows
-        location_stats.forEach(loc => {
-            html += `
-                <tr class="border-t border-gray-200 [&>td]:py-2 [&>td]:px-4">
-                    <td class="font-medium">${loc.location}</td>
-                    <td>${loc.total_activities}</td>
-                    <td>${loc.hours_used} hours</td>
-                    <td>${loc.activities_by_type.Meeting || 0}</td>
-                    <td>${loc.activities_by_type.Invitation || 0}</td>
-                    <td>${loc.activities_by_type.Survey || 0}</td>
-                </tr>
-            `;
-        });
-
-        html += `
-                    </tbody>
-                </table>
+                <div class="table-container mt-8">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Activity Locations</h3>
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activities</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meeting</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invitation</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Survey</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${locationStats.map(loc => `
+                                <tr>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.location || '-'}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.total_activities || 0}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.hours_used || 0} hours</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.activities_by_type?.Meeting || 0}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.activities_by_type?.Invitation || 0}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-900">${loc.activities_by_type?.Survey || 0}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         `;
-
-        return html;
     }
  
     createStatCard(title, value, bgColorClass) {
@@ -310,120 +296,134 @@ class ActivityReportGenerator {
     }
 
     generateDetailedActivityReport(data) {
+        console.log('Detailed Activity Data:', data);
         const activities = data.activities || [];
-        const dateRange = data.date_range || { start: 'Unknown', end: 'Unknown' };
         
-        if (activities.length === 0) {
-            return `
-                <div class="text-center py-12 text-gray-500">
-                    <i class="fas fa-calendar-times text-4xl mb-3"></i>
-                    <p>No activities found in the selected period</p>
-                </div>
-            `;
-        }
+        // Group activities by date for better display
+        const activitiesByDate = this.groupActivitiesByDate(activities);
         
-        // Generate header with summary stats
         let html = `
-        <div class="mb-8">
-            <div class="mb-4">
-                <h2 class="text-xl font-bold mb-1">Detailed Activity Report</h2>
-                <p class="text-gray-500">Period: ${dateRange.start} - ${dateRange.end}</p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="bg-blue-500 text-white rounded-lg p-6 shadow-md">
-                    <div class="text-4xl font-bold">${activities.length}</div>
-                    <div class="text-sm opacity-80">Total Activities</div>
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    ${this.createStatCard('Total Activities', activities.length, 'bg-blue-50 text-blue-900')}
+                    ${this.createStatCard('Date Range', `${data.date_range?.start_formatted || '-'} to ${data.date_range?.end_formatted || '-'}`, 'bg-gray-100 text-gray-800')}
                 </div>
                 
-                <div class="bg-purple-500 text-white rounded-lg p-6 shadow-md">
-                    <div class="text-4xl font-bold">
-                        ${this.countUniqueValues(activities, 'location')}
+                <!-- Filter options for detailed view -->
+                <div class="flex gap-4 my-6">
+                    <div class="relative w-full md:w-1/3">
+                        <input type="text" id="detailSearch" 
+                               placeholder="Search activity..."
+                               class="px-4 py-2 border border-gray-300 rounded w-full" />
                     </div>
-                    <div class="text-sm opacity-80">Different Locations</div>
                 </div>
-            </div>
-        </div>
-        `;
+
+                <!-- Activities Timeline -->
+                <div id="activities-timeline" class="space-y-8">`;
         
-        // Generate detailed activity list
-        html += `
-        <div class="bg-white rounded-lg shadow-md overflow-hidden">
-            <h3 class="bg-gray-800 text-white px-6 py-4 font-semibold">Activity Details</h3>
-            <div class="p-2">
-        `;
-        
-        // Group activities by date for better organization
-        const groupedByDate = this.groupActivitiesByDate(activities);
-        
-        Object.entries(groupedByDate).forEach(([date, dateActivities]) => {
-            html += `
-            <div class="mb-6">
-                <div class="bg-gray-100 px-4 py-2 rounded-t-lg font-medium text-gray-700 border-l-4 border-indigo-500">
-                    ${this.formatDateHeader(date)}
-                </div>
-                <div class="space-y-4 mt-3">
-            `;
+        // Generate timeline by date
+        Object.keys(activitiesByDate).sort().reverse().forEach(date => {
+            const dateActivities = activitiesByDate[date];
             
+            html += `
+                <div class="date-group">
+                    <h3 class="text-lg font-bold text-gray-900 my-4">
+                        ${this.formatDateHeader(date)}
+                    </h3>
+                    
+                    <div class="space-y-4">`;
+            
+            // Generate activity cards for this date
             dateActivities.forEach(activity => {
-                const activityColor = activity.activity_color || '#6B7280';
+                const icon = this.getActivityIcon(activity.category);
+                const categoryClass = 
+                    activity.category === 'Meeting' ? 'bg-blue-100 text-blue-800' : 
+                    activity.category === 'Invitation' ? 'bg-green-100 text-green-800' : 
+                    'bg-orange-100 text-orange-800';
                 
                 html += `
-                <div class="p-4 bg-white rounded-lg shadow border border-gray-200 hover:shadow-md transition mx-1">
-                    <div class="flex items-start">
-                        <!-- Left side with icon -->
-                        <div class="mr-4">
-                            <div class="w-12 h-12 flex items-center justify-center rounded-full" 
-                                 style="background-color: ${activityColor}20;">
-                                <i class="${this.getActivityIcon(activity.activity_type)}" 
-                                   style="color: ${activityColor};"></i>
-                            </div>
-                        </div>
-                        
-                        <!-- Right side with details -->
-                        <div class="flex-1">
-                            <div class="flex items-center justify-between">
-                                <h4 class="font-bold text-lg">${activity.nama}</h4>
-                                <span class="text-xs px-2 py-1 rounded-full" 
-                                      style="background-color: ${activityColor}20; color: ${activityColor};">
-                                    ${activity.activity_type}
-                                </span>
+                    <div class="activity-card bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow duration-200">
+                        <div class="flex items-start">
+                            <div class="activity-icon mr-4 flex-shrink-0 text-2xl">
+                                ${icon}
                             </div>
                             
-                            <div class="text-sm text-gray-700 mt-1">
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-building mr-2 w-5 text-center text-gray-500"></i>
-                                    <span>${activity.department}</span>
+                            <div class="flex-grow">
+                                <div class="flex flex-wrap items-center justify-between mb-2">
+                                    <h4 class="text-lg font-semibold">${activity.name || 'Unnamed Activity'}</h4>
+                                    <span class="px-2 py-1 text-xs rounded-full ${categoryClass}">${activity.category}</span>
                                 </div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-map-marker-alt mr-2 w-5 text-center text-gray-500"></i>
-                                    <span>${activity.location}</span>
+                                
+                                <div class="text-sm text-gray-600 mb-2">${activity.department || 'No Department'}</div>
+                                
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-500 mb-3">
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>${this.formatDateTime(activity.start_datetime)} - ${this.formatDateTime(activity.end_datetime)}</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>${activity.city || '-'}, ${activity.province || '-'}</span>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                                        </svg>
+                                        <span>Duration: ${activity.total_days}</span>
+                                    </div>
                                 </div>
-                                <div class="flex items-center mb-1">
-                                    <i class="fas fa-clock mr-2 w-5 text-center text-gray-500"></i>
-                                    <span>${activity.time_range} (${activity.duration})</span>
+                                
+                                <div class="mt-3 pt-3 border-t border-gray-100">
+                                    <p class="text-sm text-gray-700">${activity.description || 'No description provided.'}</p>
                                 </div>
-                            </div>
-                            
-                            <div class="mt-3 text-gray-600 p-3 bg-gray-50 rounded-lg text-sm border-l-4" 
-                                 style="border-color: ${activityColor};">
-                                <p>${activity.description || 'No description provided'}</p>
                             </div>
                         </div>
-                    </div>
-                </div>
-                `;
+                    </div>`;
             });
             
             html += `
-                </div>
-            </div>
-            `;
+                    </div>
+                </div>`;
         });
         
         html += `
+                </div>
             </div>
-        </div>
+            
+            <script>
+                // Simple filtering for detailed view
+                document.getElementById('detailSearch').addEventListener('input', function(e) {
+                    const searchTerm = e.target.value.toLowerCase();
+                    const allCards = document.querySelectorAll('.activity-card');
+                    
+                    allCards.forEach(card => {
+                        const text = card.textContent.toLowerCase();
+                        if (text.includes(searchTerm)) {
+                            card.style.display = 'block';
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // Show/hide date headers based on visible cards
+                    document.querySelectorAll('.date-group').forEach(group => {
+                        const visibleCards = Array.from(group.querySelectorAll('.activity-card'))
+                            .filter(card => card.style.display !== 'none');
+                            
+                        if (visibleCards.length === 0) {
+                            group.style.display = 'none';
+                        } else {
+                            group.style.display = 'block';
+                        }
+                    });
+                });
+            </script>
         `;
         
         return html;
@@ -462,219 +462,136 @@ class ActivityReportGenerator {
     }
     
     getActivityIcon(activityType) {
-        const icons = {
-            'Meeting': 'fas fa-handshake fa-lg',
-            'Invitation': 'fas fa-envelope-open-text fa-lg',
-            'Survey': 'fas fa-clipboard-list fa-lg'
-        };
-        
-        return icons[activityType] || 'fas fa-calendar-day fa-lg';
+        switch (activityType) {
+            case 'Meeting':
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>`;
+            case 'Invitation':
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>`;
+            case 'Survey':
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>`;
+            default:
+                return `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>`;
+        }
     }
 
     // Add a new export method for detailed reports
-    async exportDetailedReport(format = 'pdf') {
+    async exportDetailedReport(format = 'xlsx') {
         const params = this.filterManager.getFilterParams();
+        params.format = format;
         
         try {
-            if (params.report_type === 'detailed_activity') {
-                // If exporting to Excel or CSV formats, use a data export approach
-                if (format === 'xlsx' || format === 'csv') {
-                    // Fetch the data again to ensure we have the raw data
-                    const response = await fetch(`${window.location.origin}/admin/activity/detailed`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        },
-                        body: JSON.stringify(params)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch activity data for export');
-                    }
-                    
-                    const data = await response.json();
-                    
-                    if (!data.activities || data.activities.length === 0) {
-                        alert('No data available to export');
-                        return;
-                    }
-                    
-                    // Prepare data for CSV or XLSX format
-                    const exportData = data.activities.map(activity => {
-                        return {
-                            'Name': activity.nama,
-                            'Department': activity.department, 
-                            'Location': activity.location,
-                            'Activity Type': activity.activity_type,
-                            'Time': activity.time_range,
-                            'Duration': activity.duration,
-                            'Description': activity.description || ''
-                        };
-                    });
-                    
-                    // For CSV export
-                    if (format === 'csv') {
-                        this.exportToCSV(exportData, `detailed_activity_report_${Date.now()}.csv`);
-                    } 
-                    // For XLSX export
-                    else {
-                        this.exportToExcel(exportData, `detailed_activity_report_${Date.now()}.xlsx`);
-                    }
-                    
-                    return;
-                }
-                
-                // For PDF format, use print functionality
-                const printWindow = window.open('', '_blank');
-                if (!printWindow) {
-                    alert('Please allow popups to export the report');
-                    return;
-                }
-
-                // Get the current report content
-                const reportContent = document.getElementById('report_content').innerHTML;
-                
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html lang="en">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Detailed Activity Report</title>
-                        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
-                        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-                        <style>
-                            body {
-                                font-family: 'Inter', sans-serif;
-                                color: #333;
-                                margin: 0;
-                                padding: 20px;
-                                line-height: 1.6;
-                            }
-                            .page-header {
-                                border-bottom: 1px solid #ddd;
-                                padding-bottom: 20px;
-                                margin-bottom: 30px;
-                            }
-                            .company-logo {
-                                text-align: center;
-                                margin-bottom: 20px;
-                            }
-                            .company-info {
-                                text-align: center;
-                                margin-bottom: 30px;
-                            }
-                            @media print {
-                                .no-print {
-                                    display: none;
-                                }
-                                body {
-                                    padding: 0;
-                                }
-                                button {
-                                    display: none;
-                                }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="no-print" style="text-align: right; margin-bottom: 20px;">
-                            <button onclick="window.print()" style="background: #4F46E5; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-                                <i class="fas fa-print"></i> Print
-                            </button>
-                        </div>
-                        
-                        <div class="page-header">
-                            <div class="company-logo">
-                                <img src="${window.location.origin}/img/logo.png" alt="Company Logo" height="60">
-                            </div>
-                            <div class="company-info">
-                                <h2 style="margin-bottom: 5px; color: #4F46E5;">Detailed Activity Report</h2>
-                                <p style="margin: 0;">Generated on ${new Date().toLocaleDateString('id-ID', { 
-                                    weekday: 'long', 
-                                    day: 'numeric', 
-                                    month: 'long', 
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}</p>
-                            </div>
-                        </div>
-                        
-                        ${reportContent}
-                        
-                        <script>
-                            // Auto print if PDF format selected
-                            ${format === 'pdf' ? 'window.onload = () => setTimeout(() => window.print(), 1000);' : ''}
-                        </script>
-                    </body>
-                    </html>
-                `);
-                
-                printWindow.document.close();
-            } else {
-                // For other report types, use the existing export functionality
-                console.log("Non-detailed reports should use the regular export feature");
+            // Pastikan semua parameter yang dibutuhkan tersedia
+            if (!params.year) {
+                // Jika tidak ada tahun, default ke tahun sekarang
+                params.year = new Date().getFullYear();
             }
+
+            // Pastikan periode sesuai dan parameter lain tersedia
+            if (params.time_period === 'monthly' && !params.month) {
+                params.month = new Date().getMonth() + 1; // bulan dimulai dari 0
+            } 
+            else if (params.time_period === 'quarterly' && !params.quarter) {
+                // Hitung quarter berdasarkan bulan sekarang
+                const currentMonth = new Date().getMonth() + 1;
+                params.quarter = Math.ceil(currentMonth / 3);
+            }
+
+            console.log('Detailed export params:', params);
+
+            // Show loading indicator
+            Swal.fire({
+                title: 'Exporting...',
+                html: 'Please wait while we prepare your export',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Use the same endpoint as regular export
+            const response = await fetch(`${window.location.origin}/admin/activity/export`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(params)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Export failed');
+            }
+
+            // Jika format PDF dan respons berisi modal dialog, tampilkan
+            const contentType = response.headers.get('content-type');
+            if (format === 'pdf' && contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                Swal.fire({
+                    icon: 'info',
+                    title: 'PDF Format',
+                    html: 'PDF format is not directly downloadable. Please use Excel or CSV format.',
+                    showConfirmButton: true
+                });
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+
+            // Generate nama file
+            const timestamp = Date.now();
+            a.download = `detailed_activity_report_${timestamp}.${format}`;
+            
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Successful',
+                text: 'Your detailed activity report has been exported.',
+                timer: 2000,
+                showConfirmButton: false
+            });
         } catch (error) {
             console.error('Error exporting detailed report:', error);
-            alert('Failed to export report. Please try again.');
-        }
-    }
-    
-    // Helper method to export data to CSV format
-    exportToCSV(data, filename) {
-        if (!data || !data.length) {
-            return;
-        }
-        
-        // Get headers from the first data object
-        const headers = Object.keys(data[0]);
-        
-        // Create CSV content
-        let csvContent = headers.join(',') + '\n';
-        
-        // Add rows
-        data.forEach(item => {
-            const row = headers.map(header => {
-                // Handle commas and quotes in the data
-                const cell = String(item[header] || '');
-                return `"${cell.replace(/"/g, '""')}"`;
+            Swal.fire({
+                icon: 'error',
+                title: 'Export Failed',
+                text: error.message || 'Failed to export report. Please try again.',
+                timer: 3000,
+                showConfirmButton: false
             });
-            csvContent += row.join(',') + '\n';
-        });
-        
-        // Create blob and download
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
-    
-    // Helper method to export data to Excel format using SheetJS (xlsx library)
-    // Note: This is a simplified version, ideally you'd include the xlsx library for better Excel exports
-    exportToExcel(data, filename) {
-        if (!window.XLSX) {
-            // If SheetJS is not available, fall back to CSV
-            console.warn('XLSX library not available, falling back to CSV export');
-            return this.exportToCSV(data, filename.replace('.xlsx', '.csv'));
         }
+    }
+
+    formatDateTime(datetimeStr) {
+        if (!datetimeStr) return '-';
         
         try {
-            const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Detailed Activities');
-            XLSX.writeFile(workbook, filename);
-        } catch (error) {
-            console.error('Error exporting to Excel:', error);
-            alert('Failed to export as Excel. Attempting CSV export instead.');
-            this.exportToCSV(data, filename.replace('.xlsx', '.csv'));
+            const dt = new Date(datetimeStr);
+            if (isNaN(dt.getTime())) return '-';
+            
+            // Format: DD/MM/YYYY HH:MM
+            return `${dt.getDate().toString().padStart(2, '0')}/${(dt.getMonth() + 1).toString().padStart(2, '0')}/${dt.getFullYear()} ${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`;
+        } catch (e) {
+            console.error('Error formatting datetime:', e);
+            return '-';
         }
     }
 }

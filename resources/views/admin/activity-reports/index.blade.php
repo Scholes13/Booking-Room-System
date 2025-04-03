@@ -5,8 +5,18 @@
 @section('content')
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex justify-between items-center mb-4">
         <h1 class="text-2xl font-bold">Activity Reports</h1>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="flex border-b border-gray-200 mb-6">
+        <a href="{{ route('admin.reports') }}" class="py-3 px-6 font-medium text-sm text-gray-600 hover:text-primary">
+            Booking Reports
+        </a>
+        <a href="{{ route('admin.activity.index') }}" class="py-3 px-6 font-medium text-sm rounded-t-lg bg-primary text-white">
+            Activity Reports
+        </a>
     </div>
 
     <!-- Include Filter Card (Hanya 2 opsi: employee_activity, department_activity) -->

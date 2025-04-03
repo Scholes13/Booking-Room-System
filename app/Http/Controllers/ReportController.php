@@ -8,6 +8,7 @@ use App\Models\MeetingRoom;
 use App\Services\ReportExportService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use App\Models\Department;
 
 class ReportController extends Controller
 {
@@ -21,8 +22,9 @@ class ReportController extends Controller
     // Halaman utama reports
     public function index()
     {
-        $meetingRooms = MeetingRoom::all();
-        $departments = Booking::select('department')->distinct()->get();
+        $meetingRooms = MeetingRoom::orderBy('name')->get();
+        $departments = Department::orderBy('name')->get();
+        
         return view('admin.reports.index', compact('meetingRooms', 'departments'));
     }
 

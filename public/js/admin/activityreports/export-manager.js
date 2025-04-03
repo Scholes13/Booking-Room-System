@@ -44,9 +44,12 @@ class ActivityExportManager {
     }
 
     async handleExport() {
+        // Ambil parameter filter
         const params = this.filterManager.getFilterParams();
         params.format = this.formatSelect?.value || 'xlsx';
         params.include_charts = this.includeChartsCheckbox?.checked || false;
+
+        console.log('Export params:', params);
 
         // Handle detailed activity reports separately using our custom exporter
         if (params.report_type === 'detailed_activity') {
@@ -72,6 +75,24 @@ class ActivityExportManager {
             this.confirmBtn.disabled = true;
             this.confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
 
+            // Pastikan semua parameter yang dibutuhkan tersedia
+            if (!params.year) {
+                // Jika tidak ada tahun, default ke tahun sekarang
+                params.year = new Date().getFullYear();
+            }
+
+            // Pastikan periode sesuai dan parameter lain tersedia
+            if (params.time_period === 'monthly' && !params.month) {
+                params.month = new Date().getMonth() + 1; // bulan dimulai dari 0
+            } 
+            else if (params.time_period === 'quarterly' && !params.quarter) {
+                // Hitung quarter berdasarkan bulan sekarang
+                const currentMonth = new Date().getMonth() + 1;
+                params.quarter = Math.ceil(currentMonth / 3);
+            }
+
+            console.log('Final export params:', params);
+
             const response = await fetch(`${window.location.origin}/admin/activity/export`, {
                 method: 'POST',
                 headers: {
@@ -82,7 +103,25 @@ class ActivityExportManager {
             });
 
             if (!response.ok) {
-                throw new Error('Export failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Export failed');
+            }
+
+            // Jika format PDF dan respons berisi modal dialog, tampilkan
+            const contentType = response.headers.get('content-type');
+            if (params.format === 'pdf' && contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                Swal.fire({
+                    icon: 'info',
+                    title: 'PDF Format',
+                    html: 'PDF format is not directly downloadable. Please use Excel or CSV format.',
+                    showConfirmButton: true
+                });
+                this.hideModal();
+                return;
             }
 
             const blob = await response.blob();
@@ -118,7 +157,7 @@ class ActivityExportManager {
             Swal.fire({
                 icon: 'error',
                 title: 'Export Failed',
-                text: 'Could not export the activity report. Please try again.',
+                text: error.message || 'Could not export the activity report. Please try again.',
                 timer: 3000,
                 showConfirmButton: false
             });

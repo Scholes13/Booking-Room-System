@@ -16,7 +16,7 @@ class AdminController extends Controller
      */
     public function showLogin()
     {
-        return view('admin.login');
+        return view('auth.login');
     }
 
     /**
@@ -72,11 +72,12 @@ class AdminController extends Controller
     public function dashboard()
     {
         $bookings = Booking::with('meetingRoom')
-            ->orderBy('date', 'asc')
-            ->orderBy('start_time', 'asc')
+            ->orderBy('date', 'desc')
+            ->orderBy('start_time', 'desc')
+            ->limit(10)
             ->get();
-
-        return view('admin.dashboard', compact('bookings'));
+            
+        return view('admin.dashboard.index', compact('bookings'));
     }
 
     /**
@@ -85,8 +86,7 @@ class AdminController extends Controller
      */
     public function superAdminDashboard()
     {
-        // Jika ingin menampilkan data lain, tambahkan di sini
-        return view('superadmin.dashboard');
+        return view('superadmin.dashboard.index');
     }
 
     /**
@@ -94,8 +94,7 @@ class AdminController extends Controller
      */
     public function createAdmin()
     {
-        // Pastikan file resources/views/superadmin/create_admin.blade.php tersedia
-        return view('superadmin.create_admin');
+        return view('superadmin.users.create');
     }
 
     /**
@@ -129,8 +128,13 @@ class AdminController extends Controller
 
     public function meetingRooms()
     {
-        $rooms = MeetingRoom::all();
-        return view('admin.meeting_rooms', compact('rooms'));
+        $rooms = MeetingRoom::orderBy('name', 'asc')->get();
+        return view('admin.meeting-rooms.index', compact('rooms'));
+    }
+
+    public function createMeetingRoom()
+    {
+        return view('admin.meeting-rooms.create');
     }
 
     public function storeMeetingRoom(Request $request)
@@ -138,10 +142,19 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name'        => 'required|string|max:255',
             'description' => 'nullable|string',
+            'capacity'    => 'nullable|integer|min:1',
+            'facilities'  => 'nullable|array',
         ]);
 
+        // Konversi fasilitas ke format JSON jika ada
+        if (isset($validated['facilities'])) {
+            $validated['facilities'] = json_encode($validated['facilities']);
+        }
+
         MeetingRoom::create($validated);
-        return redirect()->back()->with('success', 'Ruang meeting berhasil ditambahkan.');
+        
+        return redirect()->route('admin.meeting_rooms')
+                         ->with('success', 'Ruang meeting berhasil ditambahkan.');
     }
 
     public function deleteMeetingRoom($id)
@@ -151,6 +164,33 @@ class AdminController extends Controller
     
         return redirect()->route('admin.meeting_rooms')
                          ->with('success', 'Meeting room berhasil dihapus.');
+    }
+
+    public function editMeetingRoom($id)
+    {
+        $room = MeetingRoom::findOrFail($id);
+        return view('admin.meeting-rooms.edit', compact('room'));
+    }
+
+    public function updateMeetingRoom(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name'        => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'capacity'    => 'nullable|integer|min:1',
+            'facilities'  => 'nullable|array',
+        ]);
+
+        // Konversi fasilitas ke format JSON jika ada
+        if (isset($validated['facilities'])) {
+            $validated['facilities'] = json_encode($validated['facilities']);
+        }
+
+        $room = MeetingRoom::findOrFail($id);
+        $room->update($validated);
+        
+        return redirect()->route('admin.meeting_rooms')
+                         ->with('success', 'Ruang meeting berhasil diperbarui.');
     }
 
     // ----------------------------------------------------------------
@@ -203,10 +243,7 @@ class AdminController extends Controller
         $booking = Booking::findOrFail($id);
         $booking->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Booking berhasil dihapus.'
-        ]);
+        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dihapus.');
     }
 
     // ----------------------------------------------------------------
@@ -215,8 +252,10 @@ class AdminController extends Controller
 
     public function departments()
     {
-        $departments = Department::all();
-        return view('admin.departments', compact('departments'));
+        $departments = Department::withCount('employees')
+                        ->orderBy('name', 'asc')
+                        ->get();
+        return view('admin.departments.index', compact('departments'));
     }
 
     public function storeDepartment(Request $request)
@@ -233,5 +272,23 @@ class AdminController extends Controller
     {
         Department::destroy($id);
         return redirect()->back()->with('success', 'Departemen berhasil dihapus.');
+    }
+
+    public function editDepartment($id)
+    {
+        $department = Department::findOrFail($id);
+        return view('admin.departments.edit', compact('department'));
+    }
+
+    public function updateDepartment(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $department = Department::findOrFail($id);
+        $department->update($validated);
+
+        return redirect()->route('admin.departments')->with('success', 'Departemen berhasil diperbarui.');
     }
 }

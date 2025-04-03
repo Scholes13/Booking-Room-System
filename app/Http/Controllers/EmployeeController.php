@@ -7,47 +7,71 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Common\Entity\Row;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\EmployeeExport;
 
 class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Employee::with('department');
-
-        // Search
-        if ($request->has('search')) {
-            $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
-                $q->where('name', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('position', 'LIKE', "%{$searchTerm}%");
+        $employeesQuery = Employee::with('department')
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+                $query->where(function($q) use ($search) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%']);
+                });
+            })
+            ->when($request->filled('department_id'), function ($query) use ($request) {
+                $query->where('department_id', $request->department_id);
+            })
+            ->when($request->filled('gender'), function ($query) use ($request) {
+                $query->where('gender', $request->gender);
             });
-        }
 
-        // Department Filter
-        if ($request->has('department') && $request->department !== '') {
-            $query->where('department_id', $request->department);
-        }
+        // Manually sort by job title hierarchy
+        $employees = $employeesQuery->get()->sort(function ($a, $b) {
+            $positions = [
+                'CEO' => 1,
+                'Managing Director' => 2,
+                'Manager' => 3, 
+                'Coordinator' => 4,
+                'Supervisor' => 5,
+                'Staff' => 6
+            ];
+            
+            $posA = array_key_exists($a->position, $positions) ? $positions[$a->position] : 999;
+            $posB = array_key_exists($b->position, $positions) ? $positions[$b->position] : 999;
+            
+            if ($posA === $posB) {
+                return $a->name <=> $b->name; // If positions are the same, sort by name
+            }
+            
+            return $posA <=> $posB; // Sort by position weight
+        });
 
-        // Gender Filter
-        if ($request->has('gender') && $request->gender !== '') {
-            $query->where('gender', $request->gender);
-        }
+        // Count employees by gender - menggunakan query terpisah untuk menghindari masalah dengan filter
+        $maleCount = Employee::where('gender', 'L')->count();
+        $femaleCount = Employee::where('gender', 'P')->count();
 
-        $employees = $query->paginate(10);
+        // Apply pagination manually after sorting
+        $page = $request->get('page', 1);
+        $perPage = 10;
+        $total = $employees->count();
+        $currentItems = $employees->slice(($page - 1) * $perPage, $perPage);
+        $employees = new LengthAwarePaginator($currentItems, $total, $perPage, $page, [
+            'path' => $request->url(),
+            'query' => $request->query()
+        ]);
+
         $departments = Department::all();
 
-        // Get counts for dashboard
-        $totalEmployees = Employee::count();
-        $maleEmployees = Employee::where('gender', 'L')->count();
-        $femaleEmployees = Employee::where('gender', 'P')->count();
+        if ($request->ajax()) {
+            return view('admin.employees.partials.table', compact('employees', 'departments', 'maleCount', 'femaleCount'));
+        }
 
-        return view('admin.employees.index', compact(
-            'employees', 
-            'departments', 
-            'totalEmployees', 
-            'maleEmployees', 
-            'femaleEmployees'
-        ));
+        return view('admin.employees.index', compact('employees', 'departments', 'maleCount', 'femaleCount'));
     }
 
     public function create()
@@ -129,24 +153,21 @@ class EmployeeController extends Controller
                 'Tanggal Dibuat'
             ]));
             
-            // Query with filters
-            $query = Employee::with('department');
-            
-            if ($request->has('search')) {
-                $searchTerm = $request->search;
-                $query->where(function($q) use ($searchTerm) {
-                    $q->where('name', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('position', 'LIKE', "%{$searchTerm}%");
+            // Query with filters - improved with case insensitive search
+            $query = Employee::with('department')
+                ->when($request->filled('search'), function ($query) use ($request) {
+                    $search = trim($request->search);
+                    $query->where(function($q) use ($search) {
+                        $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%']);
+                    });
+                })
+                ->when($request->filled('department_id'), function ($query) use ($request) {
+                    $query->where('department_id', $request->department_id);
+                })
+                ->when($request->filled('gender'), function ($query) use ($request) {
+                    $query->where('gender', $request->gender);
                 });
-            }
-
-            if ($request->has('department') && $request->department !== '') {
-                $query->where('department_id', $request->department);
-            }
-
-            if ($request->has('gender') && $request->gender !== '') {
-                $query->where('gender', $request->gender);
-            }
             
             $employees = $query->get();
             

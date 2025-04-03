@@ -24,6 +24,8 @@ Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])-
 Route::get('/activity/create', [ActivityController::class, 'create'])->name('activity.create');
 Route::post('/activity/store', [ActivityController::class, 'store'])->name('activity.store');
 Route::get('/activity', [ActivityController::class, 'create'])->name('activity.index');
+Route::get('/activity/calendar', [ActivityController::class, 'calendar'])->name('activity.calendar');
+Route::get('/activity/calendar/events', [ActivityController::class, 'calendarEvents'])->name('activity.calendar.events');
 
 // -------------------------------------------------------------------
 //                   LOGIN ADMIN / LOGOUT
@@ -41,7 +43,10 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
     // Meeting Rooms
     Route::prefix('meeting-rooms')->group(function () {
         Route::get('/', [AdminController::class, 'meetingRooms'])->name('admin.meeting_rooms');
+        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('admin.meeting_rooms.create');
         Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('admin.meeting_rooms.store');
+        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('admin.meeting_rooms.edit');
+        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('admin.meeting_rooms.update');
         Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('admin.meeting_rooms.delete');
     });
     
@@ -104,6 +109,9 @@ Route::group(['prefix' => 'admin/activity', 'middleware' => \App\Http\Middleware
 
     // POST /admin/activity/data
     Route::post('/data', [ActivityReportController::class, 'getData'])->name('admin.activity.data');
+    
+    // POST /admin/activity/detailed
+    Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('admin.activity.detailed');
 
     // POST /admin/activity/export (opsional)
     Route::post('/export', [ActivityReportController::class, 'export'])->name('admin.activity.export');

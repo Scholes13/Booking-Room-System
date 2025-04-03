@@ -3,18 +3,17 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 
-class UserSeeder extends Seeder
+class DatabaseSeeder extends Seeder
 {
     /**
-     * Run the database seeds.
+     * Seed the application's database.
      */
-    public function run()
-{
-    $this->call([
-        EmployeeSeeder::class
-    ]);
-}
+    public function run(): void
+    {
+        $this->call([
+            AdminSeeder::class,      // Create admin users first
+            ResetDataSeeder::class,  // Reset and recreate other data
+        ]);
+    }
 }

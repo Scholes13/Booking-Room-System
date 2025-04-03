@@ -154,6 +154,34 @@
                 </div>
             </div>
 
+            <!-- Booking Type -->
+            <div>
+                <label for="booking_type" class="block text-gray-300 font-medium text-sm">Type</label>
+                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
+                    <i class="fas fa-tag text-gray-400 mr-2"></i>
+                    <select id="booking_type" 
+                            name="booking_type" 
+                            class="w-full bg-transparent border-none outline-none text-gray-900" 
+                            required>
+                        <option value="internal" {{ old('booking_type', 'internal') == 'internal' ? 'selected' : '' }}>Internal</option>
+                        <option value="external" {{ old('booking_type') == 'external' ? 'selected' : '' }}>Eksternal</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- External Description (Hidden by default) -->
+            <div id="external_description_container" class="hidden">
+                <label for="external_description" class="block text-gray-300 font-medium text-sm">Deskripsi Eksternal</label>
+                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
+                    <i class="fas fa-building text-gray-400 mr-2"></i>
+                    <textarea id="external_description" 
+                              name="external_description" 
+                              class="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400" 
+                              rows="3" 
+                              placeholder="Silakan isi detail terkait booking eksternal...">{{ old('external_description') }}</textarea>
+                </div>
+            </div>
+
             <!-- Submit Button -->
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white p-3 rounded-md shadow-lg transform hover:scale-105 transition duration-300">
                 <i class="fas fa-check-circle mr-2"></i> Submit Booking
@@ -422,6 +450,32 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
         console.error('Error initializing BookingTimeManager:', error);
     }
+});
+</script>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const bookingTypeSelect = document.getElementById('booking_type');
+    const externalDescContainer = document.getElementById('external_description_container');
+    const externalDescTextarea = document.getElementById('external_description');
+
+    // Show/hide external description based on booking type
+    function toggleExternalDescription() {
+        if (bookingTypeSelect.value === 'external') {
+            externalDescContainer.classList.remove('hidden');
+        } else {
+            externalDescContainer.classList.add('hidden');
+            externalDescTextarea.value = ''; // Clear the value when hidden
+        }
+    }
+
+    // Initial state
+    toggleExternalDescription();
+
+    // Listen for changes
+    bookingTypeSelect.addEventListener('change', toggleExternalDescription);
 });
 </script>
 @endpush

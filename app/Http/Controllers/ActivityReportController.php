@@ -61,20 +61,24 @@ class ActivityReportController extends Controller
                 Log::debug('Report Type: employee_activity');
 
                 $activities = $query
-                    ->leftJoin('employees', 'activities.nama', '=', 'employees.name')
+                    ->leftJoin('employees', 'activities.name', '=', 'employees.name')
                     ->select(
-                        'activities.nama as name',
-                        'activities.department',
-                        'activities.start_datetime AS start_time',
-                        'activities.end_datetime AS end_time',
-                        'activities.activity_type AS category',  // Use activity_type as category
-                        'activities.description'
-                    )->get();
+                        'activities.name',
+                        'departments.name as department',
+                        'activities.start_datetime',
+                        'activities.end_datetime',
+                        'activities.activity_type AS category',
+                        'activities.description',
+                        'activities.city',
+                        'activities.province'
+                    )
+                    ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                    ->get();
 
                 // Calculate total days for each activity
                 $activities = $activities->map(function($activity) {
-                    $startDate = Carbon::parse($activity->start_time);
-                    $endDate = Carbon::parse($activity->end_time);
+                    $startDate = Carbon::parse($activity->start_datetime);
+                    $endDate = Carbon::parse($activity->end_datetime);
 
                     // If the activity lasts less than 24 hours, show it in hours
                     if ($startDate->isSameDay($endDate)) {
@@ -107,11 +111,12 @@ class ActivityReportController extends Controller
 
                 $activities = $query
                     ->select(
-                        'department',
-                        'start_datetime',
-                        'end_datetime',
-                        'activity_type AS category'  // Use activity_type as category
+                        'departments.name as department',
+                        'activities.start_datetime',
+                        'activities.end_datetime',
+                        'activities.activity_type AS category'
                     )
+                    ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
                     ->get();
 
                 // Calculate total days and hours for department activities
@@ -166,13 +171,15 @@ class ActivityReportController extends Controller
 
                 $activities = $query
                     ->select(
-                        'city',
-                        'province',
-                        'start_datetime',
-                        'end_datetime',
-                        'activity_type AS category',
-                        'description'
+                        'activities.city',
+                        'activities.province',
+                        'activities.start_datetime',
+                        'activities.end_datetime',
+                        'activities.activity_type AS category',
+                        'activities.description',
+                        'departments.name as department'
                     )
+                    ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
                     ->get();
 
                 // Group activities by location (city, province)
@@ -197,19 +204,19 @@ class ActivityReportController extends Controller
                     
                     $locationData[$locationKey]['total_activities']++;
                     
+                    // Calculate hours
+                    $startDate = Carbon::parse($act->start_datetime ?? 'now');
+                    $endDate = Carbon::parse($act->end_datetime ?? 'now');
+                    $hours = $startDate->diffInHours($endDate);
+                    
+                    if (is_numeric($hours)) {
+                        $locationData[$locationKey]['hours_used'] += $hours;
+                    }
+                    
                     // Count by activity type
                     if (isset($act->category)) {
                         $locationData[$locationKey]['activities_by_type'][$act->category] = 
                             ($locationData[$locationKey]['activities_by_type'][$act->category] ?? 0) + 1;
-                    }
-                    
-                    // Calculate hours
-                    $startDate = Carbon::parse($act->start_datetime ?? 'now');
-                    $endDate = Carbon::parse($act->end_datetime ?? 'now');
-                    
-                    if ($startDate && $endDate) {
-                        $totalHours = $startDate->diffInHours($endDate);
-                        $locationData[$locationKey]['hours_used'] += $totalHours;
                     }
                 }
                 
@@ -327,6 +334,258 @@ class ActivityReportController extends Controller
                 'message' => 'Error getting activity data: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            Log::debug('ActivityReportController@export input', $request->all());
+
+            // Validasi input
+            $request->validate([
+                'report_type' => 'required|in:employee_activity,department_activity,location_activity,detailed_activity',
+                'time_period' => 'required|in:monthly,quarterly,yearly',
+                'year' => 'required|integer',
+                'month' => 'nullable|integer|between:1,12',
+                'quarter' => 'nullable|integer|between:1,4',
+                'format' => 'required|in:xlsx,pdf,csv'
+            ]);
+
+            // Ambil data laporan sesuai jenis dan periode
+            $reportType = $request->input('report_type');
+            $timePeriod = $request->input('time_period');
+            $year = $request->input('year');
+            $month = $request->input('month');
+            $quarter = $request->input('quarter');
+            $format = $request->input('format', 'xlsx');
+
+            // Buat rentang tanggal yang sesuai
+            $dateRange = $this->getDateRange($timePeriod, $year, $month, $quarter);
+
+            $query = DB::table('activities');
+            $query->whereBetween('start_datetime', [$dateRange['start'], $dateRange['end']]);
+
+            // Dapatkan data berdasarkan jenis laporan
+            switch ($reportType) {
+                case 'employee_activity':
+                    $activities = $query
+                        ->leftJoin('employees', 'activities.name', '=', 'employees.name')
+                        ->select(
+                            'activities.name',
+                            'departments.name as department',
+                            'activities.start_datetime',
+                            'activities.end_datetime',
+                            'activities.activity_type AS category',
+                            'activities.description',
+                            'activities.city',
+                            'activities.province'
+                        )
+                        ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->get();
+
+                    $headers = ['Name', 'Department', 'Province', 'City', 'Start Date', 'Start Time', 'End Date', 'End Time', 'Category', 'Total Days', 'Description'];
+                    $exportData = $activities->map(function ($activity) {
+                        $startDate = Carbon::parse($activity->start_datetime);
+                        $endDate = Carbon::parse($activity->end_datetime);
+                        
+                        // Hitung total hari
+                        $totalDays = '1 day';
+                        if ($startDate->isSameDay($endDate)) {
+                            $hours = $startDate->diffInHours($endDate);
+                            $totalDays = $hours . ' hours';
+                        } else {
+                            $totalHours = $startDate->diffInHours($endDate);
+                            if ($totalHours > 48) {
+                                $totalDays = ceil($totalHours / 24) . ' days';
+                            }
+                        }
+
+                        return [
+                            'Name' => $activity->name ?? 'N/A',
+                            'Department' => $activity->department ?? 'N/A',
+                            'Province' => $activity->province ?? 'N/A',
+                            'City' => $activity->city ?? 'N/A',
+                            'Start Date' => $activity->start_datetime ? Carbon::parse($activity->start_datetime)->format('Y-m-d') : 'N/A',
+                            'Start Time' => $activity->start_datetime ? Carbon::parse($activity->start_datetime)->format('H:i') : 'N/A',
+                            'End Date' => $activity->end_datetime ? Carbon::parse($activity->end_datetime)->format('Y-m-d') : 'N/A',
+                            'End Time' => $activity->end_datetime ? Carbon::parse($activity->end_datetime)->format('H:i') : 'N/A',
+                            'Category' => $activity->category ?? 'N/A',
+                            'Total Days' => $totalDays,
+                            'Description' => $activity->description ?? 'N/A'
+                        ];
+                    })->toArray();
+                    break;
+
+                case 'department_activity':
+                    $activities = $query
+                        ->select(
+                            'departments.name as department',
+                            'activities.start_datetime',
+                            'activities.end_datetime',
+                            'activities.activity_type AS category'
+                        )
+                        ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->get();
+
+                    // Group by department and calculate stats
+                    $departmentStats = $this->getDepartmentStats($activities);
+                    
+                    $headers = ['Department', 'Total Activities', 'Hours Used', 'Total Days'];
+                    $exportData = collect($departmentStats)->map(function ($dept) {
+                        return [
+                            'Department' => $dept['name'] ?? 'N/A',
+                            'Total Activities' => $dept['total_activities'] ?? '0',
+                            'Hours Used' => ($dept['hours_used'] ?? '0') . ' hours',
+                            'Total Days' => ($dept['total_days'] ?? '0') . ' days'
+                        ];
+                    })->toArray();
+                    break;
+
+                case 'location_activity':
+                    $activities = $query
+                        ->select(
+                            'activities.city',
+                            'activities.province',
+                            'activities.start_datetime',
+                            'activities.end_datetime',
+                            'activities.activity_type AS category',
+                            'activities.description',
+                            'departments.name as department'
+                        )
+                        ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->get();
+
+                    // Group by location and calculate stats
+                    $locationData = [];
+                    foreach ($activities as $act) {
+                        $locationKey = ($act->city && $act->province) ? 
+                                    $act->city . ', ' . $act->province : 
+                                    ($act->city ?: $act->province ?: 'Unknown');
+                        
+                        if (!isset($locationData[$locationKey])) {
+                            $locationData[$locationKey] = [
+                                'location' => $locationKey,
+                                'total_activities' => 0,
+                                'hours_used' => 0,
+                                'activities_by_type' => [
+                                    'Meeting' => 0,
+                                    'Invitation' => 0,
+                                    'Survey' => 0
+                                ]
+                            ];
+                        }
+                        
+                        $locationData[$locationKey]['total_activities']++;
+                        
+                        // Calculate hours
+                        $startDate = Carbon::parse($act->start_datetime ?? 'now');
+                        $endDate = Carbon::parse($act->end_datetime ?? 'now');
+                        $hours = $startDate->diffInHours($endDate);
+                        
+                        if (is_numeric($hours)) {
+                            $locationData[$locationKey]['hours_used'] += $hours;
+                        }
+                        
+                        // Count by activity type
+                        if (isset($act->category)) {
+                            $locationData[$locationKey]['activities_by_type'][$act->category] = 
+                                ($locationData[$locationKey]['activities_by_type'][$act->category] ?? 0) + 1;
+                        }
+                    }
+                    
+                    $headers = ['Location', 'Total Activities', 'Hours Used', 'Meetings', 'Invitations', 'Surveys'];
+                    $exportData = collect(array_values($locationData))->map(function ($loc) {
+                        return [
+                            'Location' => $loc['location'] ?? 'N/A',
+                            'Total Activities' => $loc['total_activities'] ?? '0',
+                            'Hours Used' => ($loc['hours_used'] ?? '0') . ' hours',
+                            'Meetings' => $loc['activities_by_type']['Meeting'] ?? '0',
+                            'Invitations' => $loc['activities_by_type']['Invitation'] ?? '0',
+                            'Surveys' => $loc['activities_by_type']['Survey'] ?? '0'
+                        ];
+                    })->toArray();
+                    break;
+
+                case 'detailed_activity':
+                    // For detailed activity, use the same data as employee_activity but with more details
+                    $activities = $query
+                        ->leftJoin('employees', 'activities.name', '=', 'employees.name')
+                        ->select(
+                            'activities.name',
+                            'departments.name as department',
+                            'activities.start_datetime',
+                            'activities.end_datetime',
+                            'activities.activity_type AS category',
+                            'activities.description',
+                            'activities.city',
+                            'activities.province'
+                        )
+                        ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->get();
+
+                    $headers = ['Name', 'Department', 'Province', 'City', 'Start Date', 'Start Time', 'End Date', 'End Time', 'Category', 'Duration', 'Description'];
+                    $exportData = $activities->map(function ($activity) {
+                        $startDate = Carbon::parse($activity->start_datetime);
+                        $endDate = Carbon::parse($activity->end_datetime);
+                        
+                        // Hitung total hari
+                        $totalDays = '1 day';
+                        if ($startDate->isSameDay($endDate)) {
+                            $hours = $startDate->diffInHours($endDate);
+                            $totalDays = $hours . ' hours';
+                        } else {
+                            $totalHours = $startDate->diffInHours($endDate);
+                            if ($totalHours > 48) {
+                                $totalDays = ceil($totalHours / 24) . ' days';
+                            }
+                        }
+
+                        return [
+                            'Name' => $activity->name ?? 'N/A',
+                            'Department' => $activity->department ?? 'N/A',
+                            'Province' => $activity->province ?? 'N/A',
+                            'City' => $activity->city ?? 'N/A',
+                            'Start Date' => $activity->start_datetime ? Carbon::parse($activity->start_datetime)->format('Y-m-d') : 'N/A',
+                            'Start Time' => $activity->start_datetime ? Carbon::parse($activity->start_datetime)->format('H:i') : 'N/A',
+                            'End Date' => $activity->end_datetime ? Carbon::parse($activity->end_datetime)->format('Y-m-d') : 'N/A',
+                            'End Time' => $activity->end_datetime ? Carbon::parse($activity->end_datetime)->format('H:i') : 'N/A',
+                            'Category' => $activity->category ?? 'N/A',
+                            'Duration' => $totalDays,
+                            'Description' => $activity->description ?? 'N/A'
+                        ];
+                    })->toArray();
+                    break;
+
+                default:
+                    return response()->json(['error' => 'Invalid report type'], 400);
+            }
+
+            // Export data sesuai format
+            $filename = $this->generateExportFilename($reportType, $timePeriod, $format);
+
+            // OpenSpout tidak mendukung PDF, jadi untuk format PDF lebih baik
+            // menggunakan cara manual melalui view khusus
+            if ($format === 'pdf') {
+                // Implementasi PDF dibuat terpisah nanti
+                return response()->json(['error' => 'PDF format not yet supported'], 500);
+            }
+            
+            // Gunakan metode export yang tersedia
+            return $this->exportService->export($exportData, $headers, $filename);
+        } catch (\Exception $e) {
+            Log::error('Export error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Export failed: ' . $e->getMessage()], 500);
+        }
+    }
+
+    private function generateExportFilename($reportType, $timePeriod, $format)
+    {
+        $date = Carbon::now()->format('Ymd_His');
+        return sprintf('activity_report_%s_%s_%s.%s', $reportType, $timePeriod, $date, $format);
     }
 
     /* === HELPER METHODS === */
