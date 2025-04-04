@@ -1,4 +1,8 @@
-@extends('admin.layout')
+@php
+    $layout = isset($isSuperAdmin) && $isSuperAdmin ? 'superadmin.layout' : 'admin.layout';
+@endphp
+
+@extends($layout)
 
 @section('title', 'Reports')
 

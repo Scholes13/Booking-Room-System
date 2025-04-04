@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Employee;
 use App\Models\Department;
+use App\Services\ActivityLogService;
+use App\Http\Requests\EmployeeRequest;
 use Illuminate\Http\Request;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Common\Entity\Row;
@@ -20,7 +22,9 @@ class EmployeeController extends Controller
                 $search = trim($request->search);
                 $query->where(function($q) use ($search) {
                     $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                      ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%']);
+                      ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw('LOWER(phone) LIKE ?', ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             })
             ->when($request->filled('department_id'), function ($query) use ($request) {
@@ -80,16 +84,16 @@ class EmployeeController extends Controller
         return view('admin.employees.create', compact('departments'));
     }
 
-    public function store(Request $request)
+    public function store(EmployeeRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'gender' => 'required|in:L,P',
-            'department_id' => 'required|exists:departments,id',
-            'position' => 'nullable|string|max:255',
-        ]);
-
-        Employee::create($request->all());
+        $employee = Employee::create($request->validated());
+        
+        // Log aktivitas admin
+        ActivityLogService::logCreate(
+            'employees', 
+            "Menambahkan karyawan baru: {$employee->name}",
+            $request->validated()
+        );
 
         return redirect()->route('admin.employees')
             ->with('success', 'Karyawan berhasil ditambahkan!');
@@ -102,17 +106,22 @@ class EmployeeController extends Controller
         return view('admin.employees.edit', compact('employee', 'departments'));
     }
 
-    public function update(Request $request, $id)
+    public function update(EmployeeRequest $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'gender' => 'required|in:L,P',
-            'department_id' => 'required|exists:departments,id',
-            'position' => 'nullable|string|max:255',
-        ]);
-
         $employee = Employee::findOrFail($id);
-        $employee->update($request->all());
+        $oldData = $employee->toArray();
+        
+        $employee->update($request->validated());
+        
+        // Log aktivitas admin
+        ActivityLogService::logUpdate(
+            'employees', 
+            "Memperbarui data karyawan: {$employee->name}",
+            [
+                'old_data' => $oldData,
+                'new_data' => $employee->toArray()
+            ]
+        );
 
         return redirect()->route('admin.employees')
             ->with('success', 'Data karyawan berhasil diupdate!');
@@ -122,7 +131,16 @@ class EmployeeController extends Controller
     {
         try {
             $employee = Employee::findOrFail($id);
+            $employeeData = $employee->toArray();
+            
             $employee->delete();
+            
+            // Log aktivitas admin
+            ActivityLogService::logDelete(
+                'employees', 
+                "Menghapus karyawan: {$employee->name}",
+                $employeeData
+            );
             
             return redirect()->route('admin.employees')
                 ->with('success', 'Karyawan berhasil dihapus!');
@@ -150,6 +168,8 @@ class EmployeeController extends Controller
                 'Jenis Kelamin',
                 'Departemen',
                 'Jabatan',
+                'No. HP/WA',
+                'Email',
                 'Tanggal Dibuat'
             ]));
             
@@ -159,7 +179,9 @@ class EmployeeController extends Controller
                     $search = trim($request->search);
                     $query->where(function($q) use ($search) {
                         $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%']);
+                          ->orWhereRaw('LOWER(position) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(phone) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                     });
                 })
                 ->when($request->filled('department_id'), function ($query) use ($request) {
@@ -179,9 +201,24 @@ class EmployeeController extends Controller
                     $employee->gender == 'L' ? 'Laki-laki' : 'Perempuan',
                     $employee->department->name,
                     $employee->position ?? '-',
+                    $employee->phone ?? '-',
+                    $employee->email ?? '-',
                     $employee->created_at->format('d/m/Y H:i')
                 ]));
             }
+            
+            // Log aktivitas eksport
+            ActivityLogService::logExport(
+                'employees', 
+                "Mengekspor data karyawan" . 
+                ($request->filled('search') ? " dengan pencarian: " . $request->search : "") . 
+                ($request->filled('department_id') ? " untuk departemen ID: " . $request->department_id : "") . 
+                ($request->filled('gender') ? " dengan jenis kelamin: " . ($request->gender == 'L' ? 'Laki-laki' : 'Perempuan') : ""),
+                [
+                    'total_records' => $employees->count(),
+                    'filters' => $request->only(['search', 'department_id', 'gender'])
+                ]
+            );
             
             $writer->close();
             

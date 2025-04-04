@@ -29,10 +29,6 @@
 
     <!-- Form Card -->
     <div class="bg-white rounded-xl shadow-sm p-6">
-        <form action="{{ route('admin.employees.store') }}" method="POST" class="space-y-6">
-            @csrf
-            <!-- Form Card -->
-    <div class="bg-white rounded-xl shadow-sm p-6">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">Tambah Karyawan</h3>
         <form action="{{ route('admin.employees.store') }}" method="POST" class="space-y-4">
             @csrf
@@ -76,6 +72,22 @@
                     <input type="text" 
                            name="position" 
                            value="{{ old('position') }}"
+                           class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nomor HP/WA</label>
+                    <input type="text" 
+                           name="phone" 
+                           value="{{ old('phone') }}"
+                           class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" 
+                           name="email" 
+                           value="{{ old('email') }}"
                            class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
                 </div>
             </div>

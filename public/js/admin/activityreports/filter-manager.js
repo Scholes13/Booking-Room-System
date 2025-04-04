@@ -138,6 +138,21 @@ const ActivityFilterManagerApp = (function() {
             console.log("Activity Filter Params:", params);
             return params;
         }
+
+        init() {
+            // Initialize the filter manager
+            this.cacheElements();
+            this.setupEventListeners();
+            this.initializeDynamicPeriod();
+            this.updatePeriodInputs();
+            
+            // Make this instance available globally for other scripts
+            window.activityFilterManager = this;
+            
+            // Initialize with current page url path
+            this.isBasRole = window.location.pathname.includes('/bas/');
+            console.log(`[ActivityFilterManager] Initialized with prefix: ${this.isBasRole ? 'bas' : 'admin'}`);
+        }
     }
 
     return {

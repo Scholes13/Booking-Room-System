@@ -115,16 +115,7 @@
             </div>
 
             <!-- TIPE KEGIATAN (Custom Dropdown Alpine) -->
-            <div x-data="{
-                    open: false,
-                    selected: '{{ old('activity_type') ?: 'Pilih Tipe Kegiatan' }}',
-                    options: ['Meeting','Invitation','Survey'],
-                    selectOption(opt) {
-                        this.selected = opt;
-                        this.open = false;
-                        $refs.typeInput.value = opt;
-                    }
-                }" class="relative">
+            <div x-data="activityTypeDropdown()" class="relative">
                 <label class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan</label>
                 <button type="button"
                         @click="open = !open"
@@ -148,7 +139,7 @@
                      x-transition:leave="transition ease-in duration-200"
                      x-transition:leave-start="opacity-100 transform scale-100"
                      x-transition:leave-end="opacity-0 transform scale-95"
-                     class="absolute z-20 mt-2 w-full bg-gray-800 rounded-md shadow-lg">
+                     class="absolute z-20 mt-2 w-full bg-gray-800 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     <template x-for="opt in options" :key="opt">
                         <div @click="selectOption(opt)"
                              class="cursor-pointer px-4 py-2 text-white hover:bg-gray-700"
@@ -158,6 +149,23 @@
                 </div>
                 <!-- Hidden Input -->
                 <input type="hidden" name="activity_type" x-ref="typeInput" :value="selected">
+                
+                <!-- "Lainnya" Field - hanya muncul ketika "Lainnya" dipilih -->
+                <div x-show="showOtherField" class="mt-2">
+                    <label for="activity_type_other" class="block text-sm font-medium text-gray-200 mb-1">Spesifikasi Tipe Kegiatan</label>
+                    <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
+                        <i class="fas fa-info-circle text-white mr-2"></i>
+                        <input 
+                            type="text" 
+                            id="activity_type_other" 
+                            name="activity_type_other" 
+                            class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400" 
+                            placeholder="Masukkan tipe kegiatan lainnya"
+                            value="{{ old('activity_type_other') }}"
+                            :required="showOtherField"
+                        >
+                    </div>
+                </div>
             </div>
 
             <!-- PROVINSI -->
@@ -261,6 +269,24 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 
 <script>
+function activityTypeDropdown() {
+    return {
+        open: false,
+        selected: '{{ old('activity_type') ?: 'Pilih Tipe Kegiatan' }}',
+        options: @json($activityTypes),
+        showOtherField: {{ old('activity_type') === 'Lainnya' ? 'true' : 'false' }},
+        init() {
+            this.showOtherField = this.selected === 'Lainnya';
+        },
+        selectOption(opt) {
+            this.selected = opt;
+            this.open = false;
+            this.$refs.typeInput.value = opt;
+            this.showOtherField = (opt === 'Lainnya');
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inisialisasi Flatpickr (Tanggal & Waktu Mulai)
     flatpickr("#start_datetime", {

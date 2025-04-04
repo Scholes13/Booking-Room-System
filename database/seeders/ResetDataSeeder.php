@@ -63,16 +63,86 @@ class ResetDataSeeder extends Seeder
         $departments = Department::all();
         
         $employees = [
-            ['name' => 'Ani Wijaya', 'department_id' => 1],
-            ['name' => 'Budi Santoso', 'department_id' => 2],
-            ['name' => 'Citra Dewi', 'department_id' => 3],
-            ['name' => 'Dian Pratama', 'department_id' => 4],
-            ['name' => 'Eko Nugroho', 'department_id' => 5],
-            ['name' => 'Fitri Handayani', 'department_id' => 6],
-            ['name' => 'Gunawan', 'department_id' => 7],
-            ['name' => 'Hesti Putri', 'department_id' => 1],
-            ['name' => 'Irfan Malik', 'department_id' => 2],
-            ['name' => 'Joko Widodo', 'department_id' => 3]
+            [
+                'name' => 'Ani Wijaya', 
+                'department_id' => 1, 
+                'gender' => 'P', 
+                'position' => 'HR Manager',
+                'phone' => '081234567001',
+                'email' => 'ani.wijaya@example.com'
+            ],
+            [
+                'name' => 'Budi Santoso', 
+                'department_id' => 2, 
+                'gender' => 'L', 
+                'position' => 'Sales Executive',
+                'phone' => '081234567002',
+                'email' => 'budi.santoso@example.com'
+            ],
+            [
+                'name' => 'Citra Dewi', 
+                'department_id' => 3, 
+                'gender' => 'P', 
+                'position' => 'Marketing Staff',
+                'phone' => '081234567003',
+                'email' => 'citra.dewi@example.com'
+            ],
+            [
+                'name' => 'Dian Pratama', 
+                'department_id' => 4, 
+                'gender' => 'L', 
+                'position' => 'IT Staff',
+                'phone' => '081234567004',
+                'email' => 'dian.pratama@example.com'
+            ],
+            [
+                'name' => 'Eko Nugroho', 
+                'department_id' => 5, 
+                'gender' => 'L', 
+                'position' => 'Finance Staff',
+                'phone' => '081234567005',
+                'email' => 'eko.nugroho@example.com'
+            ],
+            [
+                'name' => 'Fitri Handayani', 
+                'department_id' => 6, 
+                'gender' => 'P', 
+                'position' => 'Operations Manager',
+                'phone' => '081234567006',
+                'email' => 'fitri.handayani@example.com'
+            ],
+            [
+                'name' => 'Gunawan', 
+                'department_id' => 7, 
+                'gender' => 'L', 
+                'position' => 'R&D Staff',
+                'phone' => '081234567007',
+                'email' => 'gunawan@example.com'
+            ],
+            [
+                'name' => 'Hesti Putri', 
+                'department_id' => 1, 
+                'gender' => 'P', 
+                'position' => 'HR Staff',
+                'phone' => '081234567008',
+                'email' => 'hesti.putri@example.com'
+            ],
+            [
+                'name' => 'Irfan Malik', 
+                'department_id' => 2, 
+                'gender' => 'L', 
+                'position' => 'Sales Manager',
+                'phone' => '081234567009',
+                'email' => 'irfan.malik@example.com'
+            ],
+            [
+                'name' => 'Joko Widodo', 
+                'department_id' => 3, 
+                'gender' => 'L', 
+                'position' => 'Marketing Director',
+                'phone' => '081234567010',
+                'email' => 'joko.widodo@example.com'
+            ]
         ];
 
         foreach ($employees as $employee) {

@@ -19,9 +19,13 @@ class AdminMiddleware
 
         // Periksa apakah user memiliki role admin atau superadmin
         if ($user->role !== 'admin' && $user->role !== 'superadmin') {
-            abort(403, 'Anda tidak memiliki akses ke area admin.');
+            Auth::logout();
+            return redirect()->route('admin.login')->with('error', 'Anda tidak memiliki akses ke area admin.');
         }
 
+        // Simpan role di session untuk memastikan konsistensi
+        session(['user_role' => $user->role]);
+        
         return $next($request);
     }
 }

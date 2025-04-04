@@ -12,7 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AdminSeeder::class,      // Create admin users first
+            SuperAdminSeeder::class, // Create superadmin user
+            AdminSeeder::class,      // Create admin users
             ResetDataSeeder::class,  // Reset and recreate other data
         ]);
     }

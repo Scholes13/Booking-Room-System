@@ -70,8 +70,9 @@
                 Chart.defaults.plugins.tooltip.borderWidth = 0;
                 Chart.defaults.plugins.tooltip.borderRadius = 4;
 
-                // Ambil filterManager dari window.activityFilterManager
-                const filterManager = window.activityFilterManager; 
+                // Initialize filter manager
+                const filterManager = new ActivityFilterManager();
+                filterManager.init();
 
                 // Inisialisasi report generator khusus activity
                 const reportGenerator = new ActivityReportGenerator(filterManager);

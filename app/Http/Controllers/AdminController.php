@@ -5,9 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Department;
+use App\Models\Activity;
 use App\Models\User; // Tambahkan import model User
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Http\Controllers\ActivityReportController;
 
 class AdminController extends Controller
 {
@@ -41,19 +45,30 @@ class AdminController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
+            // Simpan role di session
+            session(['user_role' => $user->role]);
+
             // Pisahkan admin & superadmin
             if ($user->role === 'superadmin') {
-                return redirect()->route('superadmin.dashboard');
+                return redirect()->route('superadmin.dashboard')
+                               ->with('success', 'Selamat datang, Super Admin!');
             } elseif ($user->role === 'admin') {
-                return redirect()->route('admin.dashboard');
+                return redirect()->route('admin.dashboard')
+                               ->with('success', 'Selamat datang, Admin!');
+            } elseif ($user->role === 'admin_bas') {
+                return redirect()->route('bas.dashboard')
+                               ->with('success', 'Selamat datang, Admin BAS!');
             }
 
             // Jika role tidak sesuai, logout dan kembalikan error
             Auth::logout();
-            return redirect()->back()->with('error', 'Anda tidak memiliki akses ke area admin.');
+            session()->forget('user_role');
+            return redirect()->back()
+                           ->with('error', 'Anda tidak memiliki akses ke area admin.');
         }
 
-        return redirect()->back()->with('error', 'Login gagal. Periksa kembali login dan password anda.');
+        return redirect()->back()
+                       ->with('error', 'Login gagal. Periksa kembali login dan password anda.');
     }
 
     /**
@@ -62,7 +77,9 @@ class AdminController extends Controller
     public function logout()
     {
         Auth::logout();
-        return redirect()->route('admin.login');
+        session()->forget('user_role');
+        return redirect()->route('admin.login')
+                       ->with('success', 'Anda telah berhasil logout.');
     }
 
     /**
@@ -77,6 +94,49 @@ class AdminController extends Controller
             ->limit(10)
             ->get();
             
+        // Check if user is Admin BAS or regular Admin
+        if (Auth::check() && Auth::user()->role === 'admin_bas') {
+            // For Admin BAS, we need to get all activity statistics
+            $totalActivities = Activity::count();
+            
+            // Use today's date for filtering
+            $today = now()->startOfDay();
+            $todayActivities = Activity::whereDate('start_datetime', $today)->count();
+            
+            // Get week statistics
+            $weekStart = now()->startOfWeek();
+            $weekEnd = now()->endOfWeek();
+            $weekActivities = Activity::whereBetween('start_datetime', [$weekStart, $weekEnd])->count();
+            
+            // Get month statistics
+            $monthStart = now()->startOfMonth();
+            $monthEnd = now()->endOfMonth();
+            $monthActivities = Activity::whereBetween('start_datetime', [$monthStart, $monthEnd])->count();
+                
+            // Get upcoming activities
+            $upcomingActivities = Activity::with('room')
+                ->where('start_datetime', '>=', now())
+                ->orderBy('start_datetime')
+                ->limit(5)
+                ->get();
+                
+            // Get recent activities
+            $recentActivities = Activity::with('room')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
+                
+            return view('admin_bas.dashboard.index', compact(
+                'bookings', 
+                'totalActivities', 
+                'todayActivities', 
+                'weekActivities', 
+                'monthActivities',
+                'upcomingActivities',
+                'recentActivities'
+            ));
+        }
+
         return view('admin.dashboard.index', compact('bookings'));
     }
 
@@ -126,10 +186,35 @@ class AdminController extends Controller
     //                      K E L O L A   M E E T I N G   R O O M
     // ----------------------------------------------------------------
 
+    /**
+     * Helper method untuk mendapatkan view berdasarkan role user
+     */
+    private function getViewByRole($adminView, $defaultView = null)
+    {
+        if (session('user_role') === 'superadmin') {
+            $superadminView = str_replace('admin.', 'superadmin.', $adminView);
+            
+            // Cek jika view superadmin ada, jika tidak gunakan view admin
+            if (view()->exists($superadminView)) {
+                return $superadminView;
+            }
+        }
+        
+        return $defaultView ?: $adminView;
+    }
+
     public function meetingRooms()
     {
         $rooms = MeetingRoom::orderBy('name', 'asc')->get();
-        return view('admin.meeting-rooms.index', compact('rooms'));
+        
+        // Check if user is Admin BAS
+        if (Auth::check() && Auth::user()->role === 'admin_bas') {
+            return view('admin_bas.meeting-rooms.index', compact('rooms'));
+        }
+        
+        $view = $this->getViewByRole('admin.meeting-rooms.index');
+        
+        return view($view, compact('rooms'));
     }
 
     public function createMeetingRoom()
@@ -151,7 +236,14 @@ class AdminController extends Controller
             $validated['facilities'] = json_encode($validated['facilities']);
         }
 
-        MeetingRoom::create($validated);
+        $room = MeetingRoom::create($validated);
+        
+        // Log aktivitas admin
+        ActivityLogService::logCreate(
+            'meeting_rooms', 
+            "Menambahkan ruang meeting baru: {$room->name}",
+            $validated
+        );
         
         return redirect()->route('admin.meeting_rooms')
                          ->with('success', 'Ruang meeting berhasil ditambahkan.');
@@ -160,7 +252,16 @@ class AdminController extends Controller
     public function deleteMeetingRoom($id)
     {
         $room = MeetingRoom::findOrFail($id);
+        $roomName = $room->name;
+        
         $room->delete();
+        
+        // Log aktivitas admin
+        ActivityLogService::logDelete(
+            'meeting_rooms', 
+            "Menghapus ruang meeting: {$roomName}",
+            ['id' => $id, 'name' => $roomName]
+        );
     
         return redirect()->route('admin.meeting_rooms')
                          ->with('success', 'Meeting room berhasil dihapus.');
@@ -187,7 +288,19 @@ class AdminController extends Controller
         }
 
         $room = MeetingRoom::findOrFail($id);
+        $oldData = $room->toArray();
+        
         $room->update($validated);
+        
+        // Log aktivitas admin
+        ActivityLogService::logUpdate(
+            'meeting_rooms', 
+            "Memperbarui ruang meeting: {$room->name}",
+            [
+                'old_data' => $oldData,
+                'new_data' => $validated
+            ]
+        );
         
         return redirect()->route('admin.meeting_rooms')
                          ->with('success', 'Ruang meeting berhasil diperbarui.');
@@ -241,9 +354,21 @@ class AdminController extends Controller
     public function deleteBooking($id)
     {
         $booking = Booking::findOrFail($id);
+        $bookingData = $booking->toArray();
+        
         $booking->delete();
+        
+        // Log aktivitas admin
+        ActivityLogService::logDelete(
+            'bookings', 
+            "Menghapus booking: {$booking->nama} pada {$booking->date} {$booking->start_time}-{$booking->end_time}",
+            $bookingData
+        );
 
-        return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil dihapus.');
+        $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 
+                 (Auth::check() && Auth::user()->role === 'superadmin' ? 'superadmin.' : 'admin.');
+        
+        return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil dihapus.');
     }
 
     // ----------------------------------------------------------------
@@ -255,7 +380,10 @@ class AdminController extends Controller
         $departments = Department::withCount('employees')
                         ->orderBy('name', 'asc')
                         ->get();
-        return view('admin.departments.index', compact('departments'));
+        
+        $view = $this->getViewByRole('admin.departments.index');
+        
+        return view($view, compact('departments'));
     }
 
     public function storeDepartment(Request $request)
@@ -264,13 +392,32 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        Department::create($validated);
+        $department = Department::create($validated);
+        
+        // Log aktivitas admin
+        ActivityLogService::logCreate(
+            'departments', 
+            "Menambahkan departemen baru: {$department->name}",
+            $validated
+        );
+        
         return redirect()->back()->with('success', 'Departemen berhasil ditambahkan.');
     }
 
     public function deleteDepartment($id)
     {
+        $department = Department::findOrFail($id);
+        $departmentName = $department->name;
+        
         Department::destroy($id);
+        
+        // Log aktivitas admin
+        ActivityLogService::logDelete(
+            'departments', 
+            "Menghapus departemen: {$departmentName}",
+            ['id' => $id, 'name' => $departmentName]
+        );
+        
         return redirect()->back()->with('success', 'Departemen berhasil dihapus.');
     }
 
@@ -287,8 +434,202 @@ class AdminController extends Controller
         ]);
 
         $department = Department::findOrFail($id);
+        $oldName = $department->name;
+        
         $department->update($validated);
+        
+        // Log aktivitas admin
+        ActivityLogService::logUpdate(
+            'departments', 
+            "Memperbarui departemen dari {$oldName} menjadi {$department->name}",
+            [
+                'old_name' => $oldName,
+                'new_name' => $department->name
+            ]
+        );
 
         return redirect()->route('admin.departments')->with('success', 'Departemen berhasil diperbarui.');
+    }
+
+    /**
+     * Menampilkan daftar user admin
+     */
+    public function users()
+    {
+        $users = User::whereIn('role', ['admin', 'admin_bas'])->orderBy('name')->paginate(10);
+        return view('superadmin.users.index', compact('users'));
+    }
+
+    /**
+     * Tampilkan form untuk membuat User baru.
+     */
+    public function createUser()
+    {
+        return view('superadmin.users.create');
+    }
+
+    /**
+     * Simpan User baru dan redirect ke daftar users.
+     */
+    public function storeUser(Request $request)
+    {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:6',
+            'role'     => 'required|in:admin,admin_bas,superadmin',
+        ]);
+
+        // Buat user baru dengan role sesuai input
+        $user = User::create([
+            'name'     => $validated['name'],
+            'email'    => $validated['email'],
+            'password' => $validated['password'],
+            'role'     => $validated['role'], 
+        ]);
+        
+        // Log aktivitas admin
+        ActivityLogService::logCreate(
+            'users', 
+            "Menambahkan user baru: {$user->name} dengan role {$user->role}",
+            $validated
+        );
+
+        return redirect()->route('superadmin.users')
+                       ->with('success', 'User berhasil dibuat!');
+    }
+
+    /**
+     * Tampilkan form untuk edit User.
+     */
+    public function editUser($id)
+    {
+        $user = User::findOrFail($id);
+        return view('superadmin.users.edit', compact('user'));
+    }
+
+    /**
+     * Update User dan redirect ke daftar users.
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email,' . $id,
+            'role'     => 'required|in:admin,admin_bas,superadmin',
+            'password' => 'nullable|min:6',
+        ]);
+        
+        // Update data user
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->role = $validated['role'];
+        
+        // Update password jika diisi
+        if (!empty($validated['password'])) {
+            $user->password = $validated['password'];
+        }
+        
+        $user->save();
+        
+        // Log aktivitas admin
+        ActivityLogService::logUpdate(
+            'users', 
+            "Mengupdate user: {$user->name}",
+            $validated
+        );
+        
+        return redirect()->route('superadmin.users')
+                       ->with('success', 'User berhasil diperbarui!');
+    }
+
+    /**
+     * Hapus User dan redirect ke daftar users.
+     */
+    public function deleteUser($id)
+    {
+        $user = User::findOrFail($id);
+        
+        // Prevent deleting superadmin users
+        if ($user->role === 'superadmin') {
+            return redirect()->route('superadmin.users')
+                             ->with('error', 'Super Admin tidak dapat dihapus!');
+        }
+        
+        $userName = $user->name;
+        $userRole = $user->role;
+        
+        $user->delete();
+        
+        // Log aktivitas admin
+        ActivityLogService::logDelete(
+            'users', 
+            "Menghapus user: {$userName} dengan role {$userRole}",
+            ['id' => $id, 'name' => $userName, 'role' => $userRole]
+        );
+        
+        return redirect()->route('superadmin.users')
+                         ->with('success', 'User berhasil dihapus!');
+    }
+
+    /**
+     * Show activity reports page
+     */
+    public function activityReports()
+    {
+        if (Auth::check() && Auth::user()->role === 'admin_bas') {
+            return view('admin_bas.activity-reports.index');
+        }
+        
+        return view('admin.activity-reports.index');
+    }
+
+    /**
+     * Export activity reports
+     */
+    public function exportActivityReports(Request $request)
+    {
+        $reportType = $request->input('report_type', 'employee_activity');
+        $timePeriod = $request->input('time_period', 'monthly');
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+        $quarter = $request->input('quarter', ceil(now()->month / 3));
+        $format = $request->input('format', 'xlsx');
+        
+        // Delegate to ActivityReportController's export method
+        $controller = app()->make(ActivityReportController::class);
+        return $controller->export($request);
+    }
+
+    /**
+     * Print activity reports
+     */
+    public function printActivityReports(Request $request)
+    {
+        $reportType = $request->input('report_type', 'employee_activity');
+        $timePeriod = $request->input('time_period', 'monthly');
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+        $quarter = $request->input('quarter', ceil(now()->month / 3));
+        
+        // Get data from ActivityReportController
+        $controller = app()->make(ActivityReportController::class);
+        $request->merge([
+            'report_type' => $reportType,
+            'time_period' => $timePeriod,
+            'year' => $year,
+            'month' => $month,
+            'quarter' => $quarter
+        ]);
+        
+        $response = $controller->getData($request);
+        $data = $response->getData(true);
+        
+        // Determine view based on role
+        $viewPrefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'admin_bas' : 'admin';
+        
+        return view($viewPrefix . '.activity-reports.print', compact('data', 'reportType', 'timePeriod', 'year', 'month', 'quarter'));
     }
 }

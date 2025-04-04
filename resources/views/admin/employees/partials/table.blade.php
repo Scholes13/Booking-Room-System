@@ -8,6 +8,8 @@
                 <th scope="col" class="px-4 py-3">Jenis Kelamin</th>
                 <th scope="col" class="px-4 py-3">Departemen</th>
                 <th scope="col" class="px-4 py-3">Jabatan</th>
+                <th scope="col" class="px-4 py-3">HP/WA</th>
+                <th scope="col" class="px-4 py-3">Email</th>
                 <th scope="col" class="px-4 py-3 text-right">Aksi</th>
             </tr>
         </thead>
@@ -48,6 +50,8 @@
                         {{ $position }}
                     @endif
                 </td>
+                <td class="px-4 py-4">{{ $employee->phone ?? '-' }}</td>
+                <td class="px-4 py-4">{{ $employee->email ?? '-' }}</td>
                 <td class="px-4 py-4 text-right">
                     <div class="flex flex-col items-end space-y-1">
                         <a href="{{ route('admin.employees.edit', $employee->id) }}" class="text-accent font-medium text-sm hover:underline">Edit</a>

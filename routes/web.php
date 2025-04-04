@@ -7,6 +7,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityReportController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\AdminBASController;
 use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------------------
@@ -93,10 +95,91 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
 // -------------------------------------------------------------------
 //               R O U T E   A R E A   S U P E R A D M I N
 // -------------------------------------------------------------------
-Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\AdminMiddleware::class], function () {
+Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\SuperAdminMiddleware::class], function() {
     Route::get('/dashboard', [AdminController::class, 'superAdminDashboard'])->name('superadmin.dashboard');
-    Route::get('/create-admin', [AdminController::class, 'createAdmin'])->name('superadmin.createAdmin');
-    Route::post('/create-admin', [AdminController::class, 'storeAdmin'])->name('superadmin.storeAdmin');
+
+    // User Management Routes
+    Route::get('/users', [AdminController::class, 'users'])->name('superadmin.users');
+    Route::get('/users/create', [AdminController::class, 'createUser'])->name('superadmin.users.create');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('superadmin.users.store');
+    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('superadmin.users.edit');
+    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('superadmin.users.update');
+    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('superadmin.users.delete');
+    
+    // Activity Logs Routes
+    Route::prefix('logs')->group(function () {
+        Route::get('/', [ActivityLogController::class, 'index'])->name('superadmin.logs.index');
+        Route::get('/export', [ActivityLogController::class, 'export'])->name('superadmin.logs.export');
+        Route::get('/{id}', [ActivityLogController::class, 'show'])->name('superadmin.logs.show');
+    });
+    
+    // Activities Management Routes - NEW
+    Route::prefix('activities')->group(function () {
+        Route::get('/', [ActivityController::class, 'index'])->name('superadmin.activities.index');
+        Route::get('/create', [ActivityController::class, 'createAdmin'])->name('superadmin.activities.create');
+        Route::post('/', [ActivityController::class, 'storeAdmin'])->name('superadmin.activities.store');
+        Route::get('/{id}/edit', [ActivityController::class, 'edit'])->name('superadmin.activities.edit');
+        Route::put('/{id}', [ActivityController::class, 'update'])->name('superadmin.activities.update');
+        Route::delete('/{id}', [ActivityController::class, 'destroy'])->name('superadmin.activities.delete');
+        Route::get('/calendar', [ActivityController::class, 'adminCalendar'])->name('superadmin.activities.calendar');
+        Route::get('/calendar/events', [ActivityController::class, 'adminCalendarEvents'])->name('superadmin.activities.calendar.events');
+    });
+    
+    // Meeting Rooms Routes - mirip dengan admin routes tapi dengan prefix superadmin
+    Route::prefix('meeting-rooms')->group(function () {
+        Route::get('/', [AdminController::class, 'meetingRooms'])->name('superadmin.meeting_rooms');
+        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('superadmin.meeting_rooms.create');
+        Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('superadmin.meeting_rooms.store');
+        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('superadmin.meeting_rooms.edit');
+        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('superadmin.meeting_rooms.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('superadmin.meeting_rooms.delete');
+    });
+    
+    // Departments Routes
+    Route::prefix('departments')->group(function () {
+        Route::get('/', [AdminController::class, 'departments'])->name('superadmin.departments');
+        Route::post('/', [AdminController::class, 'storeDepartment'])->name('superadmin.departments.store');
+        Route::get('/{id}/edit', [AdminController::class, 'editDepartment'])->name('superadmin.departments.edit');
+        Route::put('/{id}', [AdminController::class, 'updateDepartment'])->name('superadmin.departments.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('superadmin.departments.delete');
+    });
+    
+    // Bookings Routes
+    Route::prefix('bookings')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('superadmin.bookings.index');
+        Route::get('/export', [BookingController::class, 'export'])->name('superadmin.bookings.export');
+        Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('superadmin.bookings.statistics');
+        Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('superadmin.bookings.available-times');
+        Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('superadmin.bookings.edit');
+        Route::put('/{id}', [BookingController::class, 'update'])->name('superadmin.bookings.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('superadmin.bookings.delete');
+    });
+
+    // Employees Routes
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('superadmin.employees');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('superadmin.employees.create');
+        Route::post('/', [EmployeeController::class, 'store'])->name('superadmin.employees.store');
+        Route::get('/export', [EmployeeController::class, 'export'])->name('superadmin.employees.export');
+        Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('superadmin.employees.edit');
+        Route::put('/{id}', [EmployeeController::class, 'update'])->name('superadmin.employees.update');
+        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('superadmin.employees.delete');
+    });
+
+    // Reports
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('superadmin.reports');
+        Route::post('/data', [ReportController::class, 'getData'])->name('superadmin.reports.data');
+        Route::post('/export', [ReportController::class, 'export'])->name('superadmin.reports.export');
+    });
+    
+    // Activity Reports
+    Route::prefix('activity')->group(function () {
+        Route::get('/', [ActivityReportController::class, 'index'])->name('superadmin.activity.index');
+        Route::post('/data', [ActivityReportController::class, 'getData'])->name('superadmin.activity.data');
+        Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('superadmin.activity.detailed');
+        Route::post('/export', [ActivityReportController::class, 'export'])->name('superadmin.activity.export');
+    });
 });
 
 // -------------------------------------------------------------------
@@ -115,4 +198,89 @@ Route::group(['prefix' => 'admin/activity', 'middleware' => \App\Http\Middleware
 
     // POST /admin/activity/export (opsional)
     Route::post('/export', [ActivityReportController::class, 'export'])->name('admin.activity.export');
+});
+
+// -------------------------------------------------------------------
+//     R O U T E   A R E A   A D M I N   B A S
+// -------------------------------------------------------------------
+Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMiddleware::class], function () {
+    // Dashboard (use the same as admin but with BAS controller)
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('bas.dashboard');
+    
+    // Activity Management Routes
+    Route::prefix('activities')->group(function () {
+        Route::get('/', [AdminBASController::class, 'activitiesIndex'])->name('bas.activities.index');
+        Route::get('/create', [AdminBASController::class, 'createActivity'])->name('bas.activities.create');
+        Route::post('/', [AdminBASController::class, 'storeActivity'])->name('bas.activities.store');
+        Route::get('/{activity}/edit', [AdminBASController::class, 'editActivity'])->name('bas.activities.edit');
+        Route::put('/{activity}', [AdminBASController::class, 'updateActivity'])->name('bas.activities.update');
+        Route::delete('/{activity}', [AdminBASController::class, 'destroyActivity'])->name('bas.activities.destroy');
+        Route::get('/calendar', [AdminBASController::class, 'activitiesCalendar'])->name('bas.activities.calendar');
+        Route::get('/json', [AdminBASController::class, 'activitiesJson'])->name('bas.activities.json');
+    });
+    
+    // All the other admin routes that should be accessible to Admin BAS role
+    Route::prefix('meeting-rooms')->group(function () {
+        Route::get('/', [AdminController::class, 'meetingRooms'])->name('bas.meeting_rooms');
+        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('bas.meeting_rooms.create');
+        Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('bas.meeting_rooms.store');
+        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('bas.meeting_rooms.edit');
+        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('bas.meeting_rooms.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('bas.meeting_rooms.delete');
+    });
+    
+    // Departments
+    Route::prefix('departments')->group(function () {
+        Route::get('/', [AdminController::class, 'departments'])->name('bas.departments');
+        Route::post('/', [AdminController::class, 'storeDepartment'])->name('bas.departments.store');
+        Route::get('/{id}/edit', [AdminController::class, 'editDepartment'])->name('bas.departments.edit');
+        Route::put('/{id}', [AdminController::class, 'updateDepartment'])->name('bas.departments.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('bas.departments.delete');
+    });
+    
+    // Bookings
+    Route::prefix('bookings')->group(function () {
+        Route::get('/', [BookingController::class, 'index'])->name('bas.bookings.index');
+        Route::get('/export', [BookingController::class, 'export'])->name('bas.bookings.export');
+        Route::get('/statistics', [BookingController::class, 'getStatistics'])->name('bas.bookings.statistics');
+        Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('bas.bookings.available-times');
+        Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('bas.bookings.edit');
+        Route::put('/{id}', [BookingController::class, 'update'])->name('bas.bookings.update');
+        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('bas.bookings.delete');
+        Route::post('/{booking}/approve', [AdminController::class, 'approveBooking'])->name('bas.bookings.approve');
+        Route::post('/{booking}/reject', [AdminController::class, 'rejectBooking'])->name('bas.bookings.reject');
+    });
+
+    // Employees
+    Route::prefix('employees')->group(function () {
+        Route::get('/', [EmployeeController::class, 'index'])->name('bas.employees');
+        Route::get('/create', [EmployeeController::class, 'create'])->name('bas.employees.create');
+        Route::post('/', [EmployeeController::class, 'store'])->name('bas.employees.store');
+        Route::get('/export', [EmployeeController::class, 'export'])->name('bas.employees.export');
+        Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('bas.employees.edit');
+        Route::put('/{id}', [EmployeeController::class, 'update'])->name('bas.employees.update');
+        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('bas.employees.delete');
+    });
+    
+    // Reports
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [ReportController::class, 'index'])->name('bas.reports');
+        Route::post('/data', [ReportController::class, 'getData'])->name('bas.reports.data');
+        Route::post('/export', [ReportController::class, 'export'])->name('bas.reports.export');
+        
+        // Activity Reports
+        Route::prefix('activities')->group(function () {
+            Route::get('/', [AdminController::class, 'activityReports'])->name('bas.activity.reports');
+            Route::get('/export', [AdminController::class, 'exportActivityReports'])->name('bas.activity.reports.export');
+            Route::get('/print', [AdminController::class, 'printActivityReports'])->name('bas.activity.reports.print');
+        });
+    });
+    
+    // Activity Report Routes (legacy format - keeping for compatibility)
+    Route::prefix('activity-reports')->group(function () {
+        Route::get('/', [ActivityReportController::class, 'index'])->name('bas.activity.index');
+        Route::post('/data', [ActivityReportController::class, 'getData'])->name('bas.activity.data');
+        Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('bas.activity.detailed');
+        Route::post('/export', [ActivityReportController::class, 'export'])->name('bas.activity.export');
+    });
 });

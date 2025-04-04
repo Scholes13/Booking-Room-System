@@ -29,4 +29,9 @@ class Activity extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    public function room()
+    {
+        return $this->belongsTo(MeetingRoom::class, 'meeting_room_id');
+    }
 }

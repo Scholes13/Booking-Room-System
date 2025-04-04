@@ -31,11 +31,17 @@ class ActivityReportGenerator {
         try {
             this.showLoading();
             
-            let endpoint = '/admin/activity/data';
+            // Determine the correct prefix based on the URL path
+            let prefix = '/admin';
+            if (window.location.pathname.includes('/bas/')) {
+                prefix = '/bas';
+            }
+            
+            let endpoint = `${prefix}/activity/data`;
             
             // Use different endpoint for detailed reports
             if (params.report_type === 'detailed_activity') {
-                endpoint = '/admin/activity/detailed';
+                endpoint = `${prefix}/activity/detailed`;
             }
             
             console.log(`[ActivityReportGenerator] Fetch => ${endpoint}`);

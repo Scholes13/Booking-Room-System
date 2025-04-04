@@ -13,7 +13,9 @@ class Employee extends Model
         'name',
         'gender',
         'department_id',
-        'position'
+        'position',
+        'phone',
+        'email'
     ];
 
     /**

@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\MeetingRoom;
 use App\Models\Department;
+use App\Services\ActivityLogService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Common\Entity\Row;
 use App\Models\Employee;
+use Illuminate\Support\Facades\Auth;
 
 class BookingController extends Controller
 {
@@ -91,6 +93,10 @@ class BookingController extends Controller
                             ->orderBy('name', 'asc')
                             ->get();
        
+       if (Auth::check() && Auth::user()->role === 'admin_bas') {
+           return view('admin_bas.bookings.edit', compact('booking', 'departments', 'meetingRooms', 'employees'));
+       }
+       
        return view('admin.bookings.edit', compact('booking', 'departments', 'meetingRooms', 'employees'));
    }
 
@@ -145,7 +151,8 @@ class BookingController extends Controller
            'external_description' => $request->input('external_description'),
        ]);
 
-       return redirect()->route('admin.bookings.index')->with('success', 'Booking berhasil diperbarui!');
+       $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 'admin.';
+       return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil diperbarui!');
    }
 
    // Get available times (AJAX)
@@ -220,6 +227,18 @@ class BookingController extends Controller
                ]));
            }
            
+           // Log aktivitas eksport
+           ActivityLogService::logExport(
+               'bookings', 
+               "Mengekspor data booking " . 
+               ($request->has('start_date') ? "dari tanggal " . $request->start_date : "") . 
+               ($request->has('end_date') ? " sampai tanggal " . $request->end_date : ""),
+               [
+                   'total_records' => $bookings->count(),
+                   'filters' => $request->only(['start_date', 'end_date'])
+               ]
+           );
+           
            $writer->close();
            
        } catch (\Exception $e) {
@@ -272,7 +291,8 @@ class BookingController extends Controller
        $booking = Booking::findOrFail($id);
        $booking->delete();
        
-       return redirect()->back()->with('success', 'Booking berhasil dihapus!');
+       $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 'admin.';
+       return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil dihapus!');
    }
 
    // Tampilkan halaman daftar booking (admin)
@@ -306,6 +326,10 @@ class BookingController extends Controller
        
        // Get paginated results
        $bookings = $query->paginate(10);
+       
+       if (Auth::check() && Auth::user()->role === 'admin_bas') {
+           return view('admin_bas.bookings.index', compact('bookings'));
+       }
        
        return view('admin.bookings.index', compact('bookings'));
    }
