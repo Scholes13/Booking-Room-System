@@ -48,6 +48,14 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Override API endpoints for BAS role -->
+    <script>
+        window.reportApiEndpoints = {
+            getData: '{{ route('bas.reports.data') }}',
+            export: '{{ route('bas.reports.export') }}'
+        };
+    </script>
+    
     <!-- Our application scripts -->
     <script src="{{ asset('js/admin/reports/filter-manager.js') }}"></script>
     <script src="{{ asset('js/admin/reports/report-generator.js') }}"></script>
@@ -56,7 +64,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Inisialisasi Chart.js defaults
+                // Atur default Chart.js
                 Chart.defaults.font.family = "'Poppins', sans-serif";
                 Chart.defaults.plugins.tooltip.padding = 10;
                 Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(0, 0, 0, 0.8)';
@@ -66,11 +74,12 @@
                 Chart.defaults.plugins.tooltip.borderRadius = 4;
         
                 // Pastikan filterManager sudah tersedia
-                const filterManager = window.filterManager; 
-                // Inisialisasi ReportGenerator (untuk load & display report)
+                const filterManager = window.filterManager;
+                
+                // Inisialisasi ReportGenerator
                 const reportGenerator = new ReportGenerator(filterManager);
 
-                // Inisialisasi ExportManager (untuk handle export modal)
+                // Inisialisasi ExportManager
                 const exportManager = new ExportManager(filterManager);
 
                 // Simpan instance untuk debugging
@@ -79,8 +88,10 @@
                     report: reportGenerator,
                     export: exportManager
                 };
+                
+                console.log('BAS role: Report managers initialized successfully');
             } catch (error) {
-                console.error('Error initializing managers:', error);
+                console.error('Error initializing BAS report managers:', error);
             }
         });
     </script>

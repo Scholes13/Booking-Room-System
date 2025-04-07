@@ -9,6 +9,7 @@
 const ActivityFilterManagerApp = (function() {
     class ActivityFilterManager {
         constructor() {
+            this.filters = {}; // Menyimpan filter saat ini
             this.initializeElements();
             this.initializeEventListeners();
             this.updatePeriodSelector(); // Generate period selector on load
@@ -20,6 +21,17 @@ const ActivityFilterManagerApp = (function() {
             this.reportType = document.getElementById('report_type');
             this.timePeriod = document.getElementById('time_period');
             this.periodContainer = document.getElementById('period_container');
+            
+            console.log('Filter elements initialized:', {
+                reportType: this.reportType,
+                timePeriod: this.timePeriod,
+                periodContainer: this.periodContainer
+            });
+            
+            // Periksa jika elemen tidak ditemukan
+            if (!this.reportType) console.error('Element #report_type not found');
+            if (!this.timePeriod) console.error('Element #time_period not found');
+            if (!this.periodContainer) console.error('Element #period_container not found');
         }
 
         initializeEventListeners() {
@@ -123,17 +135,39 @@ const ActivityFilterManagerApp = (function() {
             const params = {
                 report_type: this.reportType?.value || 'employee_activity',
                 time_period: this.timePeriod?.value || 'monthly',
-                year: document.getElementById('year')?.value || new Date().getFullYear()
+                year: document.getElementById('year')?.value || new Date().getFullYear().toString()
             };
 
             // Bulan / quarter
             if (params.time_period === 'monthly') {
                 const monthElement = document.getElementById('month');
-                if (monthElement) params.month = monthElement.value;
+                if (monthElement) {
+                    params.month = monthElement.value;
+                    console.log('Month element value:', monthElement.value, 'type:', typeof monthElement.value);
+                } else {
+                    // Default to current month
+                    params.month = (new Date().getMonth() + 1).toString();
+                    console.log('Using default month:', params.month);
+                }
             } else if (params.time_period === 'quarterly') {
                 const quarterElement = document.getElementById('quarter');
-                if (quarterElement) params.quarter = quarterElement.value;
+                if (quarterElement) {
+                    params.quarter = quarterElement.value;
+                    console.log('Quarter element value:', quarterElement.value, 'type:', typeof quarterElement.value);
+                } else {
+                    // Default to current quarter
+                    params.quarter = (Math.floor(new Date().getMonth() / 3) + 1).toString();
+                    console.log('Using default quarter:', params.quarter);
+                }
             }
+
+            // Pastikan semua nilai numerik adalah string untuk konsistensi
+            params.year = params.year.toString();
+            if (params.month) params.month = params.month.toString();
+            if (params.quarter) params.quarter = params.quarter.toString();
+
+            // Simpan params sebagai properti filters
+            this.filters = params;
 
             console.log("Activity Filter Params:", params);
             return params;
@@ -141,10 +175,9 @@ const ActivityFilterManagerApp = (function() {
 
         init() {
             // Initialize the filter manager
-            this.cacheElements();
-            this.setupEventListeners();
-            this.initializeDynamicPeriod();
-            this.updatePeriodInputs();
+            this.initializeElements();
+            this.initializeEventListeners();
+            this.updatePeriodSelector();
             
             // Make this instance available globally for other scripts
             window.activityFilterManager = this;
@@ -152,6 +185,54 @@ const ActivityFilterManagerApp = (function() {
             // Initialize with current page url path
             this.isBasRole = window.location.pathname.includes('/bas/');
             console.log(`[ActivityFilterManager] Initialized with prefix: ${this.isBasRole ? 'bas' : 'admin'}`);
+            
+            return this; // Return this for chaining
+        }
+
+        async fetchReportData() {
+            const params = this.getFilterParams();
+            let endpoint = 'data';
+            
+            // Gunakan endpoint /detailed untuk detailed_activity
+            if (params.report_type === 'detailed_activity') {
+                endpoint = 'detailed';
+            }
+            
+            const url = `/${this.isBasRole ? 'bas' : 'admin'}/activity/${endpoint}`;
+            
+            console.log('Fetching report data:', {
+                url: url,
+                params: params,
+                isBasRole: this.isBasRole
+            });
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(params)
+                });
+                
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Report data received:', data);
+                return data;
+            } catch (error) {
+                console.error('Error fetching report data:', error);
+                throw error;
+            }
+        }
+
+        setReportGenerator(reportGenerator) {
+            this.reportGenerator = reportGenerator;
         }
     }
 
@@ -162,7 +243,9 @@ const ActivityFilterManagerApp = (function() {
     };
 })();
 
-// Inisialisasi ActivityFilterManager saat DOM siap
-document.addEventListener('DOMContentLoaded', () => {
-    window.activityFilterManager = ActivityFilterManagerApp.create();
-});
+// Inisialisasi ini tidak dibutuhkan lagi karena akan diinisialisasi di file init.js
+// atau langsung di view
+
+// document.addEventListener('DOMContentLoaded', () => {
+//     window.activityFilterManager = ActivityFilterManagerApp.create();
+// });

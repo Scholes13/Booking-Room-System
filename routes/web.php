@@ -201,13 +201,20 @@ Route::group(['prefix' => 'admin/activity', 'middleware' => \App\Http\Middleware
 });
 
 // -------------------------------------------------------------------
-//     R O U T E   A R E A   A D M I N   B A S
+//                   ROUTE AREA ADMIN BAS
 // -------------------------------------------------------------------
-Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMiddleware::class], function () {
-    // Dashboard (use the same as admin but with BAS controller)
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('bas.dashboard');
+Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMiddleware::class], function() {
+    Route::get('/dashboard', [AdminBASController::class, 'dashboard'])->name('bas.dashboard');
     
-    // Activity Management Routes
+    // Activity Reports Routes for BAS
+    Route::prefix('activity')->group(function () {
+        Route::get('/', [ActivityReportController::class, 'index'])->name('bas.activity.index');
+        Route::post('/data', [ActivityReportController::class, 'getData'])->name('bas.activity.data');
+        Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('bas.activity.detailed');
+        Route::post('/export', [ActivityReportController::class, 'export'])->name('bas.activity.export');
+    });
+
+    // Activities Management Routes
     Route::prefix('activities')->group(function () {
         Route::get('/', [AdminBASController::class, 'activitiesIndex'])->name('bas.activities.index');
         Route::get('/create', [AdminBASController::class, 'createActivity'])->name('bas.activities.create');
@@ -219,9 +226,9 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::get('/json', [AdminBASController::class, 'activitiesJson'])->name('bas.activities.json');
     });
     
-    // All the other admin routes that should be accessible to Admin BAS role
+    // Meeting Rooms Routes
     Route::prefix('meeting-rooms')->group(function () {
-        Route::get('/', [AdminController::class, 'meetingRooms'])->name('bas.meeting_rooms');
+        Route::get('/', [AdminBASController::class, 'meetingRooms'])->name('bas.meeting_rooms');
         Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('bas.meeting_rooms.create');
         Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('bas.meeting_rooms.store');
         Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('bas.meeting_rooms.edit');
@@ -229,16 +236,16 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('bas.meeting_rooms.delete');
     });
     
-    // Departments
+    // Departments Routes
     Route::prefix('departments')->group(function () {
-        Route::get('/', [AdminController::class, 'departments'])->name('bas.departments');
-        Route::post('/', [AdminController::class, 'storeDepartment'])->name('bas.departments.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editDepartment'])->name('bas.departments.edit');
-        Route::put('/{id}', [AdminController::class, 'updateDepartment'])->name('bas.departments.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('bas.departments.delete');
+        Route::get('/', [AdminBASController::class, 'departments'])->name('bas.departments');
+        Route::post('/', [AdminBASController::class, 'storeDepartment'])->name('bas.departments.store');
+        Route::get('/{id}/edit', [AdminBASController::class, 'editDepartment'])->name('bas.departments.edit');
+        Route::put('/{id}', [AdminBASController::class, 'updateDepartment'])->name('bas.departments.update');
+        Route::delete('/{id}', [AdminBASController::class, 'deleteDepartment'])->name('bas.departments.delete');
     });
     
-    // Bookings
+    // Bookings Routes
     Route::prefix('bookings')->group(function () {
         Route::get('/', [BookingController::class, 'index'])->name('bas.bookings.index');
         Route::get('/export', [BookingController::class, 'export'])->name('bas.bookings.export');
@@ -251,36 +258,21 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::post('/{booking}/reject', [AdminController::class, 'rejectBooking'])->name('bas.bookings.reject');
     });
 
-    // Employees
+    // Employees Routes
     Route::prefix('employees')->group(function () {
-        Route::get('/', [EmployeeController::class, 'index'])->name('bas.employees');
-        Route::get('/create', [EmployeeController::class, 'create'])->name('bas.employees.create');
-        Route::post('/', [EmployeeController::class, 'store'])->name('bas.employees.store');
+        Route::get('/', [AdminBASController::class, 'employees'])->name('bas.employees');
+        Route::get('/create', [AdminBASController::class, 'createEmployee'])->name('bas.employees.create');
+        Route::post('/', [AdminBASController::class, 'storeEmployee'])->name('bas.employees.store');
         Route::get('/export', [EmployeeController::class, 'export'])->name('bas.employees.export');
-        Route::get('/{id}/edit', [EmployeeController::class, 'edit'])->name('bas.employees.edit');
-        Route::put('/{id}', [EmployeeController::class, 'update'])->name('bas.employees.update');
-        Route::delete('/{id}', [EmployeeController::class, 'destroy'])->name('bas.employees.delete');
+        Route::get('/{id}/edit', [AdminBASController::class, 'editEmployee'])->name('bas.employees.edit');
+        Route::put('/{id}', [AdminBASController::class, 'updateEmployee'])->name('bas.employees.update');
+        Route::delete('/{id}', [AdminBASController::class, 'destroyEmployee'])->name('bas.employees.delete');
     });
     
-    // Reports
+    // Reports Routes
     Route::prefix('reports')->group(function () {
-        Route::get('/', [ReportController::class, 'index'])->name('bas.reports');
+        Route::get('/', [AdminBASController::class, 'reports'])->name('bas.reports');
         Route::post('/data', [ReportController::class, 'getData'])->name('bas.reports.data');
         Route::post('/export', [ReportController::class, 'export'])->name('bas.reports.export');
-        
-        // Activity Reports
-        Route::prefix('activities')->group(function () {
-            Route::get('/', [AdminController::class, 'activityReports'])->name('bas.activity.reports');
-            Route::get('/export', [AdminController::class, 'exportActivityReports'])->name('bas.activity.reports.export');
-            Route::get('/print', [AdminController::class, 'printActivityReports'])->name('bas.activity.reports.print');
-        });
-    });
-    
-    // Activity Report Routes (legacy format - keeping for compatibility)
-    Route::prefix('activity-reports')->group(function () {
-        Route::get('/', [ActivityReportController::class, 'index'])->name('bas.activity.index');
-        Route::post('/data', [ActivityReportController::class, 'getData'])->name('bas.activity.data');
-        Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('bas.activity.detailed');
-        Route::post('/export', [ActivityReportController::class, 'export'])->name('bas.activity.export');
     });
 });

@@ -45,10 +45,10 @@ class AdminController extends Controller
             $request->session()->regenerate();
             $user = Auth::user();
 
-            // Simpan role di session
+            // Set role in session without flushing first
             session(['user_role' => $user->role]);
 
-            // Pisahkan admin & superadmin
+            // Pisahkan admin & superadmin & admin_bas berdasarkan role
             if ($user->role === 'superadmin') {
                 return redirect()->route('superadmin.dashboard')
                                ->with('success', 'Selamat datang, Super Admin!');
@@ -58,13 +58,13 @@ class AdminController extends Controller
             } elseif ($user->role === 'admin_bas') {
                 return redirect()->route('bas.dashboard')
                                ->with('success', 'Selamat datang, Admin BAS!');
+            } else {
+                // Jika role tidak valid, logout dan kembalikan error
+                Auth::logout();
+                session()->forget('user_role');
+                return redirect()->route('admin.login')
+                    ->with('error', 'Anda tidak memiliki akses ke area admin. Role tidak valid.');
             }
-
-            // Jika role tidak sesuai, logout dan kembalikan error
-            Auth::logout();
-            session()->forget('user_role');
-            return redirect()->back()
-                           ->with('error', 'Anda tidak memiliki akses ke area admin.');
         }
 
         return redirect()->back()
@@ -207,11 +207,7 @@ class AdminController extends Controller
     {
         $rooms = MeetingRoom::orderBy('name', 'asc')->get();
         
-        // Check if user is Admin BAS
-        if (Auth::check() && Auth::user()->role === 'admin_bas') {
-            return view('admin_bas.meeting-rooms.index', compact('rooms'));
-        }
-        
+        // Only check for superadmin, BAS now has its own controller
         $view = $this->getViewByRole('admin.meeting-rooms.index');
         
         return view($view, compact('rooms'));
@@ -365,8 +361,7 @@ class AdminController extends Controller
             $bookingData
         );
 
-        $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 
-                 (Auth::check() && Auth::user()->role === 'superadmin' ? 'superadmin.' : 'admin.');
+        $prefix = Auth::check() && Auth::user()->role === 'superadmin' ? 'superadmin.' : 'admin.';
         
         return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil dihapus.');
     }

@@ -52,6 +52,14 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Override API endpoints for admin role -->
+    <script>
+        window.reportApiEndpoints = {
+            getData: '{{ route('admin.reports.data') }}',
+            export: '{{ route('admin.reports.export') }}'
+        };
+    </script>
+    
     <!-- Our application scripts -->
     <script src="{{ asset('js/admin/reports/filter-manager.js') }}"></script>
     <script src="{{ asset('js/admin/reports/report-generator.js') }}"></script>
@@ -83,8 +91,10 @@
                     report: reportGenerator,
                     export: exportManager
                 };
+                
+                console.log('Admin role: Report managers initialized successfully');
             } catch (error) {
-                console.error('Error initializing managers:', error);
+                console.error('Error initializing admin report managers:', error);
             }
         });
     </script>

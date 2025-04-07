@@ -12,15 +12,17 @@ class SuperAdminMiddleware
     {
         // Pastikan user sudah login
         if (!Auth::check()) {
-            return redirect()->route('admin.login')->with('error', 'Anda harus login sebagai super admin.');
+            return redirect()->route('admin.login')
+                ->with('error', 'Anda harus login sebagai super admin.');
         }
         
         $user = Auth::user();
 
         // Periksa apakah user memiliki role superadmin
         if ($user->role !== 'superadmin') {
-            Auth::logout();
-            return redirect()->route('admin.login')->with('error', 'Anda tidak memiliki akses ke area super admin.');
+            // Don't logout, just redirect with error message
+            return redirect()->route('admin.login')
+                ->with('error', 'Anda tidak memiliki akses ke area super admin.');
         }
 
         // Simpan role di session untuk memastikan konsistensi

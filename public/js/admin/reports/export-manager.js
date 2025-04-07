@@ -14,9 +14,22 @@ class ExportManager {
         this.confirmBtn = document.getElementById('confirmExport');
         this.formatSelect = document.getElementById('export_format');
         this.includeChartsCheckbox = document.getElementById('include_charts');
+
+        // Validate required elements
+        if (!this.exportBtn || !this.exportModal || !this.closeModalBtn || 
+            !this.cancelBtn || !this.confirmBtn || !this.formatSelect || 
+            !this.includeChartsCheckbox) {
+            console.error('Required elements for export functionality are missing');
+            return;
+        }
     }
 
     initializeEventListeners() {
+        if (!this.exportBtn || !this.exportModal || !this.closeModalBtn || 
+            !this.cancelBtn || !this.confirmBtn) {
+            return;
+        }
+
         // Tombol "Export" -> showModal
         this.exportBtn.addEventListener('click', () => this.showModal());
 
@@ -38,11 +51,13 @@ class ExportManager {
     }
 
     showModal() {
+        if (!this.exportModal) return;
         this.exportModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden'; // Prevent background scroll
     }
 
     hideModal() {
+        if (!this.exportModal) return;
         this.exportModal.classList.add('hidden');
         document.body.style.overflow = ''; // Restore scroll
     }
@@ -59,7 +74,15 @@ class ExportManager {
             this.confirmBtn.disabled = true;
             this.confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
 
-            const response = await fetch(`${window.location.origin}/admin/reports/export`, {
+            // Determine the correct endpoint based on the current URL path
+            let endpoint = '/admin/reports/export';
+            if (window.location.pathname.includes('/bas/')) {
+                endpoint = '/bas/reports/export';
+            } else if (window.location.pathname.includes('/superadmin/')) {
+                endpoint = '/superadmin/reports/export';
+            }
+
+            const response = await fetch(`${window.location.origin}${endpoint}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,5 +137,29 @@ class ExportManager {
             this.confirmBtn.disabled = false;
             this.confirmBtn.innerHTML = 'Export';
         }
+    }
+
+    buildExportParams() {
+        if (!this.filterManager || !this.formatSelect || !this.includeChartsCheckbox) {
+            console.error('Required components for export are not initialized');
+            return {};
+        }
+        
+        // Get filter parameters from filter manager
+        const params = this.filterManager.getFilterParams();
+        
+        // Add export-specific parameters
+        params.format = this.formatSelect.value;
+        params.include_charts = this.includeChartsCheckbox.checked;
+        
+        return params;
+    }
+    
+    showExportLoading() {
+        if (!this.confirmBtn) return;
+        
+        // Disable button and show loading indicator
+        this.confirmBtn.disabled = true;
+        this.confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Exporting...';
     }
 }

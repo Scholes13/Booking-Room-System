@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Employee;
 use Carbon\Carbon;
 use App\Services\ReportExportService;
@@ -21,7 +22,45 @@ class ActivityReportController extends Controller
     public function index()
     {
         Log::debug('ActivityReportController@index called');
-        return view('admin.activity-reports.index');
+        
+        $user = Auth::user();
+        
+        // Redirect to correct URL based on role
+        if ($user) {
+            $currentPath = request()->path();
+            
+            switch ($user->role) {
+                case 'superadmin':
+                    if (!str_starts_with($currentPath, 'superadmin')) {
+                        return redirect()->route('superadmin.activity.index');
+                    }
+                    $view = 'superadmin.activity-reports.index';
+                    break;
+                    
+                case 'admin_bas':
+                    if (!str_starts_with($currentPath, 'bas')) {
+                        return redirect()->route('bas.activity.index');
+                    }
+                    $view = 'admin_bas.activity-reports.index';
+                    break;
+                    
+                case 'admin':
+                    if (!str_starts_with($currentPath, 'admin')) {
+                        return redirect()->route('admin.activity.index');
+                    }
+                    $view = 'admin.activity-reports.index';
+                    break;
+                    
+                default:
+                    return redirect()->route('admin.login')
+                        ->with('error', 'Unauthorized access.');
+            }
+        } else {
+            return redirect()->route('admin.login')
+                ->with('error', 'Please login to access this page.');
+        }
+        
+        return view($view);
     }
 
     public function getData(Request $request)
@@ -55,7 +94,25 @@ class ActivityReportController extends Controller
 
             // Apply time filters
             $dateRange = $this->getDateRange($timePeriod, $year, $month, $quarter);
+            
+            // Log the SQL query untuk debugging
+            DB::enableQueryLog();
+            
             $query->whereBetween('start_datetime', [$dateRange['start'], $dateRange['end']]);
+            
+            // Cetak jumlah data awal sebelum filter
+            $totalActivitiesBeforeFilter = DB::table('activities')->count();
+            Log::debug('Total activities before filter: ' . $totalActivitiesBeforeFilter);
+            
+            // Cetak total data setelah filter tanggal
+            $queryCopy = clone $query;
+            $totalAfterDateFilter = $queryCopy->count();
+            Log::debug('Total activities after date filter: ' . $totalAfterDateFilter);
+            
+            // Log the query yang akan dieksekusi
+            $bindingQuery = $query->toSql();
+            $bindings = $query->getBindings();
+            Log::debug('SQL Query: ' . $bindingQuery, ['bindings' => $bindings]);
 
             if ($reportType === 'employee_activity') {
                 Log::debug('Report Type: employee_activity');
@@ -74,6 +131,11 @@ class ActivityReportController extends Controller
                     )
                     ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
                     ->get();
+                
+                Log::debug('Executed queries:', DB::getQueryLog());
+                DB::disableQueryLog();
+                
+                Log::debug('Found ' . $activities->count() . ' activities');
 
                 // Calculate total days for each activity
                 $activities = $activities->map(function($activity) {
@@ -663,16 +725,30 @@ class ActivityReportController extends Controller
 
     private function getDateRange($timePeriod, $year, $month = null, $quarter = null)
     {
+        Log::debug('ActivityReportController@getDateRange input', [
+            'timePeriod' => $timePeriod,
+            'year' => $year . ' (type: ' . gettype($year) . ')',
+            'month' => $month . ' (type: ' . gettype($month) . ')',
+            'quarter' => $quarter . ' (type: ' . gettype($quarter) . ')'
+        ]);
+
+        // Konversi eksplisit ke integer untuk menghindari masalah tipe data
+        $year = (int) $year;
+        
+        // Pastikan variabel month dan quarter memiliki nilai default jika null
+        $month = $month !== null ? (int) $month : date('n');  // Default ke bulan saat ini
+        $quarter = $quarter !== null ? (int) $quarter : ceil(date('n') / 3);  // Default ke quarter saat ini
+
         $startDate = Carbon::create($year);
         $endDate = Carbon::create($year);
 
         switch ($timePeriod) {
             case 'monthly':
-                $startDate->setMonth((int)$month)->startOfMonth();
-                $endDate->setMonth((int)$month)->endOfMonth();
+                $startDate->setMonth($month)->startOfMonth();
+                $endDate->setMonth($month)->endOfMonth();
                 break;
             case 'quarterly':
-                $startMonth = ((int)$quarter - 1) * 3 + 1;
+                $startMonth = ($quarter - 1) * 3 + 1;
                 $startDate->setMonth($startMonth)->startOfMonth();
                 $endDate->setMonth($startMonth + 2)->endOfMonth();
                 break;
@@ -681,6 +757,12 @@ class ActivityReportController extends Controller
                 $endDate->endOfYear();
                 break;
         }
+
+        Log::debug('ActivityReportController@getDateRange output', [
+            'start' => $startDate->toDateTimeString(),
+            'end' => $endDate->toDateTimeString(),
+            'period' => $timePeriod
+        ]);
 
         return ['start' => $startDate, 'end' => $endDate];
     }

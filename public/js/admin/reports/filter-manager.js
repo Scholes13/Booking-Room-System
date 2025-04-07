@@ -1,6 +1,7 @@
 const FilterManagerApp = (function() {
     class FilterManager {
-        constructor() {
+        constructor(options = {}) {
+            this.baseUrl = options.baseUrl || '/admin/reports';
             this.initializeElements();
             this.initializeEventListeners();
             this.updatePeriodSelector(); // Generate period selector on load
@@ -10,12 +11,18 @@ const FilterManagerApp = (function() {
             this.timePeriod = document.getElementById('time_period');
             this.periodContainer = document.getElementById('period_container');
             this.reportType = document.getElementById('report_type');
+
+            // Validate required elements
+            if (!this.timePeriod || !this.periodContainer || !this.reportType) {
+                console.error('Required elements for filter functionality are missing');
+                return;
+            }
         }
 
         initializeEventListeners() {
-            if (this.timePeriod) {
-                this.timePeriod.addEventListener('change', () => this.updatePeriodSelector());
-            }
+            if (!this.timePeriod) return;
+            
+            this.timePeriod.addEventListener('change', () => this.updatePeriodSelector());
         }
 
         updatePeriodSelector() {
@@ -110,6 +117,11 @@ const FilterManagerApp = (function() {
         }
 
         getFilterParams() {
+            if (!this.reportType || !this.timePeriod) {
+                console.error('Required filter elements are not initialized');
+                return {};
+            }
+
             const params = {
                 report_type: this.reportType.value,
                 time_period: this.timePeriod.value,
@@ -138,13 +150,21 @@ const FilterManagerApp = (function() {
     }
 
     return {
-        create: function() {
-            return new FilterManager();
+        create: function(options = {}) {
+            return new FilterManager(options);
         }
     };
 })();
 
 // Inisialisasi FilterManager saat DOM sudah siap
 document.addEventListener('DOMContentLoaded', () => {
-    window.filterManager = FilterManagerApp.create();
+    // Determine the correct base URL based on the current path
+    let baseUrl = '/admin/reports';
+    if (window.location.pathname.includes('/bas/')) {
+        baseUrl = '/bas/reports';
+    } else if (window.location.pathname.includes('/superadmin/')) {
+        baseUrl = '/superadmin/reports';
+    }
+
+    window.filterManager = FilterManagerApp.create({ baseUrl });
 });

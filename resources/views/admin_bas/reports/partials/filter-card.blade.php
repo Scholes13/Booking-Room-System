@@ -32,7 +32,7 @@
         <button id="viewReport" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-hover transition-colors">
             <i class="fas fa-search mr-2"></i>View Report
         </button>
-        <button id="exportReport" class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition-colors">
+        <button id="exportReport" class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-secondary/80 transition-colors" data-export-url="{{ route('bas.reports.export') }}">
             <i class="fas fa-file-export mr-2"></i>Export
         </button>
     </div>

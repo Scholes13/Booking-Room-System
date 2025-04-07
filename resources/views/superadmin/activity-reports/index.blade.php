@@ -1,4 +1,4 @@
-@extends('admin.layout')
+@extends('superadmin.layout')
 
 @section('title', 'Activity Reports')
 
@@ -11,10 +11,10 @@
 
     <!-- Navigation Tabs -->
     <div class="flex border-b border-gray-200 mb-6">
-        <a href="{{ route('admin.reports') }}" class="py-3 px-6 font-medium text-sm text-gray-600 hover:text-primary">
+        <a href="{{ route('superadmin.reports') }}" class="py-3 px-6 font-medium text-sm text-gray-600 hover:text-primary">
             Booking Reports
         </a>
-        <a href="{{ route('admin.activity.index') }}" class="py-3 px-6 font-medium text-sm rounded-t-lg bg-primary text-white">
+        <a href="{{ route('superadmin.activity.index') }}" class="py-3 px-6 font-medium text-sm rounded-t-lg bg-primary text-white">
             Activity Reports
         </a>
     </div>
@@ -56,8 +56,6 @@
     <script src="{{ asset('js/admin/activityreports/report-generator.js') }}"></script>
     <script src="{{ asset('js/admin/activityreports/export-manager.js') }}"></script>
     <script src="{{ asset('js/admin/activityreports/init.js') }}"></script>
-    <!-- (Opsional) Jika ada file chart khusus activity, mis. activity-charts.js -->
-    {{-- <script src="{{ asset('js/admin/activityreports/activity-charts.js') }}"></script> --}}
 
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
@@ -88,4 +86,4 @@
         padding: 8px;
         border-radius: 6px;
     }
-</style>
+</style> 

@@ -20,7 +20,7 @@
     </div>
 
     <!-- Include Filter Card (Hanya 2 opsi: employee_activity, department_activity) -->
-    @include('admin_bas.activity-reports.partials.filter-card')
+    @include('admin.activity-reports.partials.filter-card')
 
     <!-- Loading State -->
     <div id="loading" class="hidden">
@@ -40,7 +40,7 @@
 </div>
 
 <!-- (Opsional) Export Modal, jika ingin ekspor data -->
-@include('admin_bas.activity-reports.partials.export-modal')
+@include('admin.activity-reports.partials.export-modal')
 
 @endsection
 
@@ -55,6 +55,7 @@
     <script src="{{ asset('js/admin/activityreports/filter-manager.js') }}"></script>
     <script src="{{ asset('js/admin/activityreports/report-generator.js') }}"></script>
     <script src="{{ asset('js/admin/activityreports/export-manager.js') }}"></script>
+    <script src="{{ asset('js/admin/activityreports/init.js') }}"></script>
     <!-- (Opsional) Jika ada file chart khusus activity, mis. activity-charts.js -->
     {{-- <script src="{{ asset('js/admin/activityreports/activity-charts.js') }}"></script> --}}
 
@@ -70,28 +71,10 @@
                 Chart.defaults.plugins.tooltip.borderWidth = 0;
                 Chart.defaults.plugins.tooltip.borderRadius = 4;
 
-                // Initialize filter manager
-                const filterManager = new ActivityFilterManager();
-                filterManager.init();
-
-                // Inisialisasi report generator khusus activity
-                const reportGenerator = new ActivityReportGenerator(filterManager);
-
-                // Inisialisasi export manager (jika ada export)
-                const exportManager = new ActivityExportManager(filterManager);
-
-                // (Opsional) Inisialisasi chart manager, jika pakai activity-charts.js
-                // const activityCharts = new ActivityCharts();
-
-                // Simpan instance ke window untuk debugging
-                window.activityReportManagers = {
-                    filter: filterManager,
-                    report: reportGenerator,
-                    export: exportManager,
-                    // charts: activityCharts
-                };
+                // Inisialisasi sudah dilakukan di init.js
+                // Tidak perlu menginisialisasi ulang di sini
             } catch (error) {
-                console.error('Error initializing Activity Reports managers:', error);
+                console.error('Error initializing chart defaults:', error);
             }
         });
     </script>
