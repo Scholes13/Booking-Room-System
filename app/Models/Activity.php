@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Activity extends Model
 {
@@ -13,6 +15,7 @@ class Activity extends Model
         'name',
         'department_id',
         'activity_type',
+        'other_activity_type',
         'description',
         'city',
         'province',
@@ -24,6 +27,35 @@ class Activity extends Model
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime'
     ];
+    
+    /**
+     * Get the activity's status based on current time.
+     */
+    protected function status(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                // If there's a status already set in the database, use it
+                if ($value) {
+                    return $value;
+                }
+                
+                $now = Carbon::now();
+                $startTime = $this->start_datetime;
+                $endTime = $this->end_datetime;
+
+                if ($now->lt($startTime)) {
+                    return 'scheduled';
+                } elseif ($now->gte($startTime) && $now->lte($endTime)) {
+                    return 'ongoing';
+                } elseif ($now->gt($endTime)) {
+                    return 'completed';
+                }
+
+                return 'scheduled'; // Default status
+            }
+        );
+    }
 
     public function department()
     {

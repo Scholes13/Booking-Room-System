@@ -22,7 +22,7 @@
 
     <div class="flex items-center justify-between">
         <h1 class="text-dark text-2xl font-bold leading-tight tracking-[-0.015em]">Manage Bookings</h1>
-        <a href="{{ route('admin.bookings.export') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-secondary text-dark gap-2 text-sm font-bold leading-normal tracking-[0.015em]">
+        <a href="{{ route('admin.bookings.export') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-[#24448c] text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#1c3670] transition-colors">
             Export CSV
         </a>
     </div>
@@ -40,10 +40,10 @@
 
         <!-- Filter Tabs -->
         <div class="flex mb-4">
-            <button type="button" id="btnAllBookings" class="filter-btn active px-4 py-2 rounded-full bg-secondary text-dark font-medium mr-2">All</button>
-            <button type="button" id="btnTodayBookings" class="filter-btn px-4 py-2 rounded-full text-dark font-medium mr-2">Today</button>
-            <button type="button" id="btnWeekBookings" class="filter-btn px-4 py-2 rounded-full text-dark font-medium mr-2">This Week</button>
-            <button type="button" id="btnMonthBookings" class="filter-btn px-4 py-2 rounded-full text-dark font-medium">This Month</button>
+            <button type="button" id="btnAllBookings" class="filter-btn active px-4 py-2 rounded-full bg-[#24448c] text-white font-medium mr-2 hover:bg-[#1c3670] transition-colors">All</button>
+            <button type="button" id="btnTodayBookings" class="filter-btn px-4 py-2 rounded-full bg-gray-100 text-dark font-medium mr-2 hover:bg-gray-200 transition-colors">Today</button>
+            <button type="button" id="btnWeekBookings" class="filter-btn px-4 py-2 rounded-full bg-gray-100 text-dark font-medium mr-2 hover:bg-gray-200 transition-colors">This Week</button>
+            <button type="button" id="btnMonthBookings" class="filter-btn px-4 py-2 rounded-full bg-gray-100 text-dark font-medium hover:bg-gray-200 transition-colors">This Month</button>
         </div>
 
         <!-- Bookings Table -->
@@ -149,9 +149,9 @@
 
                 @for ($i = $startPage; $i <= $endPage; $i++)
                     @if ($i == $bookings->currentPage())
-                        <span class="px-3 py-1 border border-primary bg-primary text-white rounded-md">{{ $i }}</span>
+                        <span class="px-3 py-1 border border-[#24448c] bg-[#24448c] text-white rounded-md">{{ $i }}</span>
                     @else
-                        <a href="{{ $bookings->url($i) }}" class="px-3 py-1 border border-border rounded-md hover:bg-secondary text-dark">{{ $i }}</a>
+                        <a href="{{ $bookings->url($i) }}" class="px-3 py-1 border border-border rounded-md hover:bg-gray-100 text-dark">{{ $i }}</a>
                     @endif
                 @endfor
 
@@ -190,7 +190,7 @@
             <form id="deleteForm" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-4 py-2 bg-danger text-white rounded-lg">Delete</button>
+                <button type="submit" class="px-4 py-2 bg-[#24448c] text-white rounded-lg hover:bg-[#1c3670] transition-colors">Delete</button>
             </form>
         </div>
     </div>
@@ -221,11 +221,13 @@
             button.addEventListener('click', function() {
                 // Remove active class from all buttons
                 filterButtons.forEach(btn => {
-                    btn.classList.remove('active', 'bg-secondary');
+                    btn.classList.remove('active', 'bg-[#24448c]', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-dark');
                 });
                 
                 // Add active class to clicked button
-                this.classList.add('active', 'bg-secondary');
+                this.classList.add('active', 'bg-[#24448c]', 'text-white');
+                this.classList.remove('bg-gray-100', 'text-dark');
                 
                 // Filter bookings based on button id
                 const filterId = this.id;

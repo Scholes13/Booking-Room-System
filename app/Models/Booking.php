@@ -23,6 +23,6 @@ class Booking extends Model
 
     public function meetingRoom()
     {
-        return $this->belongsTo(MeetingRoom::class);
+        return $this->belongsTo(MeetingRoom::class, 'meeting_room_id');
     }
 }

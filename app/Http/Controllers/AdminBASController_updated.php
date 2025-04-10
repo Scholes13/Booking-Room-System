@@ -102,29 +102,7 @@ class AdminBASController extends Controller
     public function createActivity()
     {
         $rooms = MeetingRoom::all();
-        $employees = \App\Models\Employee::orderBy('name')->get();
-        $activityTypes = \App\Models\ActivityType::where('is_active', true)->orderBy('name')->get();
-        
-        // Data provinsi dan kota (contoh data)
-        $provinces = [
-            'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi', 'Sumatera Selatan',
-            'Bengkulu', 'Lampung', 'Kepulauan Bangka Belitung', 'Kepulauan Riau', 'DKI Jakarta',
-            'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
-            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat', 'Kalimantan Tengah',
-            'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara',
-            'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo',
-            'Sulawesi Barat', 'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
-        ];
-
-        $cities = [
-            // Contoh kota-kota besar di Indonesia
-            'Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur',
-            'Bandung', 'Bekasi', 'Tangerang', 'Depok', 'Bogor', 'Semarang', 'Yogyakarta',
-            'Surabaya', 'Malang', 'Medan', 'Palembang', 'Makassar', 'Balikpapan', 'Banjarmasin',
-            'Pontianak', 'Padang', 'Pekanbaru', 'Denpasar', 'Manado', 'Sleman'
-        ];
-        
-        return view('admin_bas.activities.create', compact('rooms', 'employees', 'activityTypes', 'provinces', 'cities'));
+        return view('admin_bas.activities.create', compact('rooms'));
     }
 
     /**
@@ -165,29 +143,7 @@ class AdminBASController extends Controller
     public function editActivity(Activity $activity)
     {
         $rooms = MeetingRoom::all();
-        $employees = \App\Models\Employee::orderBy('name')->get();
-        $activityTypes = \App\Models\ActivityType::where('is_active', true)->orderBy('name')->get();
-        
-        // Data provinsi dan kota (contoh data)
-        $provinces = [
-            'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi', 'Sumatera Selatan',
-            'Bengkulu', 'Lampung', 'Kepulauan Bangka Belitung', 'Kepulauan Riau', 'DKI Jakarta',
-            'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
-            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat', 'Kalimantan Tengah',
-            'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara',
-            'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo',
-            'Sulawesi Barat', 'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
-        ];
-
-        $cities = [
-            // Contoh kota-kota besar di Indonesia
-            'Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur',
-            'Bandung', 'Bekasi', 'Tangerang', 'Depok', 'Bogor', 'Semarang', 'Yogyakarta',
-            'Surabaya', 'Malang', 'Medan', 'Palembang', 'Makassar', 'Balikpapan', 'Banjarmasin',
-            'Pontianak', 'Padang', 'Pekanbaru', 'Denpasar', 'Manado', 'Sleman'
-        ];
-        
-        return view('admin_bas.activities.edit', compact('activity', 'rooms', 'provinces', 'cities', 'employees', 'activityTypes'));
+        return view('admin_bas.activities.edit', compact('activity', 'rooms'));
     }
 
     /**
@@ -200,6 +156,7 @@ class AdminBASController extends Controller
             'description' => 'nullable|string',
             'start_datetime' => 'required|date',
             'end_datetime' => 'required|date|after:start_datetime',
+            'organizer' => 'nullable|string|max:255',
             'city' => 'nullable|string|max:255',
             'province' => 'nullable|string|max:255',
             'activity_type' => 'nullable|string|max:255',

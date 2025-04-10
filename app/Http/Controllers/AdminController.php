@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\ActivityReportController;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -88,19 +89,31 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
+        // Get today's date
+        $today = now()->startOfDay();
+        
+        // Get bookings for today
+        $todayBookings = Booking::with('meetingRoom')
+            ->whereDate('date', $today)
+            ->orderBy('start_time', 'asc')
+            ->get();
+            
+        // Get all bookings for stats
         $bookings = Booking::with('meetingRoom')
             ->orderBy('date', 'desc')
             ->orderBy('start_time', 'desc')
             ->limit(10)
             ->get();
             
+        // Get meeting rooms for usage stats
+        $meetingRooms = MeetingRoom::all();
+        
         // Check if user is Admin BAS or regular Admin
         if (Auth::check() && Auth::user()->role === 'admin_bas') {
             // For Admin BAS, we need to get all activity statistics
             $totalActivities = Activity::count();
             
             // Use today's date for filtering
-            $today = now()->startOfDay();
             $todayActivities = Activity::whereDate('start_datetime', $today)->count();
             
             // Get week statistics
@@ -128,6 +141,8 @@ class AdminController extends Controller
                 
             return view('admin_bas.dashboard.index', compact(
                 'bookings', 
+                'todayBookings',
+                'meetingRooms',
                 'totalActivities', 
                 'todayActivities', 
                 'weekActivities', 
@@ -137,7 +152,7 @@ class AdminController extends Controller
             ));
         }
 
-        return view('admin.dashboard.index', compact('bookings'));
+        return view('admin.dashboard.index', compact('bookings', 'todayBookings', 'meetingRooms'));
     }
 
     /**
@@ -626,5 +641,140 @@ class AdminController extends Controller
         $viewPrefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'admin_bas' : 'admin';
         
         return view($viewPrefix . '.activity-reports.print', compact('data', 'reportType', 'timePeriod', 'year', 'month', 'quarter'));
+    }
+
+    public function getBookings(Request $request)
+    {
+        $query = Booking::with(['meetingRoom'])
+            ->select('bookings.*')
+            ->distinct();
+
+        // Filter berdasarkan waktu
+        if ($request->filter === 'today') {
+            $query->whereDate('date', Carbon::today());
+        } elseif ($request->filter === 'week') {
+            $query->whereBetween('date', [
+                Carbon::now()->startOfWeek(),
+                Carbon::now()->endOfWeek()
+            ]);
+        } elseif ($request->filter === 'month') {
+            $query->whereYear('date', Carbon::now()->year)
+                ->whereMonth('date', Carbon::now()->month);
+        } elseif ($request->filter === 'custom' && $request->date) {
+            $query->whereDate('date', Carbon::parse($request->date));
+        }
+
+        $bookings = $query->orderBy('date', 'desc')->orderBy('start_time', 'desc')->get();
+
+        // Hitung statistik
+        $comparisonData = $this->calculateBookingComparison($bookings, $request);
+        $stats = [
+            'total_bookings' => $bookings->count(),
+            'booking_comparison' => $comparisonData,
+            'booking_trend' => $this->calculateBookingTrend($bookings),
+            'room_usage' => $this->calculateRoomUsage($bookings),
+            'department_stats' => $this->calculateDepartmentStats($bookings)
+        ];
+
+        return response()->json([
+            'bookings' => $bookings,
+            'stats' => $stats
+        ]);
+    }
+
+    private function calculateBookingComparison($bookings, Request $request = null)
+    {
+        // Get current filter type
+        $filterType = $request ? $request->filter : 'today';
+        $customDate = $request ? $request->date : null;
+        
+        $totalBookings = $bookings->count();
+        $previousBookings = 0;
+        $comparisonText = '';
+        $percentageChange = 0;
+        
+        // Calculate previous period bookings based on filter type
+        if ($filterType === 'today' || $filterType === null) {
+            // Compare with yesterday
+            $yesterday = Carbon::yesterday();
+            $previousBookings = Booking::whereDate('date', $yesterday)->count();
+            $comparisonText = 'compared to yesterday';
+        } 
+        elseif ($filterType === 'week') {
+            // Compare with previous week
+            $previousWeekStart = Carbon::now()->startOfWeek()->subWeek();
+            $previousWeekEnd = Carbon::now()->startOfWeek()->subDay();
+            $previousBookings = Booking::whereBetween('date', [$previousWeekStart, $previousWeekEnd])->count();
+            $comparisonText = 'compared to last week';
+        } 
+        elseif ($filterType === 'month') {
+            // Compare with previous month
+            $previousMonthStart = Carbon::now()->startOfMonth()->subMonth();
+            $previousMonthEnd = Carbon::now()->startOfMonth()->subDay();
+            $previousBookings = Booking::whereBetween('date', [$previousMonthStart, $previousMonthEnd])->count();
+            $comparisonText = 'compared to last month';
+        } 
+        elseif ($filterType === 'custom' && $customDate) {
+            // Compare with previous day of the selected date
+            $selectedDate = Carbon::parse($customDate);
+            $previousDay = $selectedDate->copy()->subDay();
+            $previousBookings = Booking::whereDate('date', $previousDay)->count();
+            $comparisonText = 'compared to previous day';
+        }
+        
+        // Calculate percentage change
+        if ($previousBookings > 0) {
+            $percentageChange = round((($totalBookings - $previousBookings) / $previousBookings) * 100);
+        } elseif ($totalBookings > 0 && $previousBookings == 0) {
+            $percentageChange = 100; // If there were no previous bookings but there are now
+        } else {
+            $percentageChange = 0; // If both are 0
+        }
+        
+        return [
+            'previous_count' => $previousBookings,
+            'current_count' => $totalBookings,
+            'percentage_change' => $percentageChange,
+            'comparison_text' => $comparisonText,
+            'is_increase' => $totalBookings >= $previousBookings
+        ];
+    }
+
+    private function calculateBookingTrend($bookings)
+    {
+        // Implementasi perhitungan tren booking
+        // Contoh: Menggunakan perbandingan jumlah booking
+        $totalBookings = $bookings->count();
+        $previousBookings = Booking::whereDate('date', '<', Carbon::today())->count();
+        $trend = ($totalBookings > $previousBookings) ? 'meningkat' : 'menurun';
+        return $trend;
+    }
+
+    private function calculateRoomUsage($bookings)
+    {
+        // Implementasi perhitungan penggunaan ruangan
+        // Contoh: Menggunakan perbandingan jumlah booking
+        $totalBookings = $bookings->count();
+        $totalRooms = MeetingRoom::count();
+        
+        // Calculate usage as a percentage and round to nearest integer
+        $usage = ($totalBookings > 0 && $totalRooms > 0) ? round(($totalBookings / $totalRooms) * 100) : 0;
+        
+        return $usage;
+    }
+
+    private function calculateDepartmentStats($bookings)
+    {
+        // Implementasi perhitungan statistik departemen
+        // Contoh: Menggunakan perbandingan jumlah booking
+        $totalBookings = $bookings->count();
+        $totalDepartments = Department::count();
+        $departmentStats = [];
+        $departments = Department::all();
+        foreach ($departments as $department) {
+            $departmentBookings = $bookings->where('department', $department->name)->count();
+            $departmentStats[$department->name] = $departmentBookings;
+        }
+        return $departmentStats;
     }
 }

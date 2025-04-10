@@ -28,77 +28,70 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Card 1: Total Aktivitas -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-border">
-            <div class="flex justify-between items-start">
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-border">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <p class="text-gray-500 text-sm mb-1">Total Aktivitas</p>
-                    <h3 class="text-3xl font-bold">{{ $totalActivities ?? 0 }}</h3>
+                    <p class="text-gray-500 text-sm font-medium">Total Aktivitas</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ $totalActivities ?? 0 }}</h3>
                 </div>
-                <div class="p-2 bg-blue-100 rounded-full">
-                    <svg class="w-6 h-6 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                <div class="bg-blue-100 rounded-full p-3 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-2">
-                <a href="{{ route('bas.activities.index') }}" class="text-bas text-sm font-medium">Lihat semua</a>
-            </div>
+            <a href="{{ route('bas.activities.index') }}" class="text-bas text-sm font-medium hover:underline">Lihat semua</a>
         </div>
 
         <!-- Card 2: Aktivitas Hari Ini -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-border">
-            <div class="flex justify-between items-start">
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-border">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <p class="text-gray-500 text-sm mb-1">Aktivitas Hari Ini</p>
-                    <h3 class="text-3xl font-bold">{{ $todayActivities }}</h3>
+                    <p class="text-gray-500 text-sm font-medium">Aktivitas Hari Ini</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ $todayActivities }}</h3>
                 </div>
-                <div class="p-2 bg-green-100 rounded-full">
-                    <svg class="w-6 h-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div class="bg-green-100 rounded-full p-3 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-2">
-                <a href="{{ route('bas.activities.index') }}?date={{ date('Y-m-d') }}" class="text-bas text-sm font-medium">Lihat detail</a>
-            </div>
+            <a href="{{ route('bas.activities.index') }}?date={{ date('Y-m-d') }}" class="text-bas text-sm font-medium hover:underline">Lihat detail</a>
         </div>
 
         <!-- Card 3: Aktivitas Minggu Ini -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-border">
-            <div class="flex justify-between items-start">
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-border">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <p class="text-gray-500 text-sm mb-1">Aktivitas Minggu Ini</p>
-                    <h3 class="text-3xl font-bold">{{ $weekActivities }}</h3>
+                    <p class="text-gray-500 text-sm font-medium">Aktivitas Minggu Ini</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ $weekActivities }}</h3>
                 </div>
-                <div class="p-2 bg-purple-100 rounded-full">
-                    <svg class="w-6 h-6 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <div class="bg-purple-100 rounded-full p-3 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-2">
-                <a href="{{ route('bas.activities.index') }}?week=current" class="text-bas text-sm font-medium">Lihat detail</a>
-            </div>
+            <a href="{{ route('bas.activities.index') }}?week=current" class="text-bas text-sm font-medium hover:underline">Lihat detail</a>
         </div>
 
         <!-- Card 4: Aktivitas Bulan Ini -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-border">
-            <div class="flex justify-between items-start">
+        <div class="bg-white p-5 rounded-lg shadow-sm border border-border">
+            <div class="flex justify-between items-center mb-4">
                 <div>
-                    <p class="text-gray-500 text-sm mb-1">Aktivitas Bulan Ini</p>
-                    <h3 class="text-3xl font-bold">{{ $monthActivities }}</h3>
+                    <p class="text-gray-500 text-sm font-medium">Aktivitas Bulan Ini</p>
+                    <h3 class="text-3xl font-bold mt-1">{{ $monthActivities }}</h3>
                 </div>
-                <div class="p-2 bg-orange-100 rounded-full">
-                    <svg class="w-6 h-6 text-orange-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                <div class="bg-orange-100 rounded-full p-3 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </div>
             </div>
-            <div class="mt-2">
-                <a href="{{ route('bas.activities.index') }}?month={{ date('Y-m') }}" class="text-bas text-sm font-medium">Lihat detail</a>
-            </div>
+            <a href="{{ route('bas.activities.index') }}?month={{ date('Y-m') }}" class="text-bas text-sm font-medium hover:underline">Lihat detail</a>
         </div>
     </div>
 
@@ -114,8 +107,8 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Aktivitas</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruangan</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pembuat</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -126,7 +119,7 @@
                     @foreach($upcomingActivities as $activity)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $activity->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $activity->room->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $activity->city }}, {{ $activity->province }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ \Carbon\Carbon::parse($activity->start_datetime)->format('d M Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ \Carbon\Carbon::parse($activity->start_datetime)->format('H:i') }} - 
@@ -135,9 +128,9 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 @if($activity->status == 'scheduled') bg-blue-100 text-blue-800 
-                                @elseif($activity->status == 'ongoing') bg-green-100 text-green-800 
-                                @elseif($activity->status == 'completed') bg-gray-100 text-gray-800 
-                                @else bg-red-100 text-red-800 @endif">
+                                @elseif($activity->status == 'ongoing') bg-red-100 text-red-800 
+                                @elseif($activity->status == 'completed') bg-green-100 text-green-800 
+                                @else bg-gray-100 text-gray-800 @endif">
                                 {{ ucfirst($activity->status ?? 'scheduled') }}
                             </span>
                         </td>
@@ -173,8 +166,8 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead>
                     <tr>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Aktivitas</th>
-                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ruangan</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pembuat</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -185,7 +178,7 @@
                     @foreach($recentActivities as $activity)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $activity->name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $activity->room->name ?? 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $activity->city }}, {{ $activity->province }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ \Carbon\Carbon::parse($activity->start_datetime)->format('d M Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ \Carbon\Carbon::parse($activity->start_datetime)->format('H:i') }} - 
@@ -194,9 +187,9 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
                                 @if($activity->status == 'scheduled') bg-blue-100 text-blue-800 
-                                @elseif($activity->status == 'ongoing') bg-green-100 text-green-800 
-                                @elseif($activity->status == 'completed') bg-gray-100 text-gray-800 
-                                @else bg-red-100 text-red-800 @endif">
+                                @elseif($activity->status == 'ongoing') bg-red-100 text-red-800 
+                                @elseif($activity->status == 'completed') bg-green-100 text-green-800 
+                                @else bg-gray-100 text-gray-800 @endif">
                                 {{ ucfirst($activity->status ?? 'scheduled') }}
                             </span>
                         </td>

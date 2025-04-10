@@ -141,19 +141,6 @@
                 </div>
             </div>
 
-            <!-- Deskripsi -->
-            <div>
-                <label for="description" class="block text-gray-300 font-medium text-sm">Alasan / Deskripsi</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-comment-dots text-gray-400 mr-2"></i>
-                    <textarea id="description" 
-                              name="description" 
-                              class="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400" 
-                              rows="3" 
-                              required>{{ old('description') }}</textarea>
-                </div>
-            </div>
-
             <!-- Booking Type -->
             <div>
                 <label for="booking_type" class="block text-gray-300 font-medium text-sm">Type</label>
@@ -169,18 +156,20 @@
                 </div>
             </div>
 
-            <!-- External Description (Hidden by default) -->
-            <div id="external_description_container" class="hidden">
-                <label for="external_description" class="block text-gray-300 font-medium text-sm">Deskripsi Eksternal</label>
+            <!-- Deskripsi -->
+            <div>
+                <label for="description" class="block text-gray-300 font-medium text-sm">Alasan / Deskripsi</label>
                 <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-building text-gray-400 mr-2"></i>
-                    <textarea id="external_description" 
-                              name="external_description" 
+                    <i class="fas fa-comment-dots text-gray-400 mr-2"></i>
+                    <textarea id="description" 
+                              name="description" 
                               class="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400" 
                               rows="3" 
-                              placeholder="Silakan isi detail terkait booking eksternal...">{{ old('external_description') }}</textarea>
+                              required>{{ old('description') }}</textarea>
                 </div>
             </div>
+
+            <!-- External Description removed as requested -->
 
             <!-- Submit Button -->
             <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white p-3 rounded-md shadow-lg transform hover:scale-105 transition duration-300">
@@ -454,28 +443,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 @endpush
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    const bookingTypeSelect = document.getElementById('booking_type');
-    const externalDescContainer = document.getElementById('external_description_container');
-    const externalDescTextarea = document.getElementById('external_description');
-
-    // Show/hide external description based on booking type
-    function toggleExternalDescription() {
-        if (bookingTypeSelect.value === 'external') {
-            externalDescContainer.classList.remove('hidden');
-        } else {
-            externalDescContainer.classList.add('hidden');
-            externalDescTextarea.value = ''; // Clear the value when hidden
-        }
-    }
-
-    // Initial state
-    toggleExternalDescription();
-
-    // Listen for changes
-    bookingTypeSelect.addEventListener('change', toggleExternalDescription);
-});
-</script>
-@endpush
+<!-- JavaScript untuk external description telah dihapus -->

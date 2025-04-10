@@ -21,24 +21,24 @@ class ActivityController extends Controller
                              ->orderBy('name', 'asc')
                              ->get();
 
-        // Daftar lengkap jenis aktivitas (diurutkan alfabetis)
-        $activityTypes = [
-            'Courtesy Visit',
-            'External Activities',
-            'Hosting',
-            'Internal Activities',
-            'Meeting External (Meeting yang diundang oleh pihak luar)',
-            'Meeting Internal',
-            'Project / Tour / Event',
-            'Sales Call',
-            'Survey / Inspection',
-            'Training',
-            'Ulang Tahun Intern',
-            'Ulang Tahun Karyawan',
-            'Ulang Tahun Klien / Perusahaan',
-            'Ulang Tahun Partner',
-            'Lainnya' // Tetap di posisi terakhir
-        ];
+        // Ambil jenis aktivitas dari database
+        $dbActivityTypes = \App\Models\ActivityType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+            
+        // Konversi nama activity type dari bahasa Inggris ke bahasa Indonesia jika diperlukan
+        $activityTypes = [];
+        foreach ($dbActivityTypes as $type) {
+            if ($type == 'Other') {
+                // Skip 'Other' karena kita akan menambahkan 'Lainnya' di akhir
+                continue;
+            }
+            $activityTypes[] = $type;
+        }
+        
+        // Tambahkan 'Lainnya' di akhir array
+        $activityTypes[] = 'Lainnya';
 
         // Data provinsi dan kota (contoh data)
         $provinces = [
@@ -118,24 +118,24 @@ class ActivityController extends Controller
         // Ambil semua departemen
         $departments = Department::all();
         
-        // Daftar lengkap jenis aktivitas (diurutkan alfabetis)
-        $activityTypes = [
-            'Courtesy Visit',
-            'External Activities',
-            'Hosting',
-            'Internal Activities',
-            'Meeting External (Meeting yang diundang oleh pihak luar)',
-            'Meeting Internal',
-            'Project / Tour / Event',
-            'Sales Call',
-            'Survey / Inspection',
-            'Training',
-            'Ulang Tahun Intern',
-            'Ulang Tahun Karyawan',
-            'Ulang Tahun Klien / Perusahaan',
-            'Ulang Tahun Partner',
-            'Lainnya' // Tetap di posisi terakhir
-        ];
+        // Ambil jenis aktivitas dari database
+        $dbActivityTypes = \App\Models\ActivityType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+            
+        // Konversi nama activity type dari bahasa Inggris ke bahasa Indonesia jika diperlukan
+        $activityTypes = [];
+        foreach ($dbActivityTypes as $type) {
+            if ($type == 'Other') {
+                // Skip 'Other' karena kita akan menambahkan 'Lainnya' di akhir
+                continue;
+            }
+            $activityTypes[] = $type;
+        }
+        
+        // Tambahkan 'Lainnya' di akhir array
+        $activityTypes[] = 'Lainnya';
         
         return view('public.activity.calendar', compact('departments', 'activityTypes'));
     }
@@ -221,24 +221,24 @@ class ActivityController extends Controller
                              ->orderBy('name', 'asc')
                              ->get();
 
-        // Daftar lengkap jenis aktivitas (diurutkan alfabetis)
-        $activityTypes = [
-            'Courtesy Visit',
-            'External Activities',
-            'Hosting',
-            'Internal Activities',
-            'Meeting External (Meeting yang diundang oleh pihak luar)',
-            'Meeting Internal',
-            'Project / Tour / Event',
-            'Sales Call',
-            'Survey / Inspection',
-            'Training',
-            'Ulang Tahun Intern',
-            'Ulang Tahun Karyawan',
-            'Ulang Tahun Klien / Perusahaan',
-            'Ulang Tahun Partner',
-            'Lainnya' // Tetap di posisi terakhir
-        ];
+        // Ambil jenis aktivitas dari database
+        $dbActivityTypes = \App\Models\ActivityType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+            
+        // Konversi nama activity type dari bahasa Inggris ke bahasa Indonesia jika diperlukan
+        $activityTypes = [];
+        foreach ($dbActivityTypes as $type) {
+            if ($type == 'Other') {
+                // Skip 'Other' karena kita akan menambahkan 'Lainnya' di akhir
+                continue;
+            }
+            $activityTypes[] = $type;
+        }
+        
+        // Tambahkan 'Lainnya' di akhir array
+        $activityTypes[] = 'Lainnya';
 
         // Data provinsi dan kota (contoh data)
         $provinces = [
@@ -320,24 +320,24 @@ class ActivityController extends Controller
                              ->orderBy('name', 'asc')
                              ->get();
                              
-        // Daftar lengkap jenis aktivitas (diurutkan alfabetis)
-        $activityTypes = [
-            'Courtesy Visit',
-            'External Activities',
-            'Hosting',
-            'Internal Activities',
-            'Meeting External (Meeting yang diundang oleh pihak luar)',
-            'Meeting Internal',
-            'Project / Tour / Event',
-            'Sales Call',
-            'Survey / Inspection',
-            'Training',
-            'Ulang Tahun Intern',
-            'Ulang Tahun Karyawan',
-            'Ulang Tahun Klien / Perusahaan',
-            'Ulang Tahun Partner',
-            'Lainnya' // Tetap di posisi terakhir
-        ];
+        // Ambil jenis aktivitas dari database
+        $dbActivityTypes = \App\Models\ActivityType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+            
+        // Konversi nama activity type dari bahasa Inggris ke bahasa Indonesia jika diperlukan
+        $activityTypes = [];
+        foreach ($dbActivityTypes as $type) {
+            if ($type == 'Other') {
+                // Skip 'Other' karena kita akan menambahkan 'Lainnya' di akhir
+                continue;
+            }
+            $activityTypes[] = $type;
+        }
+        
+        // Tambahkan 'Lainnya' di akhir array
+        $activityTypes[] = 'Lainnya';
 
         // Data provinsi dan kota (contoh data)
         $provinces = [
@@ -447,24 +447,24 @@ class ActivityController extends Controller
         // Ambil semua departemen
         $departments = Department::all();
         
-        // Daftar lengkap jenis aktivitas (diurutkan alfabetis)
-        $activityTypes = [
-            'Courtesy Visit',
-            'External Activities',
-            'Hosting',
-            'Internal Activities',
-            'Meeting External (Meeting yang diundang oleh pihak luar)',
-            'Meeting Internal',
-            'Project / Tour / Event',
-            'Sales Call',
-            'Survey / Inspection',
-            'Training',
-            'Ulang Tahun Intern',
-            'Ulang Tahun Karyawan',
-            'Ulang Tahun Klien / Perusahaan',
-            'Ulang Tahun Partner',
-            'Lainnya' // Tetap di posisi terakhir
-        ];
+        // Ambil jenis aktivitas dari database
+        $dbActivityTypes = \App\Models\ActivityType::where('is_active', true)
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
+            
+        // Konversi nama activity type dari bahasa Inggris ke bahasa Indonesia jika diperlukan
+        $activityTypes = [];
+        foreach ($dbActivityTypes as $type) {
+            if ($type == 'Other') {
+                // Skip 'Other' karena kita akan menambahkan 'Lainnya' di akhir
+                continue;
+            }
+            $activityTypes[] = $type;
+        }
+        
+        // Tambahkan 'Lainnya' di akhir array
+        $activityTypes[] = 'Lainnya';
         
         return view('superadmin.activities.calendar', compact('departments', 'activityTypes'));
     }

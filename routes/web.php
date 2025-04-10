@@ -8,6 +8,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\ActivityReportController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,7 @@ Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.log
 // -------------------------------------------------------------------
 Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMiddleware::class], function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/dashboard/bookings', [AdminController::class, 'getBookings'])->name('admin.dashboard.bookings');
     
     // Meeting Rooms
     Route::prefix('meeting-rooms')->group(function () {
@@ -180,6 +182,16 @@ Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\Sup
         Route::post('/detailed', [ActivityReportController::class, 'getDetailedData'])->name('superadmin.activity.detailed');
         Route::post('/export', [ActivityReportController::class, 'export'])->name('superadmin.activity.export');
     });
+    
+    // Activity Types Routes
+    Route::prefix('activity-types')->group(function () {
+        Route::get('/', [ActivityTypeController::class, 'index'])->name('superadmin.activity-types.index');
+        Route::get('/create', [ActivityTypeController::class, 'create'])->name('superadmin.activity-types.create');
+        Route::post('/', [ActivityTypeController::class, 'store'])->name('superadmin.activity-types.store');
+        Route::get('/{activityType}/edit', [ActivityTypeController::class, 'edit'])->name('superadmin.activity-types.edit');
+        Route::put('/{activityType}', [ActivityTypeController::class, 'update'])->name('superadmin.activity-types.update');
+        Route::delete('/{activityType}', [ActivityTypeController::class, 'destroy'])->name('superadmin.activity-types.destroy');
+    });
 });
 
 // -------------------------------------------------------------------
@@ -243,6 +255,16 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::get('/{id}/edit', [AdminBASController::class, 'editDepartment'])->name('bas.departments.edit');
         Route::put('/{id}', [AdminBASController::class, 'updateDepartment'])->name('bas.departments.update');
         Route::delete('/{id}', [AdminBASController::class, 'deleteDepartment'])->name('bas.departments.delete');
+    });
+    
+    // Activity Types Routes
+    Route::prefix('activity-types')->group(function () {
+        Route::get('/', [ActivityTypeController::class, 'index'])->name('bas.activity-types.index');
+        Route::get('/create', [ActivityTypeController::class, 'create'])->name('bas.activity-types.create');
+        Route::post('/', [ActivityTypeController::class, 'store'])->name('bas.activity-types.store');
+        Route::get('/{activityType}/edit', [ActivityTypeController::class, 'edit'])->name('bas.activity-types.edit');
+        Route::put('/{activityType}', [ActivityTypeController::class, 'update'])->name('bas.activity-types.update');
+        Route::delete('/{activityType}', [ActivityTypeController::class, 'destroy'])->name('bas.activity-types.destroy');
     });
     
     // Bookings Routes

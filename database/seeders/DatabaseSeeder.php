@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class, // Create superadmin user
             AdminSeeder::class,      // Create admin users
             ResetDataSeeder::class,  // Reset and recreate other data
+            ActivityTypeSeeder::class, // Add activity types
         ]);
     }
 }

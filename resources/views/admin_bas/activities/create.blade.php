@@ -59,14 +59,19 @@
                 <div>
                     <label for="activity_type" class="block text-sm font-medium text-gray-700 mb-1">Jenis Aktivitas</label>
                     <select name="activity_type" id="activity_type" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 @error('activity_type') border-red-500 @enderror">
-                        <option value="">Pilih Jenis</option>
-                        <option value="Meeting" {{ old('activity_type') == 'Meeting' ? 'selected' : '' }}>Meeting</option>
-                        <option value="Invitation" {{ old('activity_type') == 'Invitation' ? 'selected' : '' }}>Invitation</option>
-                        <option value="Survey" {{ old('activity_type') == 'Survey' ? 'selected' : '' }}>Survey</option>
+                        <option value="">Pilih Jenis Aktivitas</option>
+                        @foreach($activityTypes as $type)
+                            <option value="{{ $type->name }}" {{ old('activity_type') == $type->name ? 'selected' : '' }}>{{ $type->name }}</option>
+                        @endforeach
                     </select>
                     @error('activity_type')
                         <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                     @enderror
+                </div>
+                
+                <div id="other_activity_type_container" style="display: none;">
+                    <label for="other_activity_type" class="block text-sm font-medium text-gray-700 mb-1">Jelaskan Jenis Aktivitas Lainnya</label>
+                    <input type="text" name="other_activity_type" id="other_activity_type" class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50" value="{{ old('other_activity_type') }}">
                 </div>
                 
                 <div>
@@ -136,4 +141,32 @@
         </form>
     </div>
 </div>
-@endsection 
+@endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const activityTypeSelect = document.getElementById('activity_type');
+        const otherActivityTypeContainer = document.getElementById('other_activity_type_container');
+        const otherActivityTypeInput = document.getElementById('other_activity_type');
+        
+        // Function to toggle the visibility of the other activity type field
+        function toggleOtherActivityType() {
+            if (activityTypeSelect.value === 'Other') {
+                otherActivityTypeContainer.style.display = 'block';
+                otherActivityTypeInput.setAttribute('required', 'required');
+            } else {
+                otherActivityTypeContainer.style.display = 'none';
+                otherActivityTypeInput.removeAttribute('required');
+                otherActivityTypeInput.value = '';
+            }
+        }
+        
+        // Initial check
+        toggleOtherActivityType();
+        
+        // Add event listener for changes
+        activityTypeSelect.addEventListener('change', toggleOtherActivityType);
+    });
+</script>
+@endpush 

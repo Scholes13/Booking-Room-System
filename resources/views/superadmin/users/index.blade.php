@@ -47,7 +47,11 @@
                         <td class="px-4 py-4">{{ $user->email }}</td>
                         <td class="px-4 py-4">
                             <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                                {{ ucfirst($user->role) }}
+                                @if($user->role == 'admin_bas')
+                                    Admin BAS
+                                @else
+                                    {{ ucfirst($user->role) }}
+                                @endif
                             </span>
                         </td>
                         <td class="px-4 py-4 text-right">

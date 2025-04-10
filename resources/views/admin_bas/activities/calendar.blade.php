@@ -16,24 +16,28 @@
     }
     /* Theme colors for event status */
     .event-scheduled {
-        background-color: #93c5fd;
-        border-color: #3b82f6;
+        background-color: #93c5fd !important;
+        border-color: #3b82f6 !important;
     }
     .event-ongoing {
-        background-color: #86efac;
-        border-color: #22c55e;
+        background-color: #86efac !important;
+        border-color: #22c55e !important;
     }
     .event-completed {
-        background-color: #d1d5db;
-        border-color: #6b7280;
+        background-color: #d1d5db !important;
+        border-color: #6b7280 !important;
     }
     .event-cancelled {
-        background-color: #fca5a5;
-        border-color: #ef4444;
+        background-color: #fca5a5 !important;
+        border-color: #ef4444 !important;
     }
     /* Hide time part in all-day events */
     .fc-daygrid-event .fc-event-time {
-        display: none;
+        display: inline-block;
+    }
+    /* Custom style for today */
+    .fc-day-today {
+        background-color: rgba(255, 220, 40, 0.15) !important;
     }
 </style>
 @endpush
@@ -63,24 +67,24 @@
         <div class="flex flex-wrap gap-4 mb-6">
             <div class="flex items-center">
                 <span class="inline-block w-3 h-3 rounded-full mr-2 bg-blue-300 border border-blue-500"></span>
-                <span class="text-sm">Scheduled</span>
+                <span class="text-sm">Dijadwalkan</span>
             </div>
             <div class="flex items-center">
                 <span class="inline-block w-3 h-3 rounded-full mr-2 bg-green-300 border border-green-500"></span>
-                <span class="text-sm">Ongoing</span>
+                <span class="text-sm">Sedang Berlangsung</span>
             </div>
             <div class="flex items-center">
                 <span class="inline-block w-3 h-3 rounded-full mr-2 bg-gray-300 border border-gray-500"></span>
-                <span class="text-sm">Completed</span>
+                <span class="text-sm">Selesai</span>
             </div>
             <div class="flex items-center">
                 <span class="inline-block w-3 h-3 rounded-full mr-2 bg-red-300 border border-red-500"></span>
-                <span class="text-sm">Cancelled</span>
+                <span class="text-sm">Dibatalkan</span>
             </div>
         </div>
         
         <!-- Calendar -->
-        <div id="calendar"></div>
+        <div id="calendar" class="min-h-[600px]"></div>
     </div>
     
     <!-- Activity Detail Modal -->
@@ -142,6 +146,7 @@
         fetch('{{ route("bas.activities.json") }}')
             .then(response => response.json())
             .then(data => {
+                console.log('Fetched activities:', data);
                 initializeCalendar(data);
             })
             .catch(error => console.error('Error loading activities:', error));
@@ -155,35 +160,49 @@
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
-                events: events.map(event => ({
-                    id: event.id,
-                    title: event.name,
-                    start: event.date + 'T' + event.start_time,
-                    end: event.date + 'T' + event.end_time,
-                    className: 'event-' + event.status,
-                    extendedProps: {
-                        room: event.room,
-                        status: event.status,
-                        description: event.description,
-                        organizer: event.organizer
-                    }
-                })),
+                events: events.map(event => {
+                    // Make sure we have proper status values
+                    const validStatuses = ['scheduled', 'ongoing', 'completed', 'cancelled'];
+                    const status = validStatuses.includes(event.status) ? event.status : 'scheduled';
+                    
+                    return {
+                        id: event.id,
+                        title: event.name,
+                        start: event.start_datetime, // ISO format
+                        end: event.end_datetime,     // ISO format
+                        className: 'event-' + status,
+                        extendedProps: {
+                            room: event.room,
+                            status: status,
+                            description: event.description,
+                            organizer: event.organizer
+                        }
+                    };
+                }),
                 eventClick: function(info) {
                     showModal(info.event);
-                }
+                },
+                eventTimeFormat: {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    meridiem: false,
+                    hour12: false
+                },
+                dayMaxEvents: true, // Allow "more" link when too many events
+                locale: 'id'
             });
             calendar.render();
         }
         
         window.showModal = function(event) {
             document.getElementById('modal-title').textContent = event.title;
-            document.getElementById('modal-room').textContent = event.extendedProps.room;
+            document.getElementById('modal-room').textContent = event.extendedProps.room || 'Tidak ada ruangan';
             
             // Format date and time
             const startDate = new Date(event.start);
-            const endDate = new Date(event.end);
+            const endDate = new Date(event.end || event.start); // Handle case where end might be null
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const timeOptions = { hour: '2-digit', minute: '2-digit' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: false };
             
             document.getElementById('modal-date').textContent = 
                 startDate.toLocaleDateString('id-ID', options) + ', ' +
@@ -197,19 +216,19 @@
             
             switch(event.extendedProps.status) {
                 case 'scheduled':
-                    statusText = 'Scheduled';
+                    statusText = 'Dijadwalkan';
                     statusClass = 'bg-blue-100 text-blue-800';
                     break;
                 case 'ongoing':
-                    statusText = 'Ongoing';
+                    statusText = 'Sedang Berlangsung';
                     statusClass = 'bg-green-100 text-green-800';
                     break;
                 case 'completed':
-                    statusText = 'Completed';
+                    statusText = 'Selesai';
                     statusClass = 'bg-gray-100 text-gray-800';
                     break;
                 case 'cancelled':
-                    statusText = 'Cancelled';
+                    statusText = 'Dibatalkan';
                     statusClass = 'bg-red-100 text-red-800';
                     break;
             }
