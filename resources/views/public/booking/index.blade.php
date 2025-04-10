@@ -317,14 +317,14 @@ class BookingTimeManager {
         // Round up ke interval 30 menit berikutnya
         let startMinute = currentMinute >= 30 ? 0 : 30;
         let startHour   = currentMinute >= 30 ? currentHour + 1 : currentHour;
-        // Jika sudah melewati jam kerja (misal 17:00)
-        if (currentHour >= 17) {
+        // Jika sudah melewati jam kerja (misal 20:00)
+        if (currentHour >= 20) {
             this.populateTimeSelect(this.startTimeSelect, [], []);
             this.populateTimeSelect(this.endTimeSelect, [], []);
             return;
         }
         const startTime = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
-        const slots = this.generateTimeSlots(startTime, '17:00', 30);
+        const slots = this.generateTimeSlots(startTime, '20:00', 30);
         this.populateTimeSelect(this.startTimeSelect, slots, []);
         this.updateEndTimeOptions();
     }
@@ -381,13 +381,13 @@ class BookingTimeManager {
             const currentMinute = today.getMinutes();
             let startMinute = currentMinute >= 30 ? 0 : 30;
             let startHour   = currentMinute >= 30 ? currentHour + 1 : currentHour;
-            if (currentHour < 8) {
-                startTime = '08:00';
+            if (currentHour < 9) {
+                startTime = '09:00';
             } else {
                 startTime = `${String(startHour).padStart(2, '0')}:${String(startMinute).padStart(2, '0')}`;
             }
         }
-        const slots = this.generateTimeSlots(startTime, '17:00', 30);
+        const slots = this.generateTimeSlots(startTime, '20:00', 30);
         this.populateTimeSelect(this.startTimeSelect, slots, bookedIntervals);
         this.updateEndTimeOptions();
     }
@@ -397,7 +397,7 @@ class BookingTimeManager {
             this.endTimeSelect.innerHTML = '<option value="">Pilih Waktu Selesai</option>';
             return;
         }
-        const endSlots = this.generateTimeSlots(startTime, '17:00', 30).slice(1);
+        const endSlots = this.generateTimeSlots(startTime, '20:00', 30).slice(1);
         const currentEndTime = this.endTimeSelect.value;
         // Tandai slot yang sudah dibooking pada waktu selesai
         this.populateTimeSelect(this.endTimeSelect, endSlots, this.bookedIntervals || []);
