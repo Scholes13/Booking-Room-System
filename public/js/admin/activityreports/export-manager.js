@@ -18,11 +18,11 @@ class ActivityExportManager {
     }
 
     initializeEventListeners() {
-        this.exportBtn?.addEventListener('click', () => this.showModal());
-        this.closeModalBtn?.addEventListener('click', () => this.hideModal());
-        this.cancelBtn?.addEventListener('click', () => this.hideModal());
+        this.exportBtn?.addEventListener('click', () => this.openExportModal());
+        this.closeModalBtn?.addEventListener('click', () => this.closeExportModal());
+        this.cancelBtn?.addEventListener('click', () => this.closeExportModal());
         this.exportModal?.addEventListener('click', (e) => {
-            if (e.target === this.exportModal) this.hideModal();
+            if (e.target === this.exportModal) this.closeExportModal();
         });
         this.confirmBtn?.addEventListener('click', () => this.handleExport());
         
@@ -30,15 +30,22 @@ class ActivityExportManager {
         this.formatSelect?.addEventListener('change', () => this.updateFormatDescription());
     }
 
-    showModal() {
-        this.exportModal?.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        
-        // Initialize the format description based on the default selected option
-        this.updateFormatDescription();
+    async openExportModal() {
+        try {
+            // Update filters dari UI
+            const filters = this.filterManager.getFilterParams();
+            
+            // Show modal
+            this.exportModal?.classList.remove('hidden');
+            
+            // Initialize the format description based on the default selected option
+            this.updateFormatDescription();
+        } catch (error) {
+            console.error('Error opening export modal:', error);
+        }
     }
 
-    hideModal() {
+    closeExportModal() {
         this.exportModal?.classList.add('hidden');
         document.body.style.overflow = '';
     }
@@ -48,7 +55,8 @@ class ActivityExportManager {
             const params = { 
                 ...this.filterManager.getFilterParams(),
                 format: this.getSelectedFormat(),
-                include_charts: this.includeCharts()
+                include_charts: this.includeCharts(),
+                sort_by_date: true
             };
 
             // Determine the correct prefix based on the URL path
@@ -102,7 +110,7 @@ class ActivityExportManager {
             a.click();
             window.URL.revokeObjectURL(url);
             
-            this.hideModal();
+            this.closeExportModal();
             
         } catch (error) {
             console.error('Export error:', error);
@@ -153,5 +161,83 @@ class ActivityExportManager {
             timer: 3000,
             showConfirmButton: false
         });
+    }
+
+    // Mengurutkan data berdasarkan tanggal mulai sebelum export
+    sortDataByStartDate(data) {
+        // Pastikan data adalah array
+        if (!Array.isArray(data)) return data;
+
+        return data.sort((a, b) => {
+            // Tentukan kolom tanggal mulai berdasarkan struktur data
+            let aDate, bDate;
+
+            if (a['Start Date']) {
+                // Format export dengan kolom terpisah
+                const aDateStr = a['Start Date'];
+                const aTimeStr = a['Start Time'] || '00:00';
+                aDate = new Date(`${aDateStr} ${aTimeStr}`);
+                
+                const bDateStr = b['Start Date'];
+                const bTimeStr = b['Start Time'] || '00:00';
+                bDate = new Date(`${bDateStr} ${bTimeStr}`);
+            } 
+            else if (a.start_datetime) {
+                // Format dengan datetime lengkap
+                aDate = new Date(a.start_datetime);
+                bDate = new Date(b.start_datetime);
+            }
+            else {
+                // Jika tidak ada kolom tanggal yang bisa digunakan, kembalikan original order
+                return 0;
+            }
+
+            return aDate - bDate;
+        });
+    }
+
+    async exportToExcel() {
+        try {
+            // Get filter params dari FilterManager
+            const filters = this.filterManager.getFilterParams();
+            
+            // Tambahkan format export
+            filters.format = 'xlsx';
+            
+            // Tentukan endpoint API berdasarkan role
+            const baseEndpoint = `/${this.filterManager.isBasRole ? 'bas' : 'admin'}/activity/export`;
+            
+            console.log('Exporting to Excel with params:', filters);
+            
+            const response = await fetch(baseEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify(filters)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error ${response.status}`);
+            }
+            
+            // Get blob dari response
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            
+            // Buat link download dan klik secara programatis
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `${filters.report_type}_${filters.time_period}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            this.closeExportModal();
+        } catch (error) {
+            console.error('Error exporting to Excel:', error);
+            alert('Failed to export data. Please try again.');
+        }
     }
 }

@@ -163,9 +163,33 @@ class ActivityController extends Controller
             }
         }
         
+        // Filter berdasarkan pencarian jika ada
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('activity_type', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('province', 'like', "%{$search}%");
+            });
+        }
+        
         // Filter berdasarkan range tanggal jika ada
         if ($request->filled('start') && $request->filled('end')) {
-            $query->whereBetween('start_datetime', [$request->start, $request->end]);
+            // Kalender memerlukan semua kegiatan yang berada dalam rentang waktu
+            // termasuk yang dimulai sebelum rentang waktu tapi berakhir dalam rentang waktu
+            $query->where(function($q) use ($request) {
+                // Kegiatan yang dimulai dalam rentang waktu
+                $q->whereBetween('start_datetime', [$request->start, $request->end])
+                  // ATAU kegiatan yang berakhir dalam rentang waktu
+                  ->orWhereBetween('end_datetime', [$request->start, $request->end])
+                  // ATAU kegiatan yang mencakup seluruh rentang waktu (mulai sebelum dan berakhir setelah)
+                  ->orWhere(function($subq) use ($request) {
+                      $subq->where('start_datetime', '<', $request->start)
+                           ->where('end_datetime', '>', $request->end);
+                  });
+            });
         }
         
         // Dapatkan hasil query
@@ -176,12 +200,25 @@ class ActivityController extends Controller
         foreach ($activities as $activity) {
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
+            
+            // Format tanggal untuk memastikan event multi-hari ditampilkan dengan benar
+            $startDateTime = Carbon::parse($activity->start_datetime);
+            $endDateTime = Carbon::parse($activity->end_datetime);
+            
+            // Untuk event multi-hari, FullCalendar membutuhkan end date exclusive
+            // Jika end datenya tidak berakhir pada pukul 00:00, tambahkan 1 hari
+            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
+                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
+                // Jika waktu akhir bukan 00:00, FullCalendar akan menganggapnya hari ini saja
+                // sehingga perlu ditambahkan 1 hari agar mencakup hari terakhir penuh
+                $endDateTime = $endDateTime->addDay()->startOfDay();
+            }
 
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $activity->end_datetime,
+                'end' => $endDateTime->format('Y-m-d H:i:s'),
                 'extendedProps' => [
                     'department' => $activity->department->name,
                     'activity_type' => $displayActivityType,
@@ -190,7 +227,8 @@ class ActivityController extends Controller
                     'province' => $activity->province,
                     'location' => ($activity->city && $activity->province) 
                                 ? $activity->city . ', ' . $activity->province 
-                                : ($activity->city ?: $activity->province ?: 'No location')
+                                : ($activity->city ?: $activity->province ?: 'No location'),
+                    'original_end' => $activity->end_datetime // Simpan tanggal akhir asli
                 ]
             ];
         }
@@ -492,9 +530,33 @@ class ActivityController extends Controller
             }
         }
         
+        // Filter berdasarkan pencarian jika ada
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('activity_type', 'like', "%{$search}%")
+                  ->orWhere('city', 'like', "%{$search}%")
+                  ->orWhere('province', 'like', "%{$search}%");
+            });
+        }
+        
         // Filter berdasarkan range tanggal jika ada
         if ($request->filled('start') && $request->filled('end')) {
-            $query->whereBetween('start_datetime', [$request->start, $request->end]);
+            // Kalender memerlukan semua kegiatan yang berada dalam rentang waktu
+            // termasuk yang dimulai sebelum rentang waktu tapi berakhir dalam rentang waktu
+            $query->where(function($q) use ($request) {
+                // Kegiatan yang dimulai dalam rentang waktu
+                $q->whereBetween('start_datetime', [$request->start, $request->end])
+                  // ATAU kegiatan yang berakhir dalam rentang waktu
+                  ->orWhereBetween('end_datetime', [$request->start, $request->end])
+                  // ATAU kegiatan yang mencakup seluruh rentang waktu (mulai sebelum dan berakhir setelah)
+                  ->orWhere(function($subq) use ($request) {
+                      $subq->where('start_datetime', '<', $request->start)
+                           ->where('end_datetime', '>', $request->end);
+                  });
+            });
         }
         
         // Dapatkan hasil query
@@ -505,12 +567,25 @@ class ActivityController extends Controller
         foreach ($activities as $activity) {
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
+            
+            // Format tanggal untuk memastikan event multi-hari ditampilkan dengan benar
+            $startDateTime = Carbon::parse($activity->start_datetime);
+            $endDateTime = Carbon::parse($activity->end_datetime);
+            
+            // Untuk event multi-hari, FullCalendar membutuhkan end date exclusive
+            // Jika end datenya tidak berakhir pada pukul 00:00, tambahkan 1 hari
+            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
+                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
+                // Jika waktu akhir bukan 00:00, FullCalendar akan menganggapnya hari ini saja
+                // sehingga perlu ditambahkan 1 hari agar mencakup hari terakhir penuh
+                $endDateTime = $endDateTime->addDay()->startOfDay();
+            }
 
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $activity->end_datetime,
+                'end' => $endDateTime->format('Y-m-d H:i:s'),
                 'extendedProps' => [
                     'department' => $activity->department->name,
                     'activity_type' => $displayActivityType,
@@ -519,7 +594,8 @@ class ActivityController extends Controller
                     'province' => $activity->province,
                     'location' => ($activity->city && $activity->province) 
                                 ? $activity->city . ', ' . $activity->province 
-                                : ($activity->city ?: $activity->province ?: 'No location')
+                                : ($activity->city ?: $activity->province ?: 'No location'),
+                    'original_end' => $activity->end_datetime // Simpan tanggal akhir asli
                 ]
             ];
         }

@@ -80,7 +80,9 @@
     </script>
 @endpush
 
+@push('styles')
 <style>
+    /* Base Styles */
     select {
         background-color: white !important;
         color: #333 !important;
@@ -88,4 +90,100 @@
         padding: 8px;
         border-radius: 6px;
     }
-</style> 
+    
+    /* Scrollbar Styling */
+    .scrollbar-thin {
+        scrollbar-width: thin;
+    }
+    
+    .scrollbar-thumb-gray-300::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .scrollbar-thumb-gray-300::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 10px;
+    }
+    
+    .scrollbar-thumb-gray-300::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
+    
+    /* Table Improvements */
+    .overflow-x-auto {
+        position: relative;
+        max-height: 600px;
+        border-radius: 0.5rem;
+    }
+    
+    table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    thead {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    th {
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+    }
+    
+    tbody tr:hover {
+        background-color: rgba(249, 250, 251, 0.5);
+    }
+    
+    /* Responsive improvements */
+    @media (max-width: 768px) {
+        table {
+            display: block;
+            width: 100%;
+        }
+        
+        thead, tbody, td, th {
+            display: block;
+        }
+        
+        thead tr {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+        
+        tr {
+            border: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        
+        td {
+            border: none;
+            border-bottom: 1px solid #eee;
+            position: relative;
+            padding-left: 50% !important;
+            white-space: normal !important;
+            text-align: left !important;
+        }
+        
+        td:before {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            left: 6px;
+            width: 45%;
+            padding-right: 10px;
+            white-space: nowrap;
+            text-align: left;
+            font-weight: bold;
+            content: attr(data-label);
+        }
+    }
+</style>
+@endpush 

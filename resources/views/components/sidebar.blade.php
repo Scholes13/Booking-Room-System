@@ -14,9 +14,14 @@
 
 <div class="bg-white h-screen w-64 fixed left-0 top-0 shadow-lg">
     <div class="p-4">
-        <h1 class="text-xl font-bold mb-8">Meeting Room Booking</h1>
+        <div class="flex items-center">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21.25 21C21.25 21 18.0573 16.9519 20.5846 12C23.4312 6.4668 21.104 2 21.104 2H3.50567C3.50567 2 5.82883 6.466 3.00456 11.9984C0.438136 16.9515 3.6355 21 3.6355 21H21.25Z" fill="#386DE8"></path>
+            </svg>
+            <h1 class="ml-2 text-xl font-semibold">Bookings Room</h1>
+        </div>
         
-        <nav class="space-y-2">
+        <nav class="space-y-2 mt-8">
             <!-- Dashboard -->
             <a href="{{ route($prefix . 'dashboard') }}" 
                class="flex items-center p-2 text-gray-700 rounded hover:bg-gray-100 {{ request()->routeIs($prefix . 'dashboard') ? 'bg-gray-100' : '' }}">

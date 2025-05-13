@@ -31,7 +31,7 @@
             </div>
             <div>
                 <h2 class="text-sm text-gray-500 font-medium">Total Admin</h2>
-                <p class="text-2xl font-bold text-dark">{{ \App\Models\User::where('role', 'admin')->count() }}</p>
+                <p class="text-2xl font-bold text-dark">{{ \App\Models\User::whereIn('role', ['admin', 'admin_bas'])->count() }}</p>
             </div>
         </div>
 

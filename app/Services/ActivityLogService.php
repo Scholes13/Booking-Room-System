@@ -24,8 +24,8 @@ class ActivityLogService
             $request = request();
         }
         
-        // Only log activities for admin users
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
+        // Only log activities for admin users (both admin and admin_bas roles)
+        if (!Auth::check() || !in_array(Auth::user()->role, ['admin', 'admin_bas', 'superadmin'])) {
             return null;
         }
         

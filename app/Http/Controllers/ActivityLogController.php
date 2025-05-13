@@ -46,11 +46,15 @@ class ActivityLogController extends Controller
         }
         
         $logs = $query->paginate(15);
-        $admins = User::where('role', 'admin')->orderBy('name')->get();
         
-        // Get unique action types and modules for filter dropdowns
+        // Include all admin types (admin and admin_bas) in the dropdown
+        $admins = User::whereIn('role', ['admin', 'admin_bas'])->orderBy('name')->get();
+        
+        // Get unique action types for filter dropdowns
         $actions = ActivityLog::distinct()->pluck('action');
-        $modules = ActivityLog::distinct()->pluck('module');
+        
+        // Restrict modules to only the two main modules: bookings and activities
+        $modules = collect(['bookings', 'activities']);
         
         return view('superadmin.logs.index', compact('logs', 'admins', 'actions', 'modules'));
     }

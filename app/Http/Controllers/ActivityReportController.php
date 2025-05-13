@@ -130,6 +130,7 @@ class ActivityReportController extends Controller
                         'activities.province'
                     )
                     ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                    ->orderBy('activities.start_datetime', 'asc')
                     ->get();
                 
                 Log::debug('Executed queries:', DB::getQueryLog());
@@ -179,6 +180,7 @@ class ActivityReportController extends Controller
                         'activities.activity_type AS category'
                     )
                     ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                    ->orderBy('activities.start_datetime', 'asc')
                     ->get();
 
                 // Calculate total days and hours for department activities
@@ -242,6 +244,7 @@ class ActivityReportController extends Controller
                         'departments.name as department'
                     )
                     ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                    ->orderBy('activities.start_datetime', 'asc')
                     ->get();
 
                 // Group activities by location (city, province)
@@ -343,7 +346,7 @@ class ActivityReportController extends Controller
                     'start_datetime',
                     'end_datetime'
                 )
-                ->orderBy('start_datetime', 'desc')
+                ->orderBy('start_datetime', 'asc')
                 ->get();
 
             // Format activity data for display
@@ -410,7 +413,8 @@ class ActivityReportController extends Controller
                 'year' => 'required|integer',
                 'month' => 'nullable|integer|between:1,12',
                 'quarter' => 'nullable|integer|between:1,4',
-                'format' => 'required|in:xlsx,pdf,csv'
+                'format' => 'required|in:xlsx,pdf,csv',
+                'sort_by_date' => 'nullable|boolean'
             ]);
 
             // Ambil data laporan sesuai jenis dan periode
@@ -420,12 +424,18 @@ class ActivityReportController extends Controller
             $month = $request->input('month');
             $quarter = $request->input('quarter');
             $format = $request->input('format', 'xlsx');
+            $sortByDate = $request->input('sort_by_date', true); // Default true untuk sorting
 
             // Buat rentang tanggal yang sesuai
             $dateRange = $this->getDateRange($timePeriod, $year, $month, $quarter);
 
             $query = DB::table('activities');
             $query->whereBetween('start_datetime', [$dateRange['start'], $dateRange['end']]);
+            
+            // Tambahkan pengurutan berdasarkan tanggal mulai jika parameter sort_by_date true
+            if ($sortByDate) {
+                $query->orderBy('start_datetime', 'asc');
+            }
 
             // Dapatkan data berdasarkan jenis laporan
             switch ($reportType) {
@@ -443,6 +453,7 @@ class ActivityReportController extends Controller
                             'activities.province'
                         )
                         ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->orderBy('activities.start_datetime', 'asc')
                         ->get();
 
                     $headers = ['Name', 'Department', 'Province', 'City', 'Start Date', 'Start Time', 'End Date', 'End Time', 'Category', 'Total Days', 'Description'];
@@ -487,6 +498,7 @@ class ActivityReportController extends Controller
                             'activities.activity_type AS category'
                         )
                         ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->orderBy('activities.start_datetime', 'asc')
                         ->get();
 
                     // Group by department and calculate stats
@@ -515,6 +527,7 @@ class ActivityReportController extends Controller
                             'departments.name as department'
                         )
                         ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->orderBy('activities.start_datetime', 'asc')
                         ->get();
 
                     // Group by location and calculate stats
@@ -583,6 +596,7 @@ class ActivityReportController extends Controller
                             'activities.province'
                         )
                         ->leftJoin('departments', 'activities.department_id', '=', 'departments.id')
+                        ->orderBy('activities.start_datetime', 'asc')
                         ->get();
 
                     $headers = ['Name', 'Department', 'Province', 'City', 'Start Date', 'Start Time', 'End Date', 'End Time', 'Category', 'Duration', 'Description'];

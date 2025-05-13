@@ -116,10 +116,11 @@
 
             <!-- TIPE KEGIATAN (Custom Dropdown Alpine) -->
             <div x-data="activityTypeDropdown()" class="relative">
-                <label class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan</label>
+                <label class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan <span class="text-red-500">*</span></label>
                 <button type="button"
                         @click="open = !open"
-                        class="w-full bg-gray-800 text-white p-3 rounded-md shadow-md flex justify-between items-center focus:outline-none">
+                        class="w-full bg-gray-800 text-white p-3 rounded-md shadow-md flex justify-between items-center focus:outline-none"
+                        :class="{'ring-2 ring-red-500': validationError}">
                     <span x-text="selected"></span>
                     <svg class="w-5 h-5 transform transition-transform duration-200"
                          :class="{'rotate-180': open}"
@@ -148,7 +149,12 @@
                     </template>
                 </div>
                 <!-- Hidden Input -->
-                <input type="hidden" name="activity_type" x-ref="typeInput" :value="selected">
+                <input type="hidden" name="activity_type" x-ref="typeInput" :value="selected" required>
+                
+                <!-- Error Message -->
+                <div x-show="validationError" class="text-red-400 text-sm mt-1">
+                    Silahkan pilih tipe kegiatan
+                </div>
                 
                 <!-- "Lainnya" Field - hanya muncul ketika "Lainnya" dipilih -->
                 <div x-show="showOtherField" class="mt-2">
@@ -275,14 +281,29 @@ function activityTypeDropdown() {
         selected: '{{ old('activity_type') ?: 'Pilih Tipe Kegiatan' }}',
         options: @json($activityTypes),
         showOtherField: {{ old('activity_type') === 'Lainnya' ? 'true' : 'false' }},
+        validationError: false,
         init() {
             this.showOtherField = this.selected === 'Lainnya';
+            
+            // Tambahkan handler untuk validasi form
+            const form = document.getElementById('activityForm');
+            form.addEventListener('submit', (e) => {
+                if (this.selected === 'Pilih Tipe Kegiatan') {
+                    e.preventDefault();
+                    this.validationError = true;
+                    this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    return false;
+                }
+                this.validationError = false;
+                return true;
+            });
         },
         selectOption(opt) {
             this.selected = opt;
             this.open = false;
             this.$refs.typeInput.value = opt;
             this.showOtherField = (opt === 'Lainnya');
+            this.validationError = false;
         }
     }
 }

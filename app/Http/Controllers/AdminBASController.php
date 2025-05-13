@@ -69,8 +69,15 @@ class AdminBASController extends Controller
             $query->where('status', $request->status);
         }
         
-        // Filter by date
-        if ($request->has('date') && !empty($request->date)) {
+        // Filter by date range
+        if ($request->has('start_date') && !empty($request->start_date) && $request->has('end_date') && !empty($request->end_date)) {
+            $query->whereBetween('start_datetime', [
+                Carbon::parse($request->start_date)->startOfDay(),
+                Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        } 
+        // Filter by single date (for backward compatibility)
+        else if ($request->has('date') && !empty($request->date)) {
             $query->whereDate('start_datetime', $request->date);
         }
         
@@ -92,6 +99,9 @@ class AdminBASController extends Controller
         }
         
         $activities = $query->orderBy('start_datetime', 'desc')->paginate(15);
+        
+        // Append all filter parameters to pagination links
+        $activities->appends($request->all());
         
         return view('admin_bas.activities.index', compact('activities'));
     }
