@@ -114,50 +114,29 @@
                 </div>
             </div>
 
-            <!-- TIPE KEGIATAN (Custom Dropdown Alpine) -->
-            <div x-data="activityTypeDropdown()" class="relative">
-                <label class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan <span class="text-red-500">*</span></label>
-                <button type="button"
-                        @click="open = !open"
-                        class="w-full bg-gray-800 text-white p-3 rounded-md shadow-md flex justify-between items-center focus:outline-none"
-                        :class="{'ring-2 ring-red-500': validationError}">
-                    <span x-text="selected"></span>
-                    <svg class="w-5 h-5 transform transition-transform duration-200"
-                         :class="{'rotate-180': open}"
-                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" 
-                              stroke-linejoin="round" 
-                              stroke-width="2" 
-                              d="M19 9l-7 7-7-7" />
-                    </svg>
-                </button>
-                <!-- Menu Dropdown -->
-                <div x-show="open"
-                     @click.away="open = false"
-                     x-transition:enter="transition ease-out duration-200"
-                     x-transition:enter-start="opacity-0 transform scale-95"
-                     x-transition:enter-end="opacity-100 transform scale-100"
-                     x-transition:leave="transition ease-in duration-200"
-                     x-transition:leave-start="opacity-100 transform scale-100"
-                     x-transition:leave-end="opacity-0 transform scale-95"
-                     class="absolute z-20 mt-2 w-full bg-gray-800 rounded-md shadow-lg max-h-60 overflow-y-auto">
-                    <template x-for="opt in options" :key="opt">
-                        <div @click="selectOption(opt)"
-                             class="cursor-pointer px-4 py-2 text-white hover:bg-gray-700"
-                             x-text="opt">
-                        </div>
-                    </template>
-                </div>
-                <!-- Hidden Input -->
-                <input type="hidden" name="activity_type" x-ref="typeInput" :value="selected" required>
-                
-                <!-- Error Message -->
-                <div x-show="validationError" class="text-red-400 text-sm mt-1">
-                    Silahkan pilih tipe kegiatan
+            <!-- TIPE KEGIATAN (menggunakan <select> standar) -->
+            <div>
+                <label for="activity_type" class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan <span class="text-red-500">*</span></label>
+                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
+                    <i class="fas fa-tasks text-white mr-2"></i>
+                    <select 
+                        id="activity_type" 
+                        name="activity_type"
+                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        required
+                        onchange="checkOtherActivity()"
+                    >
+                        <option value="">Pilih Tipe Kegiatan</option>
+                        @foreach($activityTypes as $type)
+                            <option value="{{ $type }}" {{ old('activity_type') == $type ? 'selected' : '' }}>
+                                {{ $type }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 
                 <!-- "Lainnya" Field - hanya muncul ketika "Lainnya" dipilih -->
-                <div x-show="showOtherField" class="mt-2">
+                <div id="other_activity_container" class="mt-2" style="display: {{ old('activity_type') === 'Lainnya' ? 'block' : 'none' }}">
                     <label for="activity_type_other" class="block text-sm font-medium text-gray-200 mb-1">Spesifikasi Tipe Kegiatan</label>
                     <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
                         <i class="fas fa-info-circle text-white mr-2"></i>
@@ -168,7 +147,6 @@
                             class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400" 
                             placeholder="Masukkan tipe kegiatan lainnya"
                             value="{{ old('activity_type_other') }}"
-                            :required="showOtherField"
                         >
                     </div>
                 </div>
@@ -267,47 +245,11 @@
 @endpush
 
 @push('scripts')
-<!-- Alpine.js -->
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-
 <!-- Flatpickr & Locale Indonesia -->
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
 
 <script>
-function activityTypeDropdown() {
-    return {
-        open: false,
-        selected: '{{ old('activity_type') ?: 'Pilih Tipe Kegiatan' }}',
-        options: @json($activityTypes),
-        showOtherField: {{ old('activity_type') === 'Lainnya' ? 'true' : 'false' }},
-        validationError: false,
-        init() {
-            this.showOtherField = this.selected === 'Lainnya';
-            
-            // Tambahkan handler untuk validasi form
-            const form = document.getElementById('activityForm');
-            form.addEventListener('submit', (e) => {
-                if (this.selected === 'Pilih Tipe Kegiatan') {
-                    e.preventDefault();
-                    this.validationError = true;
-                    this.$el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    return false;
-                }
-                this.validationError = false;
-                return true;
-            });
-        },
-        selectOption(opt) {
-            this.selected = opt;
-            this.open = false;
-            this.$refs.typeInput.value = opt;
-            this.showOtherField = (opt === 'Lainnya');
-            this.validationError = false;
-        }
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     // Inisialisasi Flatpickr (Tanggal & Waktu Mulai)
     flatpickr("#start_datetime", {
@@ -341,6 +283,18 @@ document.addEventListener('DOMContentLoaded', function() {
             departmentSelect.value = '';
             departmentSelect.removeAttribute('readonly');
         }
+    });
+
+    // Memastikan form validation berjalan
+    const form = document.getElementById('activityForm');
+    form.addEventListener('submit', function(e) {
+        const activityType = document.getElementById('activity_type');
+        if (!activityType.value) {
+            e.preventDefault();
+            activityType.classList.add('ring-2', 'ring-red-500');
+            return false;
+        }
+        return true;
     });
 
     // Data provinsi dan kota di Indonesia
@@ -482,5 +436,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Fungsi untuk menampilkan/menyembunyikan field "Lainnya"
+function checkOtherActivity() {
+    const activityType = document.getElementById('activity_type');
+    const otherContainer = document.getElementById('other_activity_container');
+    const otherInput = document.getElementById('activity_type_other');
+    
+    if (activityType.value === 'Lainnya') {
+        otherContainer.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherContainer.style.display = 'none';
+        otherInput.required = false;
+    }
+}
+
+// Jalankan sekali saat halaman dimuat
+document.addEventListener('DOMContentLoaded', checkOtherActivity);
 </script>
 @endpush

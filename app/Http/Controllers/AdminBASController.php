@@ -64,10 +64,8 @@ class AdminBASController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
         
-        // Filter by status
-        if ($request->has('status') && !empty($request->status)) {
-            $query->where('status', $request->status);
-        }
+        // Filter by status - collect results first since status is a computed attribute
+        $statusFilter = $request->has('status') && !empty($request->status) ? $request->status : null;
         
         // Filter by date range
         if ($request->has('start_date') && !empty($request->start_date) && $request->has('end_date') && !empty($request->end_date)) {
@@ -98,12 +96,35 @@ class AdminBASController extends Controller
             }
         }
         
-        $activities = $query->orderBy('start_datetime', 'desc')->paginate(15);
+        // Get all activities that match the database-level filters
+        $allActivities = $query->get();
+        
+        // Apply status filter in PHP if needed (since status is a computed attribute)
+        if ($statusFilter) {
+            $filteredActivities = $allActivities->filter(function ($activity) use ($statusFilter) {
+                return $activity->status === $statusFilter;
+            });
+        } else {
+            $filteredActivities = $allActivities;
+        }
+        
+        // Manual pagination since we filtered in PHP
+        $page = $request->get('page', 1);
+        $perPage = 15;
+        $items = $filteredActivities->forPage($page, $perPage);
+        
+        $activities = new LengthAwarePaginator(
+            $items,
+            $filteredActivities->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
         
         // Append all filter parameters to pagination links
         $activities->appends($request->all());
         
-        return view('admin_bas.activities.index', compact('activities'));
+        return view('admin_bas.activities.index', compact('activities', 'statusFilter'));
     }
 
     /**
@@ -271,19 +292,44 @@ class AdminBASController extends Controller
      */
     public function activitiesJson()
     {
-        $activities = Activity::all();
+        // Get all activities with eager loading for relationships
+        $activities = Activity::with(['room', 'department'])->get();
         $events = [];
         
         foreach ($activities as $activity) {
+            // Format dates for proper handling of multi-day events
+            $startDateTime = Carbon::parse($activity->start_datetime);
+            $endDateTime = Carbon::parse($activity->end_datetime);
+            
+            // For multi-day events, FullCalendar needs end date to be exclusive
+            // If end date doesn't end at 00:00, add 1 day for proper display
+            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
+                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
+                $endDateTime = $endDateTime->addDay()->startOfDay();
+            }
+            
+            // Get status - default to 'scheduled' if not set
+            $status = $activity->status ?? 'scheduled';
+            
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $activity->end_datetime,
-                'url' => route('bas.activities.edit', $activity->id),
-                'color' => '#3788d8'
+                'end' => $endDateTime->format('Y-m-d H:i:s'),
+                'status' => $status,
+                'extendedProps' => [
+                    'description' => $activity->description,
+                    'room' => $activity->room ? $activity->room->name : null,
+                    'organizer' => $activity->organizer ?? null,
+                    'department' => $activity->department ? $activity->department->name : null,
+                    'original_end' => $activity->end_datetime, // Store original end date
+                    'status' => $status
+                ]
             ];
         }
+        
+        // Add debug info
+        info('Activities JSON: ' . count($activities) . ' records found');
         
         return response()->json($events);
     }
@@ -439,7 +485,7 @@ class AdminBASController extends Controller
     
     public function createEmployee()
     {
-        $departments = Department::all();
+        $departments = Department::orderBy('name', 'asc')->get();
         return view('admin_bas.employees.create', compact('departments'));
     }
     

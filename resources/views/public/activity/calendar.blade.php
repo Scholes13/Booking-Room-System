@@ -23,14 +23,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Theme Toggle -->
-            <div class="flex justify-end items-center">
-                <button id="theme-toggle" class="bg-white/10 backdrop-blur-lg p-2 rounded-xl shadow-lg">
-                    <i class="fas fa-moon text-yellow-500" id="dark-icon"></i>
-                    <i class="fas fa-sun text-yellow-500 hidden" id="light-icon"></i>
-                </button>
-            </div>
         </div>
 
         <!-- Filters and Search -->
@@ -74,13 +66,7 @@
             <div id="calendar" class="min-w-[600px]"></div>
         </div>
 
-        <!-- Legend -->
-        <div class="mt-4 bg-white/10 backdrop-blur-lg p-4 rounded-xl shadow-lg">
-            <h3 class="text-sm font-medium text-white mb-2">Legend</h3>
-            <div id="activity-type-legend" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
-                <!-- Will be filled by JavaScript -->
-            </div>
-        </div>
+
     </div>
 
     <!-- Modal Detail Event -->
@@ -158,27 +144,12 @@
         --font-family: 'Inter', sans-serif;
     }
 
-    .light-theme {
-        --fc-border-color: rgba(0, 0, 0, 0.1);
-        --fc-event-border-color: transparent;
-        --fc-now-indicator-color: #e63946;
-        --fc-today-bg-color: rgba(230, 240, 255, 0.5);
-        --fc-highlight-color: rgba(0, 0, 0, 0.05);
-        --primary-color: #3788d8;
-        --event-bg-color: rgba(55, 136, 216, 0.95);
-        --hover-color: rgba(55, 136, 216, 0.8);
-    }
-
     /* Background */
     body {
         background: url('https://booking.maharajapratama.com/images/bg.png') no-repeat center center fixed;
         background-size: cover;
         min-height: 100vh;
         font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    .light-theme body {
-        background: #f8f9fa;
     }
 
     /* Overlay */
@@ -191,13 +162,6 @@
         background: rgba(0, 0, 0, 0.6);
         z-index: 1;
     }
-
-    /* Theme toggling */
-    .light-theme #dark-icon {
-        display: none;
-    }
-    
-    .light-theme #light-icon {
         display: block;
     }
 
@@ -219,9 +183,7 @@
         color: #000;
     }
     
-    .light-theme .view-btn.active {
-        color: white;
-    }
+    
 
     /* Responsiveness */
     @media (max-width: 768px) {
@@ -244,20 +206,10 @@
         font-size: 0.875rem;
     }
 
-    .light-theme select, .light-theme input {
-        background-color: white;
-        color: #333;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-    select:focus, input:focus {
+        select:focus, input:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
-    }
-
-    .light-theme select:focus, .light-theme input:focus {
-        box-shadow: 0 0 0 3px rgba(55, 136, 216, 0.2);
     }
 
     /* Calendar Container */
@@ -271,10 +223,7 @@
         overflow: hidden !important;
     }
 
-    .light-theme #calendar-container {
-        background: white !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
-    }
+    
 
     @media (max-width: 640px) {
         #calendar-container {
@@ -283,53 +232,7 @@
         }
     }
 
-    /* Legend container */
-    .legend-container {
-        padding: 1rem;
-        border-radius: 0.75rem;
-        background-color: rgba(15, 23, 42, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .light-theme .legend-container {
-        background-color: white;
-        border: 1px solid rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Calendar Legend */
-    #activity-type-legend {
-    gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-    
-    #activity-type-legend .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.4rem 0.65rem;
-        border-radius: 0.35rem;
-        font-size: 0.75rem;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    
-    .light-theme #activity-type-legend .legend-item {
-        color: #333;
-    }
 
-    #activity-type-legend .legend-item i {
-        font-size: 0.85rem;
-        width: 1.2rem;
-        text-align: center;
-    }
-    
-    #activity-type-legend .legend-item:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
 
     /* ============== FULLCALENDAR STYLING ============== */
     .fc {
@@ -343,12 +246,7 @@
         background: transparent !important;
     }
 
-    .light-theme .fc {
-        --fc-neutral-bg-color: white;
-        --fc-today-bg-color: var(--fc-today-bg-color);
-        --fc-border-color: var(--fc-border-color);
-        color: #333;
-    }
+    
 
     /* Header Toolbar */
     .fc-header-toolbar {
@@ -367,10 +265,7 @@
         border-color: var(--fc-border-color) !important;
     }
 
-    .light-theme .fc th {
-        color: #333 !important;
-        background-color: #f8f9fa !important;
-}
+    
 
 /* Day cells */
 .fc-day {
@@ -386,17 +281,13 @@
         text-align: center !important;
     }
 
-    .light-theme .fc-day {
-        background-color: white !important;
-}
+    
 
 .fc-day:hover {
         background-color: rgba(255, 255, 255, 0.12) !important;
     }
 
-    .light-theme .fc-day:hover {
-        background-color: #f8f9fa !important;
-}
+    
 
 .fc-day-today {
         background-color: rgba(255, 255, 255, 0.15) !important;
@@ -407,9 +298,7 @@
         background-color: rgba(255, 255, 255, 0.08) !important;
     }
 
-    .light-theme .fc-day-sat, .light-theme .fc-day-sun {
-        background-color: #f8f9fa !important;
-}
+    
 
 /* Day cell with no date in current month - now same as regular days */
 .fc .fc-daygrid-day.fc-day-other {
@@ -417,10 +306,7 @@
         opacity: 1;
     }
 
-    .light-theme .fc .fc-daygrid-day.fc-day-other {
-        background-color: white !important;
-    opacity: 1;
-}
+    
 
 /* Time slots */
 .fc .fc-timegrid-slot {
@@ -429,17 +315,13 @@
         background-color: rgba(255, 255, 255, 0.05) !important;
     }
 
-    .light-theme .fc .fc-timegrid-slot {
-        background-color: white !important;
-}
+    
 
 .fc-timegrid-slot-lane {
         background-color: rgba(255, 255, 255, 0.05) !important;
     }
 
-    .light-theme .fc-timegrid-slot-lane {
-        background-color: white !important;
-}
+    
 
 .fc-timegrid-col.fc-day-today {
         background-color: var(--fc-today-bg-color) !important;
@@ -511,9 +393,7 @@
         border-bottom-right-radius: 4px !important;
     }
 
-    .light-theme .fc-daygrid-block-event {
-        color: white !important;
-    }
+    
 
     .fc-daygrid-block-event:hover {
         background-color: var(--hover-color) !important;
@@ -542,9 +422,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
     }
 
-    .light-theme .fc-daygrid-dot-event {
-        color: white !important;
-    }
+    
 
     .fc-daygrid-dot-event:hover {
         background-color: var(--hover-color) !important;
@@ -691,11 +569,7 @@
         margin-right: 5px !important;
     }
 
-    .light-theme .fc-daygrid-more-link {
-        color: #333 !important;
-        background: rgba(36, 68, 140, 0.2) !important;
-        border: 1px solid rgba(36, 68, 140, 0.3) !important;
-    }
+    
 
     .fc-daygrid-more-link:hover {
         background-color: rgba(36, 68, 140, 0.9) !important;
@@ -704,10 +578,7 @@
         box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
     }
 
-    .light-theme .fc-daygrid-more-link:hover {
-        background-color: rgba(36, 68, 140, 0.3) !important;
-        color: #24448c !important;
-    }
+    
     
     /* Add a plus icon before the text */
     .fc-daygrid-more-link::before {
@@ -842,57 +713,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return timeStr;
         }
 
-        // Theme management
-        const themeToggle = document.getElementById('theme-toggle');
-        const htmlElement = document.documentElement;
-        const savedTheme = localStorage.getItem('calendar-theme');
-        
-        if (savedTheme === 'light') {
-            htmlElement.classList.add('light-theme');
-            document.getElementById('dark-icon').classList.add('hidden');
-            document.getElementById('light-icon').classList.remove('hidden');
-        }
-        
-        themeToggle.addEventListener('click', function() {
-            htmlElement.classList.toggle('light-theme');
-            document.getElementById('dark-icon').classList.toggle('hidden');
-            document.getElementById('light-icon').classList.toggle('hidden');
-            
-            const currentTheme = htmlElement.classList.contains('light-theme') ? 'light' : 'dark';
-            localStorage.setItem('calendar-theme', currentTheme);
-            
-            // Refresh calendar to apply theme
-            calendar.refetchEvents();
-        });
 
-        // Populate activity type legend
-        const legendContainer = document.getElementById('activity-type-legend');
-        
-        // Define the exact order for activity types as shown in the screenshot
-        const activityTypeOrder = [
-            'Meeting', 'Training', 'Workshop', 'Conference', 
-            'Invitation', 'Survey', 'Courtesy Visit', 'External Activities',
-            'Hosting', 'Internal Activities', 'Meeting External', 'Business Trip',
-            'Onsite Work', 'Remote Work', 'Leave', 'Sick Leave', 
-            'Holiday', 'Lainnya'
-        ];
-        
-        // Create legend items in the specified order
-        activityTypeOrder.forEach(type => {
-            if (activityTypeConfig[type]) {
-                const config = activityTypeConfig[type];
-                const legendItem = document.createElement('div');
-                legendItem.className = 'legend-item';
-                legendItem.style.backgroundColor = config.color + '20'; // Add transparency to the color
-                legendItem.style.borderLeft = `3px solid ${config.color}`;
-                
-                legendItem.innerHTML = `
-                    <i class="fas ${config.icon}" style="color: ${config.color}"></i>
-                    <span>${type}</span>
-                `;
-                legendContainer.appendChild(legendItem);
-            }
-        });
+
+
 
         // Calendar view control
         const viewBtns = document.querySelectorAll('.view-btn');

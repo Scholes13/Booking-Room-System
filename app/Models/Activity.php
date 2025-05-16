@@ -20,7 +20,8 @@ class Activity extends Model
         'city',
         'province',
         'start_datetime',
-        'end_datetime'
+        'end_datetime',
+        'status'
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class Activity extends Model
     
     /**
      * Get the activity's status based on current time.
+     * This also persists the computed status to the database.
      */
     protected function status(): Attribute
     {
@@ -43,18 +45,59 @@ class Activity extends Model
                 $now = Carbon::now();
                 $startTime = $this->start_datetime;
                 $endTime = $this->end_datetime;
-
-                if ($now->lt($startTime)) {
+                
+                // If start or end time is not set, return default status
+                if (!$startTime || !$endTime) {
                     return 'scheduled';
-                } elseif ($now->gte($startTime) && $now->lte($endTime)) {
-                    return 'ongoing';
-                } elseif ($now->gt($endTime)) {
-                    return 'completed';
                 }
 
-                return 'scheduled'; // Default status
+                $computedStatus = 'scheduled';
+                
+                if ($now->lt($startTime)) {
+                    $computedStatus = 'scheduled';
+                } elseif ($now->gte($startTime) && $now->lte($endTime)) {
+                    $computedStatus = 'ongoing';
+                } elseif ($now->gt($endTime)) {
+                    $computedStatus = 'completed';
+                }
+                
+                // Save the computed status to the database
+                if ($this->exists && !$value) {
+                    $this->status = $computedStatus;
+                    $this->saveQuietly();
+                }
+
+                return $computedStatus;
+            },
+            set: function ($value) {
+                return $value;
             }
         );
+    }
+
+    /**
+     * Boot method to ensure status is always updated on save
+     */
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::saving(function ($activity) {
+            // Update status based on dates if not explicitly set
+            if (!$activity->isDirty('status') && $activity->start_datetime && $activity->end_datetime) {
+                $now = Carbon::now();
+                $startTime = $activity->start_datetime;
+                $endTime = $activity->end_datetime;
+                
+                if ($now->lt($startTime)) {
+                    $activity->status = 'scheduled';
+                } elseif ($now->gte($startTime) && $now->lte($endTime)) {
+                    $activity->status = 'ongoing';
+                } elseif ($now->gt($endTime)) {
+                    $activity->status = 'completed';
+                }
+            }
+        });
     }
 
     public function department()

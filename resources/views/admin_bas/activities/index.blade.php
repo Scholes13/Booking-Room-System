@@ -267,6 +267,7 @@
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Aktivitas</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
                         <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -286,6 +287,18 @@
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">{{ $activity->start_datetime ? \Carbon\Carbon::parse($activity->start_datetime)->format('d M Y') : 'N/A' }}</div>
                             <div class="text-sm text-gray-500">{{ $activity->start_datetime ? \Carbon\Carbon::parse($activity->start_datetime)->format('H:i') : '' }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            @php
+                                $statusColor = 'gray';
+                                if($activity->status === 'scheduled') $statusColor = 'blue';
+                                elseif($activity->status === 'ongoing') $statusColor = 'green';
+                                elseif($activity->status === 'completed') $statusColor = 'indigo';
+                                elseif($activity->status === 'cancelled') $statusColor = 'red';
+                            @endphp
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $statusColor }}-100 text-{{ $statusColor }}-800">
+                                {{ ucfirst($activity->status) }}
+                            </span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="text-sm text-gray-900">{{ $activity->activity_type ?: 'Umum' }}</div>
@@ -314,7 +327,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500 bg-gray-50/50">
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500 bg-gray-50/50">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>

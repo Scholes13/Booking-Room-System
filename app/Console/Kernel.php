@@ -15,6 +15,9 @@ class Kernel extends ConsoleKernel
         // Jalankan perintah reminder setiap menit untuk cek booking/aktivitas yang akan datang dalam 1 jam
         $schedule->command('reminders:booking')->everyMinute();
         $schedule->command('reminders:activity')->everyMinute();
+        
+        // Update activity statuses every hour
+        $schedule->command('activity:update-status')->hourly();
     }
 
     /**
