@@ -339,7 +339,7 @@ class AdminBASController extends Controller
      */
     public function departments()
     {
-        $departments = Department::withCount('employees')->get();
+        $departments = Department::withCount('employees')->orderBy('name', 'asc')->get();
         
         // Count employees by department
         $totalEmployees = Employee::count();

@@ -315,17 +315,49 @@ class BookingController extends Controller
            });
        }
        
-       // Filter by date range if provided
-       if ($request->has('start_date')) {
-           $query->whereDate('date', '>=', $request->start_date);
+       // Filter by specific date if provided
+       if ($request->has('date')) {
+           $query->whereDate('date', $request->date);
        }
-       
-       if ($request->has('end_date')) {
+       // Apply predefined filters (today, week, month)
+       elseif ($request->has('filter')) {
+           $today = Carbon::today();
+           
+           switch ($request->filter) {
+               case 'today':
+                   $query->whereDate('date', $today);
+                   break;
+                   
+               case 'week':
+                   $weekStart = $today->copy()->startOfWeek();
+                   $weekEnd = $today->copy()->endOfWeek();
+                   $query->whereBetween('date', [$weekStart, $weekEnd]);
+                   break;
+                   
+               case 'month':
+                   $monthStart = $today->copy()->startOfMonth();
+                   $monthEnd = $today->copy()->endOfMonth();
+                   $query->whereBetween('date', [$monthStart, $monthEnd]);
+                   break;
+           }
+       }
+       // Filter by date range if provided 
+       else if ($request->has('start_date')) {
+           $query->whereDate('date', '>=', $request->start_date);
+           
+           if ($request->has('end_date')) {
+               $query->whereDate('date', '<=', $request->end_date);
+           }
+       }
+       else if ($request->has('end_date')) {
            $query->whereDate('date', '<=', $request->end_date);
        }
        
        // Get paginated results
        $bookings = $query->paginate(10);
+       
+       // Remember to keep any query parameters in pagination links
+       $bookings->appends($request->all());
        
        if (Auth::check() && Auth::user()->role === 'admin_bas') {
            return view('admin_bas.bookings.index', compact('bookings'));

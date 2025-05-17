@@ -1,5 +1,5 @@
 @php
-    $layout = isset($isSuperAdmin) && $isSuperAdmin ? 'superadmin.layout' : 'admin.layout';
+    $layout = 'superadmin.layout';
 @endphp
 
 @extends($layout)
@@ -31,7 +31,7 @@
             <h1 class="text-dark text-2xl font-bold leading-tight tracking-[-0.015em]">Manage Bookings</h1>
             <p class="text-gray-500 mt-1">View and manage all room booking schedules</p>
         </div>
-        <a href="{{ route('admin.bookings.export') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-[#24448c] text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#1c3670] transition-colors shadow-sm">
+        <a href="{{ route('superadmin.bookings.export') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-[#24448c] text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#1c3670] transition-colors shadow-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -42,7 +42,7 @@
     <div class="flex flex-col gap-6 bg-white rounded-lg p-6 shadow-sm">
         <!-- Search Bar -->
         <div class="relative w-full md:w-1/2">
-            <form action="{{ route('admin.bookings.index') }}" method="GET">
+            <form action="{{ route('superadmin.bookings.index') }}" method="GET">
                 <!-- Preserve filter parameters -->
                 @if (request('filter'))
                 <input type="hidden" name="filter" value="{{ request('filter') }}">
@@ -64,25 +64,25 @@
         <div class="flex flex-col lg:flex-row gap-4 items-center">
             <!-- Filter Tabs -->
             <div class="flex flex-wrap mb-0 lg:mb-4 gap-2">
-                <a href="{{ route('admin.bookings.index') }}" class="filter-btn {{ !request('filter') ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('superadmin.bookings.index') }}" class="filter-btn {{ !request('filter') ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                     </svg>
                     All
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'today']) }}" class="filter-btn {{ request('filter') == 'today' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('superadmin.bookings.index', ['filter' => 'today']) }}" class="filter-btn {{ request('filter') == 'today' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
                     Today
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'week']) }}" class="filter-btn {{ request('filter') == 'week' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('superadmin.bookings.index', ['filter' => 'week']) }}" class="filter-btn {{ request('filter') == 'week' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
                     This Week
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'month']) }}" class="filter-btn {{ request('filter') == 'month' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('superadmin.bookings.index', ['filter' => 'month']) }}" class="filter-btn {{ request('filter') == 'month' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
@@ -92,7 +92,7 @@
 
             <!-- Date Picker -->
             <div class="relative ml-auto">
-                <form action="{{ route('admin.bookings.index') }}" method="GET" class="inline">
+                <form action="{{ route('superadmin.bookings.index') }}" method="GET" class="inline">
                     <!-- Preserve search parameter if exists -->
                     @if (request('search'))
                     <input type="hidden" name="search" value="{{ request('search') }}">
@@ -182,7 +182,7 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center">
+                                <a href="{{ route('superadmin.bookings.edit', $booking->id) }}" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
@@ -399,7 +399,7 @@
                         const bookingId = this.dataset.id;
                         console.log('Delete clicked for booking ID:', bookingId);
                         
-                        deleteForm.action = `{{ route('admin.bookings.delete', '') }}/${bookingId}`;
+                        deleteForm.action = `{{ route('superadmin.bookings.delete', '') }}/${bookingId}`;
                         deleteModal.classList.remove('hidden');
                         deleteModal.classList.add('flex');
                     });
@@ -419,4 +419,4 @@
         }
     });
 </script>
-@endpush
+@endpush 

@@ -46,8 +46,8 @@ class ActivityTypeController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        // Handle checkbox - explicitly set is_active based on presence of checkbox value
-        $validated['is_active'] = $request->has('is_active');
+        // Handle radio button - explicitly set is_active based on input value
+        $validated['is_active'] = $request->input('is_active') == 1;
 
         ActivityType::create($validated);
 
@@ -84,8 +84,8 @@ class ActivityTypeController extends Controller
             'description' => 'nullable|string',
         ]);
         
-        // Handle checkbox - explicitly set is_active based on presence of checkbox value
-        $validated['is_active'] = $request->has('is_active');
+        // Handle radio button - explicitly set is_active based on input value
+        $validated['is_active'] = $request->input('is_active') == 1;
 
         $activityType->update($validated);
 

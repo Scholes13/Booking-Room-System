@@ -230,7 +230,18 @@ class AdminController extends Controller
 
     public function createMeetingRoom()
     {
-        return view('admin.meeting-rooms.create');
+        // Now that we're using modals, just redirect to the index page
+        // which will show the Add Room modal
+        if (Auth::check() && Auth::user()->role === 'admin_bas') {
+            return redirect()->route('bas.meeting_rooms');
+        }
+        
+        // For regular admin or superadmin
+        if (Auth::check() && Auth::user()->role === 'superadmin') {
+            return redirect()->route('superadmin.meeting_rooms');
+        }
+        
+        return redirect()->route('admin.meeting_rooms');
     }
 
     public function storeMeetingRoom(Request $request)
@@ -256,7 +267,17 @@ class AdminController extends Controller
             $validated
         );
         
-        return redirect()->route('admin.meeting_rooms')
+        // Determine redirect route based on user role
+        $routeName = 'admin.meeting_rooms';
+        if (Auth::check()) {
+            if (Auth::user()->role === 'admin_bas') {
+                $routeName = 'bas.meeting_rooms';
+            } elseif (Auth::user()->role === 'superadmin') {
+                $routeName = 'superadmin.meeting_rooms';
+            }
+        }
+        
+        return redirect()->route($routeName)
                          ->with('success', 'Ruang meeting berhasil ditambahkan.');
     }
 
@@ -274,14 +295,35 @@ class AdminController extends Controller
             ['id' => $id, 'name' => $roomName]
         );
     
-        return redirect()->route('admin.meeting_rooms')
+        // Determine redirect route based on user role
+        $routeName = 'admin.meeting_rooms';
+        if (Auth::check()) {
+            if (Auth::user()->role === 'admin_bas') {
+                $routeName = 'bas.meeting_rooms';
+            } elseif (Auth::user()->role === 'superadmin') {
+                $routeName = 'superadmin.meeting_rooms';
+            }
+        }
+        
+        return redirect()->route($routeName)
                          ->with('success', 'Meeting room berhasil dihapus.');
     }
 
     public function editMeetingRoom($id)
     {
-        $room = MeetingRoom::findOrFail($id);
-        return view('admin.meeting-rooms.edit', compact('room'));
+        // Now that we're using modals, just redirect to the index page
+        // The edit button on index page will open the modal with room data
+        
+        if (Auth::check() && Auth::user()->role === 'admin_bas') {
+            return redirect()->route('bas.meeting_rooms');
+        }
+        
+        // For regular admin or superadmin
+        if (Auth::check() && Auth::user()->role === 'superadmin') {
+            return redirect()->route('superadmin.meeting_rooms');
+        }
+        
+        return redirect()->route('admin.meeting_rooms');
     }
 
     public function updateMeetingRoom(Request $request, $id)
@@ -313,8 +355,18 @@ class AdminController extends Controller
             ]
         );
         
-        return redirect()->route('admin.meeting_rooms')
-                         ->with('success', 'Ruang meeting berhasil diperbarui.');
+        // Determine the route based on user role
+        $routeName = 'admin.meeting_rooms';
+        if (Auth::check()) {
+            if (Auth::user()->role === 'admin_bas') {
+                $routeName = 'bas.meeting_rooms';
+            } elseif (Auth::user()->role === 'superadmin') {
+                $routeName = 'superadmin.meeting_rooms';
+            }
+        }
+        
+        return redirect()->route($routeName)
+                        ->with('success', 'Meeting room updated successfully.');
     }
 
     // ----------------------------------------------------------------
@@ -376,7 +428,15 @@ class AdminController extends Controller
             $bookingData
         );
 
-        $prefix = Auth::check() && Auth::user()->role === 'superadmin' ? 'superadmin.' : 'admin.';
+        // Determine the route prefix based on user role
+        $prefix = 'admin.';
+        if (Auth::check()) {
+            if (Auth::user()->role === 'superadmin') {
+                $prefix = 'superadmin.';
+            } elseif (Auth::user()->role === 'admin_bas') {
+                $prefix = 'bas.';
+            }
+        }
         
         return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil dihapus.');
     }
@@ -458,7 +518,17 @@ class AdminController extends Controller
             ]
         );
 
-        return redirect()->route('admin.departments')->with('success', 'Departemen berhasil diperbarui.');
+        // Determine redirect route based on user role
+        $routeName = 'admin.departments';
+        if (Auth::check()) {
+            if (Auth::user()->role === 'superadmin') {
+                $routeName = 'superadmin.departments';
+            } elseif (Auth::user()->role === 'admin_bas') {
+                $routeName = 'bas.departments';
+            }
+        }
+
+        return redirect()->route($routeName)->with('success', 'Departemen berhasil diperbarui.');
     }
 
     /**

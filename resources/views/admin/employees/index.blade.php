@@ -1,5 +1,6 @@
 @php
     $layout = isset($isSuperAdmin) && $isSuperAdmin ? 'superadmin.layout' : 'admin.layout';
+    $routePrefix = isset($isSuperAdmin) && $isSuperAdmin ? 'superadmin' : 'admin';
 @endphp
 
 @extends($layout)
@@ -9,145 +10,182 @@
 @section('content')
 <div class="flex flex-col gap-6 h-full">
     @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-sm mb-2 flex items-center" role="alert">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+        </svg>
         <span class="block sm:inline">{{ session('success') }}</span>
     </div>
     @endif
 
     @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-sm mb-2 flex items-center" role="alert">
+        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+        </svg>
         <span class="block sm:inline">{{ session('error') }}</span>
     </div>
     @endif
 
-    <div class="flex items-center justify-between">
-        <h1 class="text-dark text-2xl font-bold leading-tight tracking-[-0.015em]">Karyawan</h1>
-        <a href="{{ route('admin.employees.create') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-primary text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em]">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm48-88a8,8,0,0,1-8,8H136v32a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V88a8,8,0,0,1,16,0v32h32A8,8,0,0,1,176,128Z"></path>
+    <!-- Header Section with Responsive Layout -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <div>
+            <h1 class="text-dark text-2xl font-bold leading-tight tracking-[-0.015em]">Karyawan</h1>
+            <p class="text-gray-500 mt-1">Lihat dan kelola semua karyawan</p>
+        </div>
+        <a href="{{ route($routePrefix.'.employees.create') }}" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-5 bg-primary text-white gap-2 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-opacity-90 transition-colors shadow-sm w-full sm:w-auto">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
             </svg>
             Tambah Karyawan
         </a>
     </div>
 
-    <!-- Info Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Stats Cards - Responsive Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <!-- Total Karyawan Card -->
-        <div class="bg-white rounded-lg p-4 flex items-center gap-4 border-l-4 border-primary shadow-sm">
-            <div class="flex justify-center items-center rounded-full bg-primary bg-opacity-10 p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" class="text-primary" viewBox="0 0 256 256">
-                    <path d="M234.38,210a123.36,123.36,0,0,0-60.78-53.23,76,76,0,1,0-91.2,0A123.36,123.36,0,0,0,21.62,210a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.53-52s70.69,19.43,89.53,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
-                </svg>
-            </div>
-            <div>
-                <h2 class="text-sm text-gray-500 font-medium">Total Karyawan</h2>
-                <p class="text-2xl font-bold text-dark">{{ $employees->total() }}</p>
+        <div class="bg-white rounded-lg p-4 md:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 flex justify-center items-center rounded-full bg-primary bg-opacity-10 p-2 md:p-3">
+                    <svg class="w-6 h-6 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm text-gray-500 font-medium">Total Karyawan</h2>
+                    <p class="text-xl md:text-2xl font-bold text-dark">{{ $employees->total() }}</p>
+                </div>
             </div>
         </div>
 
         <!-- Karyawan Laki-laki Card -->
-        <div class="bg-white rounded-lg p-4 flex items-center gap-4 border-l-4 border-blue-500 shadow-sm">
-            <div class="flex justify-center items-center rounded-full bg-blue-500 bg-opacity-10 p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" class="text-blue-500" viewBox="0 0 256 256">
-                    <path d="M208,31.31a8,8,0,0,0-8.63,1.72L166.45,68.42A80,80,0,1,0,68.42,166.45l-35.39,33.45a8,8,0,0,0,5.47,13.79,8.24,8.24,0,0,0,5.5-2.17l35.38-33.45a80,80,0,0,0,108,0l35.39-33.45a8,8,0,0,0-5.47-13.79,8.24,8.24,0,0,0-5.47,2.17l-35.42,33.48a64,64,0,1,1,0-90.51L208,42.83A8,8,0,0,0,208,31.31Z"></path>
-                </svg>
-            </div>
-            <div>
-                <h2 class="text-sm text-gray-500 font-medium">Laki-laki</h2>
-                <p class="text-2xl font-bold text-dark">{{ $maleCount }}</p>
+        <div class="bg-white rounded-lg p-4 md:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 flex justify-center items-center rounded-full bg-blue-100 p-2 md:p-3">
+                    <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm text-gray-500 font-medium">Laki-laki</h2>
+                    <p class="text-xl md:text-2xl font-bold text-dark">{{ $maleCount }}</p>
+                </div>
             </div>
         </div>
 
         <!-- Karyawan Perempuan Card -->
-        <div class="bg-white rounded-lg p-4 flex items-center gap-4 border-l-4 border-pink-500 shadow-sm">
-            <div class="flex justify-center items-center rounded-full bg-pink-500 bg-opacity-10 p-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" class="text-pink-500" viewBox="0 0 256 256">
-                    <path d="M128,104a40,40,0,1,0-40-40A40,40,0,0,0,128,104Zm0-64a24,24,0,1,1-24,24A24,24,0,0,1,128,40Zm48,72a8,8,0,0,0-8,8v56H136V144a8,8,0,0,0-16,0v32H88V120a8,8,0,0,0-16,0v72a8,8,0,0,0,8,8h48v16a8,8,0,0,0,16,0V200h48a8,8,0,0,0,8-8V120A8,8,0,0,0,176,112Z"></path>
-                </svg>
-            </div>
-            <div>
-                <h2 class="text-sm text-gray-500 font-medium">Perempuan</h2>
-                <p class="text-2xl font-bold text-dark">{{ $femaleCount }}</p>
+        <div class="bg-white rounded-lg p-4 md:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div class="flex items-center gap-3">
+                <div class="flex-shrink-0 flex justify-center items-center rounded-full bg-pink-100 p-2 md:p-3">
+                    <svg class="w-6 h-6 text-pink-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h2 class="text-sm text-gray-500 font-medium">Perempuan</h2>
+                    <p class="text-xl md:text-2xl font-bold text-dark">{{ $femaleCount }}</p>
+                </div>
             </div>
         </div>
 
-        <!-- Export Button in Card -->
-        <div class="bg-white rounded-lg p-4 flex items-center justify-between shadow-sm">
-            <div class="flex items-center gap-4">
-                <div class="flex justify-center items-center rounded-full bg-green-500 bg-opacity-10 p-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" class="text-green-500" viewBox="0 0 256 256">
-                        <path d="M216,88H168V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V88H40a16,16,0,0,0-16,16V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V104A16,16,0,0,0,216,88Zm0,16v32H168V104ZM104,40h48V136H104Zm-64,64h48v32H40Zm0,48h48v48H40Zm176,48H104V152H216Z"></path>
+        <!-- Employee Data Export Card -->
+        <div class="bg-white rounded-lg p-4 md:p-5 shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-300">
+            <div class="h-full flex flex-col">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="flex-shrink-0 flex justify-center items-center rounded-full bg-green-100 p-2 md:p-3">
+                        <svg class="w-6 h-6 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-sm text-gray-500 font-medium">Data Karyawan</h2>
+                        <p class="text-base font-medium text-dark">Export Excel</p>
+                    </div>
+                </div>
+                <a href="{{ route($routePrefix.'.employees.export') }}" class="mt-auto py-2 px-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm text-sm font-medium flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                     </svg>
-                </div>
-                <div>
-                    <h2 class="text-sm text-gray-500 font-medium">Data Karyawan</h2>
-                    <p class="text-lg font-medium text-dark">Export Excel</p>
-                </div>
+                    Export
+                </a>
             </div>
-            <a href="{{ route('admin.employees.export') }}" class="bg-green-500 text-white rounded-full py-2 px-4 text-sm hover:bg-green-600 transition-colors">
-                Export
-            </a>
         </div>
     </div>
 
-    <div class="flex flex-col gap-4">
-        <!-- Filter Section -->
-        <div class="bg-white rounded-lg p-4 shadow-sm">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="space-y-2">
-                    <label for="searchInput" class="block text-sm font-medium text-dark">Cari Nama/Jabatan/HP/Email</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-                            </svg>
-                        </div>
-                        <input type="search" id="searchInput" name="search" value="{{ request('search') }}" class="block w-full p-3 ps-10 text-sm text-dark border border-border rounded-md bg-gray-50 focus:ring-primary focus:border-primary" placeholder="Cari nama, jabatan, nomor HP, atau email...">
+    <!-- Filter Section - Improved Mobile Layout -->
+    <div class="flex flex-col gap-4 bg-white rounded-lg p-4 md:p-5 shadow-sm">
+        <h2 class="text-base font-semibold text-gray-700">Filter Karyawan</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Search Input with Responsive Design -->
+            <div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                        </svg>
                     </div>
-                </div>
-                
-                <div class="space-y-2">
-                    <label for="departmentFilter" class="block text-sm font-medium text-dark">Departemen</label>
-                    <select id="departmentFilter" name="department_id" class="w-full p-3 text-sm text-dark border border-border rounded-md bg-gray-50 focus:ring-primary focus:border-primary">
-                        <option value="">Semua Departemen</option>
-                        @foreach($departments as $department)
-                            <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
-                                {{ $department->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label for="genderFilter" class="block text-sm font-medium text-dark">Jenis Kelamin</label>
-                    <select id="genderFilter" name="gender" class="w-full p-3 text-sm text-dark border border-border rounded-md bg-gray-50 focus:ring-primary focus:border-primary">
-                        <option value="">Semua</option>
-                        <option value="L" {{ request('gender') == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                        <option value="P" {{ request('gender') == 'P' ? 'selected' : '' }}>Perempuan</option>
-                    </select>
+                    <input type="search" id="searchInput" name="search" value="{{ request('search') }}" class="block w-full p-2.5 sm:p-3 ps-10 text-sm text-dark border border-gray-200 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary transition-all shadow-sm" placeholder="Cari nama, jabatan, nomor HP, atau email...">
                 </div>
             </div>
+            
+            <!-- Department Filter -->
+            <div>
+                <select id="departmentFilter" name="department_id" class="block w-full p-2.5 sm:p-3 text-sm text-dark border border-gray-200 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary transition-all shadow-sm appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em]" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236B7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e')">
+                    <option value="">Semua Departemen</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}" {{ request('department_id') == $department->id ? 'selected' : '' }}>
+                            {{ $department->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            
+            <!-- Gender Filter -->
+            <div>
+                <select id="genderFilter" name="gender" class="block w-full p-2.5 sm:p-3 text-sm text-dark border border-gray-200 rounded-lg bg-gray-50 focus:ring-primary focus:border-primary transition-all shadow-sm appearance-none bg-no-repeat bg-[right_0.5rem_center] bg-[length:1em]" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 fill=%27none%27 viewBox=%270 0 20 20%27%3e%3cpath stroke=%27%236B7280%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27 stroke-width=%271.5%27 d=%27M6 8l4 4 4-4%27/%3e%3c/svg%3e')">
+                    <option value="">Semua Jenis Kelamin</option>
+                    <option value="L" {{ request('gender') == 'L' ? 'selected' : '' }}>Laki-laki</option>
+                    <option value="P" {{ request('gender') == 'P' ? 'selected' : '' }}>Perempuan</option>
+                </select>
+            </div>
         </div>
-        
-        <!-- Employees Table -->
-        <div class="bg-white rounded-lg p-4 shadow-sm" id="employeesTableContainer">
-            @include('admin.employees.partials.table')
+    </div>
+    
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="hidden bg-white rounded-lg p-6 shadow-sm">
+        <div class="flex flex-col items-center justify-center py-4">
+            <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+            <p class="mt-2 text-gray-600">Loading data...</p>
         </div>
+    </div>
+    
+    <!-- Employees Table Container -->
+    <div class="flex flex-col gap-6 bg-white rounded-lg p-4 md:p-6 shadow-sm" id="employeesTableContainer">
+        @include('admin.employees.partials.table')
     </div>
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 flex">
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h3 class="text-lg font-bold mb-4">Konfirmasi Penghapusan</h3>
-        <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus karyawan ini? Tindakan ini tidak dapat dibatalkan.</p>
-        <div class="flex justify-end gap-3">
-            <button id="cancelDelete" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700">Batal</button>
-            <form id="deleteForm" method="POST" action="{{ route('admin.employees.delete', '') }}">
+<div id="confirmDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-transform duration-300 scale-100">
+        <div class="flex justify-center mb-4 text-red-500">
+            <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+        </div>
+        <h3 class="text-xl font-bold text-center mb-2">Konfirmasi Penghapusan</h3>
+        <p class="text-gray-600 text-center mb-6">Apakah Anda yakin ingin menghapus karyawan ini? Tindakan ini tidak dapat dibatalkan.</p>
+        <div class="flex justify-center gap-3">
+            <button id="cancelDelete" class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                Batal
+            </button>
+            <form id="deleteForm" method="POST" action="{{ route($routePrefix.'.employees.delete', '') }}" class="flex-1">
                 @csrf
                 @method('DELETE')
                 <input type="hidden" id="delete-employee-id" name="id" value="">
-                <button type="submit" class="px-4 py-2 bg-danger text-white rounded-lg">Hapus</button>
+                <button type="submit" class="w-full px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500">
+                    Hapus
+                </button>
             </form>
         </div>
     </div>
@@ -175,11 +213,23 @@
                 document.getElementById('confirmDeleteModal').classList.remove('hidden');
                 document.getElementById('confirmDeleteModal').classList.add('flex');
                 
-                // Set action URL dengan employee ID
+                // Set action URL with employee ID
                 const formAction = document.getElementById('deleteForm').getAttribute('action');
                 document.getElementById('deleteForm').action = formAction.replace('', '/' + employeeId);
             });
         });
+    }
+
+    // Function to show loading indicator
+    function showLoading() {
+        document.getElementById('loadingIndicator').classList.remove('hidden');
+        document.getElementById('employeesTableContainer').classList.add('opacity-50');
+    }
+    
+    // Function to hide loading indicator
+    function hideLoading() {
+        document.getElementById('loadingIndicator').classList.add('hidden');
+        document.getElementById('employeesTableContainer').classList.remove('opacity-50');
     }
 
     // Initialize when the page first loads
@@ -190,6 +240,18 @@
         document.getElementById('cancelDelete').addEventListener('click', function() {
             document.getElementById('confirmDeleteModal').classList.add('hidden');
             document.getElementById('confirmDeleteModal').classList.remove('flex');
+        });
+
+        // Auto-hide alerts after 5 seconds
+        const alerts = document.querySelectorAll('[role="alert"]');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.transition = 'opacity 1s ease-out';
+                alert.style.opacity = '0';
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 1000);
+            }, 5000);
         });
 
         // Search input event
@@ -215,8 +277,7 @@
         const genderValue = document.getElementById('genderFilter')?.value || '';
         
         // Show loading indicator
-        const tableContainer = document.getElementById('employeesTableContainer');
-        tableContainer.innerHTML = '<div class="text-center py-8"><div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div><p class="mt-2 text-gray-500">Loading...</p></div>';
+        showLoading();
         
         // Build query parameters
         const params = new URLSearchParams();
@@ -241,28 +302,16 @@
             return response.text();
         })
         .then(html => {
-            tableContainer.innerHTML = html;
+            document.getElementById('employeesTableContainer').innerHTML = html;
+            hideLoading();
             // Reinitialize delete buttons after content update
             initializeDeleteButtons();
         })
         .catch(error => {
             console.error('Error fetching data:', error);
-            tableContainer.innerHTML = `<div class="text-center py-8 text-danger">Error loading data: ${error.message}</div>`;
+            document.getElementById('employeesTableContainer').innerHTML = `<div class="text-center py-8 text-danger">Error loading data: ${error.message}</div>`;
+            hideLoading();
         });
     }
-</script>
-
-<!-- Delete Modal Script -->
-<script>
-    // Additional script for modal opening/closing
-    document.addEventListener('DOMContentLoaded', function() {
-        // Close when clicking outside the modal content
-        document.getElementById('confirmDeleteModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.add('hidden');
-                this.classList.remove('flex');
-            }
-        });
-    });
 </script>
 @endpush
