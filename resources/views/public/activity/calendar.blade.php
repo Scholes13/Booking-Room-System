@@ -359,6 +359,28 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    
+    .event-activity-type {
+        font-size: 0.65rem;
+        font-weight: normal;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-top: 2px;
+        line-height: 1.2;
+    }
+    
+    .activity-type-badge {
+        padding: 1px 4px;
+        border-radius: 3px;
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.65rem;
+    }
 
     /* Button styling */
     .fc .fc-button {
@@ -470,6 +492,52 @@ document.addEventListener('DOMContentLoaded', function() {
             'Holiday': { icon: 'fa-calendar-day', color: '#3B82F6' },
             'Lainnya': { icon: 'fa-calendar-check', color: '#6B7280' },
             'default': { icon: 'fa-calendar', color: '#6B7280' }
+        };
+        
+        // Pre-defined aesthetically pleasing color pairs (background and text color)
+        const colorPalette = [
+            { bgColor: '#EBF4FF', textColor: '#1E40AF' }, // Light blue
+            { bgColor: '#F0FDF4', textColor: '#166534' }, // Light green
+            { bgColor: '#FEF3C7', textColor: '#92400E' }, // Light yellow
+            { bgColor: '#FEE2E2', textColor: '#991B1B' }, // Light red
+            { bgColor: '#F3E8FF', textColor: '#6B21A8' }, // Light purple
+            { bgColor: '#E0F2FE', textColor: '#0369A1' }, // Light sky blue
+            { bgColor: '#ECFDF5', textColor: '#065F46' }, // Light teal
+            { bgColor: '#FEF2F2', textColor: '#B91C1C' }, // Light rose
+            { bgColor: '#FDF2F8', textColor: '#9D174D' }, // Light pink
+            { bgColor: '#F5F3FF', textColor: '#5B21B6' }, // Light violet
+            { bgColor: '#FFFBEB', textColor: '#B45309' }, // Light amber
+            { bgColor: '#F0FDFA', textColor: '#115E59' }, // Light cyan
+            { bgColor: '#F8FAFC', textColor: '#334155' }, // Light slate
+            { bgColor: '#F1F5F9', textColor: '#475569' }, // Light gray
+            { bgColor: '#F9FAFB', textColor: '#374151' }  // Light cool gray
+        ];
+        
+        // Cache for activity type colors
+        const activityTypeColorCache = {};
+        
+        // Function to generate a consistent color for each activity type
+        window.getActivityTypeColor = function(activityType) {
+            // If we already calculated this color, return from cache
+            if (activityTypeColorCache[activityType]) {
+                return activityTypeColorCache[activityType];
+            }
+            
+            // Generate a number from the activity type string
+            let hash = 0;
+            for (let i = 0; i < activityType.length; i++) {
+                hash = ((hash << 5) - hash) + activityType.charCodeAt(i);
+                hash = hash & hash; // Convert to 32bit integer
+            }
+            
+            // Get a consistent color from the palette based on hash
+            const colorIndex = Math.abs(hash) % colorPalette.length;
+            const color = colorPalette[colorIndex];
+            
+            // Cache the color for this activity type
+            activityTypeColorCache[activityType] = color;
+            
+            return color;
         };
 
         // Helper functions
@@ -946,6 +1014,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 nameEl.innerText = displayName;
                 
                 container.appendChild(nameEl);
+                
+                // Activity type row (if available)
+                if (props.activity_type) {
+                    const activityTypeEl = document.createElement('div');
+                    activityTypeEl.className = 'event-activity-type';
+                    
+                    // Abbreviate activity type if needed
+                    let activityType = props.activity_type;
+                    if (activityType.length > 22) {
+                        activityType = activityType.substring(0, 20) + '...';
+                    }
+                    
+                    // Get color for this activity type
+                    const activityColor = getActivityTypeColor(activityType);
+                    
+                    // Create a span with background color
+                    const coloredSpan = document.createElement('span');
+                    coloredSpan.className = 'activity-type-badge';
+                    coloredSpan.innerText = activityType;
+                    coloredSpan.style.backgroundColor = activityColor.bgColor;
+                    coloredSpan.style.color = activityColor.textColor;
+                    
+                    activityTypeEl.appendChild(coloredSpan);
+                    container.appendChild(activityTypeEl);
+                }
                 
                 return { domNodes: [container] };
             },
