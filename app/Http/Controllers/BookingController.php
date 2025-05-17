@@ -359,10 +359,17 @@ class BookingController extends Controller
        // Remember to keep any query parameters in pagination links
        $bookings->appends($request->all());
        
+       // Get data for modal forms
+       $departments = Department::all();
+       $meetingRooms = MeetingRoom::orderBy('name', 'asc')->get();
+       $employees = Employee::with('department')
+                          ->orderBy('name', 'asc')
+                          ->get();
+       
        if (Auth::check() && Auth::user()->role === 'admin_bas') {
-           return view('admin_bas.bookings.index', compact('bookings'));
+           return view('admin_bas.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
        }
        
-       return view('admin.bookings.index', compact('bookings'));
+       return view('admin.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
    }
 }
