@@ -4,28 +4,10 @@
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center">
-    <div class="w-full max-w-lg mx-auto bg-white/20 backdrop-blur-lg shadow-2xl rounded-lg p-8">
-        <h2 class="text-3xl font-semibold text-center text-gray-200 mb-6">
+    <div class="w-full max-w-lg mx-auto bg-white/15 backdrop-blur-lg shadow-2xl rounded-lg p-8 border border-white/20">
+        <h2 class="text-3xl font-semibold text-center text-white mb-6">
             Booking Ruang Meeting
         </h2>
-
-        <!-- Error Validation -->
-        @if($errors->any())
-        <div class="bg-red-500/20 text-red-400 p-3 rounded-md mb-4">
-            <ul>
-                @foreach($errors->all() as $error)
-                <li>⚠️ {{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
-
-        <!-- Success Message -->
-        @if(session('success'))
-        <div class="bg-green-500/20 text-green-400 p-3 rounded-md mb-4">
-            ✅ {{ session('success') }}
-        </div>
-        @endif
 
         <!-- Loading Animation -->
         <div id="loading-container" class="hidden absolute top-0 left-0 w-full h-full bg-gray-800/50 flex justify-center items-center z-50">
@@ -38,13 +20,16 @@
 
             <!-- Nama -->
             <div>
-                <label class="block text-sm font-medium text-gray-300 mb-1">Nama</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-user text-gray-400 mr-2"></i>
-                    <select name="nama" 
-                            id="employee_select"
-                            class="w-full bg-transparent border-none outline-none text-gray-900"
-                            required>
+                <label class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-user mr-2 opacity-80"></i>
+                    Nama
+                </label>
+                <div class="relative">
+                    <select 
+                        name="nama" 
+                        id="employee_select"
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
+                        required>
                         <option value="">Pilih Karyawan</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->name }}" 
@@ -53,60 +38,78 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- Departemen -->
             <div>
-                <label for="department" class="block text-gray-300 font-medium text-sm">Departemen</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-building text-gray-400 mr-2"></i>
-                    <select id="department" 
-                            name="department" 
-                            class="w-full bg-transparent border-none outline-none text-gray-900" 
-                            required 
-                            readonly>
-                        <option value="" class="text-gray-900">Pilih Departemen</option>
+                <label for="department" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-building mr-2 opacity-80"></i>
+                    Departemen
+                </label>
+                <div class="relative">
+                    <select 
+                        id="department" 
+                        name="department" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm" 
+                        required 
+                        readonly>
+                        <option value="">Pilih Departemen</option>
                         @foreach($departments as $department)
-                        <option value="{{ $department->name }}" {{ old('department') == $department->name ? 'selected' : '' }} class="text-black">
+                        <option value="{{ $department->name }}" {{ old('department') == $department->name ? 'selected' : '' }}>
                             {{ $department->name }}
                         </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- Tanggal -->
             <div>
-                <label for="booking_date" class="block text-gray-300 font-medium text-sm">Tanggal</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-calendar-alt text-gray-400 mr-2"></i>
-                    <input type="date" 
-                           id="booking_date" 
-                           name="date" 
-                           min="{{ date('Y-m-d') }}"
-                           value="{{ old('date', date('Y-m-d')) }}" 
-                           class="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400" 
-                           required>
+                <label for="booking_date" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2 opacity-80"></i>
+                    Tanggal
+                </label>
+                <div class="relative" onclick="document.getElementById('booking_date').showPicker()">
+                    <input 
+                        type="date" 
+                        id="booking_date" 
+                        name="date" 
+                        min="{{ date('Y-m-d') }}"
+                        value="{{ old('date', date('Y-m-d')) }}" 
+                        class="form-input rounded-md pl-4 pr-10 py-2.5 w-full text-sm cursor-pointer" 
+                        required>
                 </div>
             </div>
 
             <!-- Ruang Meeting -->
             <div>
-                <label for="meeting_room" class="block text-gray-300 font-medium text-sm">Ruang Meeting</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-door-open text-gray-400 mr-2"></i>
-                    <select id="meeting_room" 
-                            name="meeting_room_id" 
-                            class="w-full bg-transparent border-none outline-none text-gray-900" 
-                            required>
-                        <option value="" class="text-gray-900">Pilih Ruangan</option>
+                <label for="meeting_room" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-door-open mr-2 opacity-80"></i>
+                    Ruang Meeting
+                </label>
+                <div class="relative">
+                    <select 
+                        id="meeting_room" 
+                        name="meeting_room_id" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm" 
+                        required>
+                        <option value="">Pilih Ruangan</option>
                         @foreach($meetingRooms as $room)
-                        <option value="{{ $room->id }}" {{ old('meeting_room_id') == $room->id ? 'selected' : '' }} class="text-black">
+                        <option value="{{ $room->id }}" {{ old('meeting_room_id') == $room->id ? 'selected' : '' }}>
                             {{ $room->name }}
                         </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
@@ -114,65 +117,86 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Jam Booking (Mulai) -->
                 <div>
-                    <label for="start_time_select" class="block text-gray-300 font-medium text-sm">Jam Booking (Mulai)</label>
-                    <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                        <i class="fas fa-clock text-gray-400 mr-2"></i>
-                        <select id="start_time_select" 
-                                name="start_time" 
-                                class="w-full bg-transparent border-none outline-none text-gray-900" 
-                                required>
+                    <label for="start_time_select" class="block text-sm font-medium text-white mb-2 flex items-center">
+                        <i class="fas fa-clock mr-2 opacity-80"></i>
+                        Jam Mulai
+                    </label>
+                    <div class="relative">
+                        <select 
+                            id="start_time_select" 
+                            name="start_time" 
+                            class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm" 
+                            required>
                             <option value="">Pilih Waktu Mulai</option>
                         </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                            <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Jam Selesai Booking -->
                 <div>
-                    <label for="end_time_select" class="block text-gray-300 font-medium text-sm">Jam Selesai Booking</label>
-                    <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                        <i class="fas fa-clock text-gray-400 mr-2"></i>
-                        <select id="end_time_select" 
-                                name="end_time" 
-                                class="w-full bg-transparent border-none outline-none text-gray-900" 
-                                required>
+                    <label for="end_time_select" class="block text-sm font-medium text-white mb-2 flex items-center">
+                        <i class="fas fa-clock mr-2 opacity-80"></i>
+                        Jam Selesai
+                    </label>
+                    <div class="relative">
+                        <select 
+                            id="end_time_select" 
+                            name="end_time" 
+                            class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm" 
+                            required>
                             <option value="">Pilih Waktu Selesai</option>
                         </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                            <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Booking Type -->
             <div>
-                <label for="booking_type" class="block text-gray-300 font-medium text-sm">Type</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-tag text-gray-400 mr-2"></i>
-                    <select id="booking_type" 
-                            name="booking_type" 
-                            class="w-full bg-transparent border-none outline-none text-gray-900" 
-                            required>
+                <label for="booking_type" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-tag mr-2 opacity-80"></i>
+                    Type
+                </label>
+                <div class="relative">
+                    <select 
+                        id="booking_type" 
+                        name="booking_type" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm" 
+                        required>
                         <option value="internal" {{ old('booking_type', 'internal') == 'internal' ? 'selected' : '' }}>Internal</option>
                         <option value="external" {{ old('booking_type') == 'external' ? 'selected' : '' }}>Eksternal</option>
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- Deskripsi -->
             <div>
-                <label for="description" class="block text-gray-300 font-medium text-sm">Alasan / Deskripsi</label>
-                <div class="flex items-center bg-white/30 backdrop-blur-md rounded-md p-3 shadow-md border border-white/20">
-                    <i class="fas fa-comment-dots text-gray-400 mr-2"></i>
-                    <textarea id="description" 
-                              name="description" 
-                              class="w-full bg-transparent border-none outline-none text-gray-900 placeholder-gray-400" 
-                              rows="3" 
-                              required>{{ old('description') }}</textarea>
+                <label for="description" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-comment-dots mr-2 opacity-80"></i>
+                    Alasan / Deskripsi
+                </label>
+                <div class="relative">
+                    <textarea 
+                        id="description" 
+                        name="description" 
+                        class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                        rows="3" 
+                        required>{{ old('description') }}</textarea>
                 </div>
             </div>
 
-            <!-- External Description removed as requested -->
-
             <!-- Submit Button -->
-            <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-blue-800 text-white p-3 rounded-md shadow-lg transform hover:scale-105 transition duration-300">
+            <button 
+                type="submit" 
+                class="w-full bg-white text-primary p-3 rounded-md shadow-md transform hover:scale-105 transition duration-300 hover:bg-white/90 font-medium mt-4">
                 <i class="fas fa-check-circle mr-2"></i> Submit Booking
             </button>
         </form>
@@ -180,39 +204,112 @@
 </div>
 @endsection
 
-@push('scripts')
-<!-- DotLottie Player -->
-<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+@push('styles')
+<!-- Add the same fonts as login page -->
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+<link
+    rel="stylesheet"
+    as="style"
+    onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Plus+Jakarta+Sans%3Awght%40400%3B500%3B700%3B800"
+/>
 
-<!-- Custom Style -->
 <style>
-    select {
-        appearance: none;
-        -webkit-appearance: none;
-        -moz-appearance: none;
-        background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12"><polygon points="0,0 12,0 6,6" fill="%23999"/></svg>');
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        background-size: 12px;
-    }
-    option.booked {
-        color: #EF4444;
-        font-weight: 600;
-        background-color: rgba(239, 68, 68, 0.1);
-    }
-    option[disabled] {
-        color: #6B7280;
-        background-color: #F3F4F6;
-    }
-    select[readonly] {
-        pointer-events: none;
-        opacity: 0.7;
-        cursor: not-allowed;
-    }
+  :root {
+    --primary-color: #26458e;
+    --hover-color: #ffffff;
+    --font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
+  }
+
+  body {
+    font-family: var(--font-family);
+  }
+
+  /* Filter elements */
+  .form-select, .form-input {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 6px;
+    width: 100%;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  
+  .form-input {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .form-select {
+    appearance: none;
+    background-image: none;
+  }
+
+  .form-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 3px;
+    padding: 3px;
+  }
+  
+  /* Add style for the parent container of the date input */
+  #booking_date {
+    cursor: pointer;
+  }
+
+  .form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Add elegant hover effect */
+  .form-select:hover, .form-input:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Styling for option elements */
+  option {
+    background-color: #26458e;
+    color: white;
+  }
+  
+  option.booked {
+    color: #ffc0cb;
+    font-weight: 600;
+    background-color: rgba(255, 0, 0, 0.2);
+  }
+  
+  option[disabled] {
+    color: #aaa;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  
+  select[readonly] {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  /* Submit button */
+  .bg-white {
+    background-color: #ffffff;
+  }
+
+  .text-primary {
+    color: var(--primary-color);
+  }
 </style>
 @endpush
 
 @push('scripts')
+<!-- DotLottie Player -->
+<script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs" type="module"></script>
+
 <script>
 class BookingTimeManager {
     constructor() {
@@ -420,15 +517,8 @@ class BookingTimeManager {
         });
     }
     showError(message) {
-        const errorDiv = document.createElement('div');
-        errorDiv.className = 'bg-red-500/20 text-red-400 p-3 rounded-md mb-4';
-        errorDiv.textContent = message;
-        const existingError = document.querySelector('.bg-red-500\\/20');
-        if (existingError) {
-            existingError.replaceWith(errorDiv);
-        } else {
-            this.bookingForm.insertBefore(errorDiv, this.bookingForm.firstChild);
-        }
+        // Use our new toast notification system instead of inserting error div
+        window.showErrorToast(message);
     }
 }
 
@@ -436,6 +526,34 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
         const bookingManager = new BookingTimeManager();
         window.bookingManager = bookingManager;
+        
+        // Add date input focus event to automatically open date picker
+        const dateInput = document.getElementById('booking_date');
+        if (dateInput) {
+            dateInput.addEventListener('focus', function() {
+                this.showPicker();
+            });
+        }
+        
+        // Add form submit event listener
+        const bookingForm = document.getElementById('bookingForm');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', function(event) {
+                // Don't show if validation fails
+                if (!bookingForm.checkValidity()) return;
+                
+                // Show loading toast when form is submitted
+                Toastify({
+                    text: "Submitting booking...",
+                    duration: 0, // Won't disappear until page refreshes
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "",
+                    className: "success-toast",
+                    stopOnFocus: true
+                }).showToast();
+            });
+        }
     } catch (error) {
         console.error('Error initializing BookingTimeManager:', error);
     }

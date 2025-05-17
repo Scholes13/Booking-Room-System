@@ -96,6 +96,9 @@ class AdminBASController extends Controller
             }
         }
         
+        // Order by latest created_at to show the most recent activities first
+        $query->latest('created_at');
+        
         // Get all activities that match the database-level filters
         $allActivities = $query->get();
         

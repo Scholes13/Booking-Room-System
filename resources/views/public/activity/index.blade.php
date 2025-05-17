@@ -5,28 +5,12 @@
 @section('content')
 <div class="min-h-screen flex items-center justify-center">
     <!-- Container utama dengan efek glass -->
-    <div class="w-full max-w-lg mx-auto bg-white/10 backdrop-blur-lg shadow-2xl rounded-lg p-8">
+    <div class="w-full max-w-lg mx-auto bg-white/15 backdrop-blur-lg shadow-2xl rounded-lg p-8 border border-white/20">
         <h2 class="text-3xl font-semibold text-center text-white mb-6">
             Tambah Kegiatan
         </h2>
 
-        <!-- Error Validation -->
-        @if($errors->any())
-            <div class="bg-red-500/20 text-red-400 p-3 rounded-md mb-4">
-                <ul>
-                    @foreach($errors->all() as $error)
-                        <li>⚠️ {{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <!-- Success Message -->
-        @if(session('success'))
-            <div class="bg-green-500/20 text-green-400 p-3 rounded-md mb-4">
-                ✅ {{ session('success') }}
-            </div>
-        @endif
+        <!-- Error Validation and Success Messages removed -->
 
         <!-- Form -->
         <form id="activityForm" action="{{ route('activity.store') }}" method="POST" class="space-y-5">
@@ -34,13 +18,15 @@
 
             <!-- NAMA (native <select>) -->
             <div>
-                <label class="block text-sm font-medium text-gray-200 mb-1">Nama</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-user text-white mr-2"></i>
+                <label class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-user mr-2 opacity-80"></i>
+                    Nama
+                </label>
+                <div class="relative">
                     <select 
                         name="name" 
                         id="employee_select" 
-                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required
                     >
                         <option value="">Pilih Karyawan</option>
@@ -54,18 +40,23 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- DEPARTEMEN (readonly <select>) -->
             <div>
-                <label for="department_id" class="block text-sm font-medium text-gray-200 mb-1">Departemen</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-building text-white mr-2"></i>
+                <label for="department_id" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-building mr-2 opacity-80"></i>
+                    Departemen
+                </label>
+                <div class="relative">
                     <select 
                         id="department_id" 
                         name="department_id"
-                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required 
                         readonly
                     >
@@ -79,50 +70,65 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- TANGGAL JAM MULAI -->
             <div>
-                <label for="start_datetime" class="block text-sm font-medium text-gray-200 mb-1">Tanggal Jam Mulai</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-calendar-alt text-white mr-2"></i>
+                <label for="start_datetime" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2 opacity-80"></i>
+                    Tanggal Jam Mulai
+                </label>
+                <div class="relative">
                     <input 
                         type="text" 
                         id="start_datetime" 
                         name="start_datetime" 
-                        class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400" 
+                        class="form-input rounded-md pl-4 pr-10 py-2.5 w-full text-sm" 
                         required
                         value="{{ old('start_datetime') }}"
                     >
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-white opacity-80">
+                        <i class="fas fa-clock"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- TANGGAL JAM SELESAI -->
             <div>
-                <label for="end_datetime" class="block text-sm font-medium text-gray-200 mb-1">Tanggal Jam Selesai</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-calendar-alt text-white mr-2"></i>
+                <label for="end_datetime" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-calendar-alt mr-2 opacity-80"></i>
+                    Tanggal Jam Selesai
+                </label>
+                <div class="relative">
                     <input 
                         type="text" 
                         id="end_datetime" 
                         name="end_datetime" 
-                        class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400" 
+                        class="form-input rounded-md pl-4 pr-10 py-2.5 w-full text-sm" 
                         required
                         value="{{ old('end_datetime') }}"
                     >
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-white opacity-80">
+                        <i class="fas fa-clock"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- TIPE KEGIATAN (menggunakan <select> standar) -->
             <div>
-                <label for="activity_type" class="block text-sm font-medium text-gray-200 mb-1">Tipe Kegiatan <span class="text-red-500">*</span></label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-tasks text-white mr-2"></i>
+                <label for="activity_type" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-tasks mr-2 opacity-80"></i>
+                    Tipe Kegiatan <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
                     <select 
                         id="activity_type" 
                         name="activity_type"
-                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required
                         onchange="checkOtherActivity()"
                     >
@@ -133,18 +139,23 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
                 
                 <!-- "Lainnya" Field - hanya muncul ketika "Lainnya" dipilih -->
                 <div id="other_activity_container" class="mt-2" style="display: {{ old('activity_type') === 'Lainnya' ? 'block' : 'none' }}">
-                    <label for="activity_type_other" class="block text-sm font-medium text-gray-200 mb-1">Spesifikasi Tipe Kegiatan</label>
-                    <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                        <i class="fas fa-info-circle text-white mr-2"></i>
+                    <label for="activity_type_other" class="block text-sm font-medium text-white mb-2 flex items-center">
+                        <i class="fas fa-info-circle mr-2 opacity-80"></i>
+                        Spesifikasi Tipe Kegiatan
+                    </label>
+                    <div class="relative">
                         <input 
                             type="text" 
                             id="activity_type_other" 
                             name="activity_type_other" 
-                            class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400" 
+                            class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
                             placeholder="Masukkan tipe kegiatan lainnya"
                             value="{{ old('activity_type_other') }}"
                         >
@@ -154,13 +165,15 @@
 
             <!-- PROVINSI -->
             <div>
-                <label for="province" class="block text-sm font-medium text-gray-200 mb-1">Provinsi</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-map-marker-alt text-white mr-2"></i>
+                <label for="province" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-map-marker-alt mr-2 opacity-80"></i>
+                    Provinsi
+                </label>
+                <div class="relative">
                     <select 
                         id="province" 
                         name="province"
-                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required
                     >
                         <option value="">Pilih Provinsi</option>
@@ -170,18 +183,23 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- KOTA -->
             <div>
-                <label for="city" class="block text-sm font-medium text-gray-200 mb-1">Kota/Kabupaten</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-city text-white mr-2"></i>
+                <label for="city" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-city mr-2 opacity-80"></i>
+                    Kota/Kabupaten
+                </label>
+                <div class="relative">
                     <select 
                         id="city" 
                         name="city"
-                        class="appearance-none w-full bg-gray-800 text-white border-none outline-none placeholder-gray-400" 
+                        class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required
                     >
                         <option value="">Pilih Kota/Kabupaten</option>
@@ -191,20 +209,25 @@
                             </option>
                         @endforeach
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                        <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- DESKRIPSI -->
             <div>
-                <label for="description" class="block text-sm font-medium text-gray-200 mb-1">Deskripsi</label>
-                <div class="bg-gray-800 text-white p-3 rounded-md shadow-md flex items-center">
-                    <i class="fas fa-comment-dots text-white mr-2"></i>
+                <label for="description" class="block text-sm font-medium text-white mb-2 flex items-center">
+                    <i class="fas fa-comment-dots mr-2 opacity-80"></i>
+                    Deskripsi
+                </label>
+                <div class="relative">
                     <textarea 
                         id="description"
                         name="description"
                         rows="3"
                         placeholder="Masukkan deskripsi kegiatan"
-                        class="w-full bg-transparent border-none outline-none text-white placeholder-gray-400"
+                        class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm"
                         required
                     >{{ old('description') }}</textarea>
                 </div>
@@ -212,11 +235,11 @@
 
             <!-- SUBMIT BUTTON -->
             <button
-            type="submit"
-            class="w-full bg-blue-600 text-white p-3 rounded-md shadow-md 
-                   transform hover:scale-105 transition duration-300 hover:bg-blue-700">
-            <i class="fas fa-check-circle mr-2"></i> Submit Kegiatan
-          </button>
+                type="submit"
+                class="w-full bg-white text-primary p-3 rounded-md shadow-md 
+                       transform hover:scale-105 transition duration-300 hover:bg-white/90 font-medium mt-4">
+                <i class="fas fa-check-circle mr-2"></i> Submit Kegiatan
+            </button>
         </form>
     </div>
 </div>
@@ -227,19 +250,110 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
+<!-- Add the same fonts as login page -->
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+<link
+    rel="stylesheet"
+    as="style"
+    onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Plus+Jakarta+Sans%3Awght%40400%3B500%3B700%3B800"
+/>
+
 <!-- Flatpickr (Tema Material Blue) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/material_blue.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
 <style>
-  body {
-    font-family: 'Poppins', sans-serif;
+  :root {
+    --primary-color: #26458e;
+    --hover-color: #ffffff;
+    --font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
   }
 
-  /* Paksa background & teks untuk dropdown <select> */
-  select, select option {
-    background-color: #1f2937 !important; /* bg-gray-800 */
-    color: #fff !important;
+  body {
+    font-family: var(--font-family);
+  }
+
+  /* Filter elements */
+  .form-select, .form-input {
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 6px;
+    width: 100%;
+    transition: all 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  
+  .form-input {
+    padding: 0.625rem 0.75rem;
+  }
+
+  .form-select {
+    appearance: none;
+    background-image: none;
+  }
+
+  .form-input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Add elegant hover effect */
+  .form-select:hover, .form-input:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Submit button */
+  .bg-white {
+    background-color: #ffffff;
+  }
+
+  .text-primary {
+    color: var(--primary-color);
+  }
+
+  /* Flatpickr theming */
+  .flatpickr-calendar {
+    background: #ffffff;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-radius: 8px !important;
+    border: none !important;
+  }
+
+  .flatpickr-day.selected, 
+  .flatpickr-day.startRange, 
+  .flatpickr-day.endRange, 
+  .flatpickr-day.selected.inRange, 
+  .flatpickr-day.startRange.inRange, 
+  .flatpickr-day.endRange.inRange, 
+  .flatpickr-day.selected:focus, 
+  .flatpickr-day.startRange:focus, 
+  .flatpickr-day.endRange:focus, 
+  .flatpickr-day.selected:hover, 
+  .flatpickr-day.startRange:hover, 
+  .flatpickr-day.endRange:hover, 
+  .flatpickr-day.selected.prevMonthDay, 
+  .flatpickr-day.startRange.prevMonthDay, 
+  .flatpickr-day.endRange.prevMonthDay, 
+  .flatpickr-day.selected.nextMonthDay, 
+  .flatpickr-day.startRange.nextMonthDay, 
+  .flatpickr-day.endRange.nextMonthDay {
+    background: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+  }
+
+  .flatpickr-time input:hover, 
+  .flatpickr-time .flatpickr-am-pm:hover, 
+  .flatpickr-time input:focus, 
+  .flatpickr-time .flatpickr-am-pm:focus {
+    background: #f3f4f6;
   }
 </style>
 @endpush
@@ -251,6 +365,26 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Add form submit event listener
+    const activityForm = document.getElementById('activityForm');
+    if (activityForm) {
+        activityForm.addEventListener('submit', function(event) {
+            // Don't show if validation fails
+            if (!activityForm.checkValidity()) return;
+            
+            // Show loading toast when form is submitted
+            Toastify({
+                text: "Submitting activity...",
+                duration: 0, // Won't disappear until page refreshes
+                gravity: "top",
+                position: "right",
+                backgroundColor: "",
+                className: "success-toast",
+                stopOnFocus: true
+            }).showToast();
+        });
+    }
+
     // Inisialisasi Flatpickr (Tanggal & Waktu Mulai)
     flatpickr("#start_datetime", {
         enableTime: true,

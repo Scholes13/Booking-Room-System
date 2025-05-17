@@ -8,118 +8,140 @@
         <!-- Top Controls -->
         <div class="flex flex-col md:flex-row mb-6 gap-4">
             <!-- Calendar Controls -->
-            <div class="flex-1 bg-white/10 backdrop-blur-lg p-4 rounded-xl shadow-lg flex flex-col md:flex-row gap-4">
+            <div class="flex-1 bg-white/15 backdrop-blur-lg p-4 rounded-lg shadow-lg flex flex-col md:flex-row gap-4 border border-white/20">
                 <div id="calendar-view-controls" class="flex items-center space-x-2 flex-wrap">
-                    <div class="bg-gray-900/80 rounded-lg px-2 py-1">
-                        <button id="view-month" class="view-btn active px-3 py-1 rounded text-sm font-medium">Month</button>
-                        <button id="view-week" class="view-btn px-3 py-1 rounded text-sm font-medium">Week</button>
-                        <button id="view-day" class="view-btn px-3 py-1 rounded text-sm font-medium">Day</button>
+                    <div class="bg-white/10 rounded-lg p-1 border border-white/20">
+                        <button id="view-month" class="view-btn active px-4 py-1.5 rounded text-sm font-medium">Month</button>
+                        <button id="view-week" class="view-btn px-4 py-1.5 rounded text-sm font-medium">Week</button>
+                        <button id="view-day" class="view-btn px-4 py-1.5 rounded text-sm font-medium">Day</button>
                     </div>
-                    <button id="today-btn" class="bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded text-sm font-medium transition-colors">Today</button>
+                    <button id="today-btn" class="bg-white hover:bg-white/90 text-primary px-4 py-1.5 rounded text-sm font-medium transition-colors shadow-sm">Today</button>
                     <div class="flex items-center space-x-2">
-                        <button id="prev-btn" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-sm"><i class="fas fa-chevron-left"></i></button>
+                        <button id="prev-btn" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm text-white shadow-sm"><i class="fas fa-chevron-left"></i></button>
                         <span id="current-range" class="text-sm font-medium text-white"></span>
-                        <button id="next-btn" class="bg-gray-700 hover:bg-gray-600 px-2 py-1 rounded text-sm"><i class="fas fa-chevron-right"></i></button>
+                        <button id="next-btn" class="bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded text-sm text-white shadow-sm"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Filters and Search -->
-        <div class="bg-white/10 backdrop-blur-lg p-4 rounded-xl shadow-lg mb-6">
-            <div class="flex flex-col md:flex-row gap-4">
+        <div class="bg-white/15 backdrop-blur-lg p-5 rounded-lg shadow-lg mb-6 border border-white/20">
+            <div class="flex flex-col md:flex-row gap-5">
                 <!-- Filters -->
-                <div class="flex-1 flex flex-col md:flex-row gap-4">
+                <div class="flex-1 flex flex-col md:flex-row gap-5">
                     <div class="flex-1">
-                        <label for="departmentFilter" class="block text-xs text-gray-400 mb-1">Department</label>
-                        <select id="departmentFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full">
-                <option value="">All Departments</option>
-                @foreach($departments as $dept)
-                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
-                @endforeach
-            </select>
+                        <label for="departmentFilter" class="block text-sm text-white mb-2 font-medium flex items-center">
+                            <i class="fas fa-building mr-2 opacity-80"></i>
+                            Department
+                        </label>
+                        <div class="relative">
+                            <select id="departmentFilter" class="form-select rounded-md pl-4 pr-10 py-2.5 w-full text-sm appearance-none">
+                                <option value="">All Departments</option>
+                                @foreach($departments as $dept)
+                                    <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                                <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                            </div>
+                        </div>
                     </div>
                     <div class="flex-1">
-                        <label for="activityTypeFilter" class="block text-xs text-gray-400 mb-1">Activity Type</label>
-                        <select id="activityTypeFilter" class="bg-gray-700 text-white rounded-lg px-4 py-2 w-full">
-                <option value="">All Activity Types</option>
-                @foreach($activityTypes as $type)
-                    <option value="{{ $type }}">{{ $type }}</option>
-                @endforeach
-            </select>
+                        <label for="activityTypeFilter" class="block text-sm text-white mb-2 font-medium flex items-center">
+                            <i class="fas fa-list-alt mr-2 opacity-80"></i>
+                            Activity Type
+                        </label>
+                        <div class="relative">
+                            <select id="activityTypeFilter" class="form-select rounded-md pl-4 pr-10 py-2.5 w-full text-sm appearance-none">
+                                <option value="">All Activity Types</option>
+                                @foreach($activityTypes as $type)
+                                    <option value="{{ $type }}">{{ $type }}</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
+                                <i class="fas fa-chevron-down text-xs opacity-80"></i>
+                            </div>
+                        </div>
                     </div>
-        </div>
-        
+                </div>
+                
                 <!-- Search -->
                 <div class="flex-1">
-                    <label for="searchInput" class="block text-xs text-gray-400 mb-1">Search by Name</label>
+                    <label for="searchInput" class="block text-sm text-white mb-2 font-medium flex items-center">
+                        <i class="fas fa-search mr-2 opacity-80"></i>
+                        Search by Name
+                    </label>
                     <div class="relative">
-                        <input type="text" id="searchInput" class="bg-gray-700 text-white rounded-lg pl-10 pr-4 py-2 w-full" placeholder="Search activities...">
-                        <i class="fas fa-search absolute left-3 top-2.5 text-gray-400"></i>
+                        <input type="text" id="searchInput" class="form-input rounded-md pl-10 pr-4 py-2.5 w-full text-sm" placeholder="Search activities...">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-search text-white/50"></i>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
         
         <!-- Calendar Container -->
-        <div id="calendar-container" class="max-w-screen-xl mx-auto bg-white/10 backdrop-blur-lg rounded-xl shadow-xl overflow-hidden">
+        <div id="calendar-container" class="max-w-screen-xl mx-auto bg-white/15 backdrop-blur-lg rounded-lg shadow-xl border border-white/20 overflow-hidden">
             <div id="calendar" class="min-w-[600px]"></div>
         </div>
-
-
     </div>
 
     <!-- Modal Detail Event -->
-    <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white/10 backdrop-blur-lg p-6 rounded-lg shadow-xl max-w-md w-full mx-4 border border-white/20">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white" id="modalTitle"></h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white">
+    <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-6 rounded-lg shadow-2xl max-w-md w-full mx-4 border border-gray-200">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                <h3 class="text-xl font-bold text-gray-800" id="modalTitle"></h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
             <div class="space-y-4">
-                <div id="modalTime" class="text-white font-medium"></div>
-                <div class="text-gray-300">
-                    <p class="font-semibold">Department:</p>
-                    <p id="modalDepartment" class="ml-2"></p>
+                <div id="modalTime" class="text-gray-700 font-medium flex items-center">
+                    <i class="far fa-clock mr-2 text-primary"></i>
+                    <span></span>
                 </div>
-                <div class="text-gray-300">
-                    <p class="font-semibold">Activity Type:</p>
-                    <p id="modalActivityType" class="ml-2"></p>
+                <div class="text-gray-600 flex">
+                    <p class="font-semibold w-28">Department:</p>
+                    <p id="modalDepartment" class="flex-1"></p>
                 </div>
-                <div class="text-gray-300">
-                    <p class="font-semibold">Location:</p>
-                    <p id="modalLocation" class="ml-2"></p>
+                <div class="text-gray-600 flex">
+                    <p class="font-semibold w-28">Activity Type:</p>
+                    <p id="modalActivityType" class="flex-1"></p>
                 </div>
-                <div class="text-gray-300">
-                    <p class="font-semibold">Description:</p>
-                    <p id="modalDescription" class="ml-2"></p>
+                <div class="text-gray-600 flex">
+                    <p class="font-semibold w-28">Location:</p>
+                    <p id="modalLocation" class="flex-1"></p>
+                </div>
+                <div class="text-gray-600">
+                    <p class="font-semibold mb-1">Description:</p>
+                    <p id="modalDescription" class="bg-gray-50 p-3 rounded-md text-sm"></p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Modal "More Activities" -->
-    <div id="moreModal" class="fixed inset-0 bg-black bg-opacity-60 hidden items-center justify-center z-50 backdrop-blur-sm">
-        <div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl shadow-2xl max-w-md w-full mx-4 border border-white/20">
+    <div id="moreModal" class="fixed inset-0 bg-black bg-opacity-70 hidden items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white p-0 rounded-lg shadow-2xl max-w-md w-full mx-4 border border-gray-200 overflow-hidden">
             <!-- Modal Header -->
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-xl font-bold text-white flex items-center" id="moreModalTitle">
-                    <span class="bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center mr-3">
-                        <i class="fas fa-calendar-day text-white"></i>
+            <div class="bg-primary p-4 text-white flex justify-between items-center">
+                <h3 class="text-xl font-bold flex items-center" id="moreModalTitle">
+                    <span class="bg-white w-10 h-10 rounded-full flex items-center justify-center mr-3 shadow-sm text-primary">
+                        <i class="fas fa-calendar-day"></i>
                     </span>
-                    <span>Activities</span>
+                    <span></span>
                 </h3>
-                <button onclick="closeMoreModal()" class="text-gray-400 hover:text-white transition-colors">
+                <button onclick="closeMoreModal()" class="text-white hover:text-white/80 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
-            <div id="moreEventsList" class="text-gray-200 space-y-2 max-h-[60vh] overflow-y-auto pr-2">
+            <div id="moreEventsList" class="p-2 text-gray-700 max-h-[70vh] overflow-y-auto">
                 <!-- Events will be dynamically added here -->
             </div>
         </div>
@@ -129,43 +151,28 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-<!-- Add Inter font for a more aesthetic look -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Add the same fonts as login page -->
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+<link
+    rel="stylesheet"
+    as="style"
+    onload="this.rel='stylesheet'"
+    href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Plus+Jakarta+Sans%3Awght%40400%3B500%3B700%3B800"
+/>
 <style>
     :root {
-        --fc-border-color: rgba(255, 255, 255, 0.1);
+        --fc-border-color: rgba(255, 255, 255, 0.2);
         --fc-event-border-color: transparent;
-        --fc-now-indicator-color: #ffcc00;
-        --fc-today-bg-color: rgba(255, 255, 255, 0.1);
-        --fc-highlight-color: rgba(255, 255, 255, 0.05);
-        --primary-color: #ffcc00;
-        --event-bg-color: rgba(18, 18, 18, 0.8);
-        --hover-color: rgba(255, 204, 0, 0.95);
-        --font-family: 'Inter', sans-serif;
+        --fc-now-indicator-color: #ffffff;
+        --fc-today-bg-color: rgba(255, 255, 255, 0.15);
+        --fc-highlight-color: rgba(255, 255, 255, 0.15);
+        --primary-color: #26458e;
+        --event-bg-color: rgba(255, 255, 255, 0.95);
+        --hover-color: #ffffff;
+        --font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
     }
 
-    /* Background */
-    body {
-        background: url('https://booking.maharajapratama.com/images/bg.png') no-repeat center center fixed;
-        background-size: cover;
-        min-height: 100vh;
-        font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    /* Overlay */
-    .overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
-        z-index: 1;
-    }
-        display: block;
-    }
-
-    /* Konten */
+    /* Content */
     .content {
         position: relative;
         z-index: 2;
@@ -174,17 +181,17 @@
 
     /* View buttons */
     .view-btn {
-        color: #999;
+        color: rgba(255, 255, 255, 0.8);
         transition: all 0.2s;
     }
     
     .view-btn.active {
-        background-color: var(--primary-color);
-        color: #000;
+        background-color: white;
+        color: var(--primary-color);
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
     
-    
-
     /* Responsiveness */
     @media (max-width: 768px) {
         .container {
@@ -194,449 +201,240 @@
     }
 
     /* Filter elements */
-    select, input {
-        background-color: rgba(30, 41, 59, 0.8);
-        backdrop-filter: blur(5px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 0.5rem;
-        color: #fff;
-        padding: 0.5rem 1rem;
+    .form-select, .form-input {
+        background-color: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        border-radius: 6px;
+        width: 100%;
         transition: all 0.2s;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        font-size: 0.875rem;
+        backdrop-filter: blur(4px);
+    }
+    
+    .form-input {
+        padding: 0.625rem 0.75rem;
     }
 
-        select:focus, input:focus {
+    .form-select {
+        appearance: none;
+        background-image: none;
+    }
+
+    .form-input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .form-select:focus, .form-input:focus {
         outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+        border-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Add elegant hover effect */
+    .form-select:hover, .form-input:hover {
+        border-color: rgba(255, 255, 255, 0.5);
+        background-color: rgba(255, 255, 255, 0.2);
     }
 
     /* Calendar Container */
     #calendar-container {
-        background: rgba(15, 23, 42, 0.7) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
         backdrop-filter: blur(10px) !important;
-        border-radius: 0.75rem !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
-        padding: 1rem !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+        padding: 1.5rem !important;
         overflow: hidden !important;
     }
 
-    
-
     @media (max-width: 640px) {
         #calendar-container {
-            padding: 0.5rem !important;
+            padding: 0.75rem !important;
             border-radius: 0.75rem !important;
         }
     }
-
-
 
     /* ============== FULLCALENDAR STYLING ============== */
     .fc {
         --fc-border-color: var(--fc-border-color);
         --fc-page-bg-color: transparent;
-        --fc-neutral-bg-color: rgba(15, 23, 42, 0.7);
-        --fc-list-event-hover-bg-color: rgba(255, 204, 0, 0.1);
+        --fc-neutral-bg-color: rgba(255, 255, 255, 0.1);
+        --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.1);
         --fc-today-bg-color: var(--fc-today-bg-color);
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', 'Noto Sans', sans-serif;
         max-width: 100%;
         background: transparent !important;
+        color: white;
     }
-
     
-
-    /* Header Toolbar */
-    .fc-header-toolbar {
-        display: none !important; /* We're using our custom controls */
-}
-
-/* Table headers */
-.fc th {
-    padding: 0.75rem 0 !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    font-size: 0.75rem !important;
-    letter-spacing: 0.05em !important;
-    color: rgba(255, 255, 255, 0.9) !important;
-        background-color: rgba(255, 255, 255, 0.1) !important;
-        border-color: var(--fc-border-color) !important;
+    /* Increase the day cell height to provide more space for events */
+    .fc .fc-daygrid-day {
+        min-height: 120px !important;
     }
-
     
-
-/* Day cells */
-.fc-day {
-    transition: background-color 0.2s;
-        border-color: var(--fc-border-color) !important;
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        min-height: 110px !important; /* Adjusted for two-line events */
-    }
-
-    .fc-daygrid-day-bottom {
-        padding-top: 2px !important;
-        padding-bottom: 2px !important;
-        text-align: center !important;
-    }
-
-    
-
-.fc-day:hover {
-        background-color: rgba(255, 255, 255, 0.12) !important;
-    }
-
-    
-
-.fc-day-today {
-        background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-/* Weekend cell color - now same as regular days */
-.fc-day-sat, .fc-day-sun {
-        background-color: rgba(255, 255, 255, 0.08) !important;
-    }
-
-    
-
-/* Day cell with no date in current month - now same as regular days */
-.fc .fc-daygrid-day.fc-day-other {
-        background-color: rgba(255, 255, 255, 0.08) !important;
-        opacity: 1;
-    }
-
-    
-
-/* Time slots */
-.fc .fc-timegrid-slot {
-    height: 2.5rem !important;
-        border-color: var(--fc-border-color) !important;
-        background-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    
-
-.fc-timegrid-slot-lane {
-        background-color: rgba(255, 255, 255, 0.05) !important;
-    }
-
-    
-
-.fc-timegrid-col.fc-day-today {
-        background-color: var(--fc-today-bg-color) !important;
-}
-
-/* Now indicator */
-.fc-now-indicator-line {
-        border-color: var(--fc-now-indicator-color) !important;
-    border-width: 2px !important;
-}
-
-.fc-now-indicator-arrow {
-        border-color: var(--fc-now-indicator-color) !important;
-}
-
-    /* ============== EVENT STYLING ============== */
-    /* All-day events and multi-day events - Google Calendar style */
-    .fc-daygrid-block-event {
-    display: flex !important;
-    flex-direction: column !important;
-        justify-content: center !important;
-        align-items: center !important;
-    padding: 0.25rem 0.5rem !important;
-        margin: 4px 0 !important;
-        border-radius: 4px !important;
-        border-left: 3px solid !important;
-        background-color: rgba(18, 18, 18, 0.8) !important;
-    backdrop-filter: blur(5px) !important;
-        color: white !important;
-        transition: all 0.15s ease-in-out;
-        overflow: hidden !important;
-        cursor: pointer !important;
-        position: relative !important;
-        min-height: 36px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    /* Specific style for multi-day events */
-    .fc-daygrid-block-event.fc-event-start {
-        margin-left: 2px !important;
-        border-top-left-radius: 4px !important;
-        border-bottom-left-radius: 4px !important;
-    }
-
-    .fc-daygrid-block-event.fc-event-end {
-        margin-right: 2px !important;
-        border-top-right-radius: 4px !important;
-        border-bottom-right-radius: 4px !important;
-    }
-
-    /* Fix for multi-day events to ensure they span across days */
-    .fc-dayGridMonth-view .fc-event {
-        margin-right: 0 !important;
-        margin-left: 0 !important;
-        margin-top: 4px !important; 
+    /* Ensure consistent spacing between events */
+    .fc .fc-daygrid-event-harness {
         margin-bottom: 4px !important;
-        border-radius: 0 !important;
     }
 
-    .fc-dayGridMonth-view .fc-event-start {
-        margin-left: 2px !important;
-        border-top-left-radius: 4px !important;
-        border-bottom-left-radius: 4px !important;
+    .fc .fc-toolbar-title {
+        color: white;
+        font-weight: 600;
     }
 
-    .fc-dayGridMonth-view .fc-event-end {
-        margin-right: 2px !important;
-        border-top-right-radius: 4px !important;
-        border-bottom-right-radius: 4px !important;
+    .fc .fc-col-header-cell-cushion {
+        color: white;
+        font-weight: 600;
+        padding: 10px 4px;
     }
 
+    .fc .fc-daygrid-day-number {
+        color: white;
+        padding: 8px;
+        font-weight: 500;
+    }
     
-
-    .fc-daygrid-block-event:hover {
-        background-color: var(--hover-color) !important;
-        color: #000 !important;
-        filter: brightness(1.1);
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3) !important;
-        z-index: 5 !important;
+    .fc .fc-daygrid-day.fc-day-today {
+        background-color: rgba(255, 255, 255, 0.2) !important;
     }
 
-    /* Day-view events */
-    .fc-daygrid-dot-event {
-        margin: 4px 2px !important;
-        padding: 3px 6px !important;
+    /* Event styling */
+    .fc-event {
+        background-color: var(--event-bg-color) !important;
+        color: var(--primary-color) !important;
         border-radius: 4px !important;
-        background-color: rgba(18, 18, 18, 0.8) !important;
-    backdrop-filter: blur(5px) !important;
-        color: white !important;
-    transition: all 0.15s ease-in-out;
-        max-width: 100% !important;
-    display: flex !important;
-        flex-direction: column !important;
-    align-items: center !important;
-        gap: 0px !important;
-        position: relative !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    
-
-    .fc-daygrid-dot-event:hover {
-        background-color: var(--hover-color) !important;
-    color: #000 !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3) !important;
-        z-index: 5 !important;
-    }
-
-    /* Time-view events */
-    .fc-timegrid-event {
-        padding: 4px 6px !important;
-        border-radius: 4px !important;
-        background-color: rgba(18, 18, 18, 0.8) !important;
-        backdrop-filter: blur(5px) !important;
-        color: white !important;
-        transition: all 0.15s ease-in-out;
-        overflow: hidden !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        padding: 2px !important;
+        margin-bottom: 4px !important;
+        margin-top: 1px !important;
+        font-size: 0.75rem !important;
+        font-weight: normal !important;
         cursor: pointer !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
-        margin: 0 2px !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
     }
 
-    .fc-timegrid-event:hover {
-        background-color: var(--hover-color) !important;
-    color: #000 !important;
-    transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3) !important;
-        z-index: 5 !important;
-}
-
-/* Event content styling */
-    .event-content {
-    width: 100% !important;
-        max-width: 100% !important;
-}
-
-    .fc-event-title {
-    font-weight: 500 !important;
-        font-size: 0.75rem !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        max-width: 100% !important;
-        width: 100% !important;
-        line-height: 1.2 !important;
-    }
-
-    .fc-event-time {
-        font-size: 0.75rem !important;
-        opacity: 0.9 !important;
-    }
-
-    /* Make event cells more compact in month view */
-    .fc-daygrid-event-harness {
-        margin-bottom: 1px !important;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-        .fc-day {
-            min-height: 90px !important;
-        }
-        
-        .fc-daygrid-day-events {
-            margin-bottom: 0 !important;
-        }
-        
-        .event-date {
-            font-size: 0.58rem !important;
-        }
-        
-        .fc-event-title {
-            font-size: 0.62rem !important;
-        }
-        
-        .event-content i {
-            font-size: 1.4rem !important;
-            opacity: 0.15 !important;
-        }
-        
-        .fc-daygrid-more-link {
-            font-size: 0.65rem !important;
-            padding: 2px 8px !important;
-        }
-        
-        #calendar-view-controls {
-            flex-direction: column !important;
-            align-items: stretch !important;
-            gap: 0.5rem !important;
-        }
-    }
-
-    /* Icon indicators for event types */
-    .event-icon {
-        margin-right: 6px;
-        font-size: 0.85rem;
-        flex-shrink: 0;
-    }
-
-    /* Multi-day event special styling */
+    /* Multi-day event styling */
     .multi-day-event {
-        background-image: linear-gradient(45deg, 
-            rgba(36, 68, 140, 0.9) 25%, 
-            rgba(42, 78, 160, 0.9) 25%, 
-            rgba(42, 78, 160, 0.9) 50%, 
-            rgba(36, 68, 140, 0.9) 50%, 
-            rgba(36, 68, 140, 0.9) 75%, 
-            rgba(42, 78, 160, 0.9) 75%, 
-            rgba(42, 78, 160, 0.9)) !important;
-        background-size: 10px 10px !important;
-        font-weight: bold !important;
-        z-index: 1 !important; /* Ensure multi-day events are on top */
-        margin: 6px 0 !important;
+        background-color: var(--event-bg-color) !important;
+        color: var(--primary-color) !important;
+    }
+
+    .fc-event:hover, .multi-day-event:hover {
+        background-color: var(--hover-color) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .fc-h-event .fc-event-main {
+        color: var(--primary-color) !important;
     }
     
-    /* Ensure multi-day event is displayed for the entire range */
-    .fc-day-grid-event.multi-day-event {
-        margin-right: 0 !important;
-        margin-left: 0 !important;
-        margin-top: 6px !important;
-        margin-bottom: 6px !important;
-        right: 0 !important;
+    /* Custom event classes */
+    .event-time {
+        font-size: 0.7rem;
+        font-weight: normal;
+        color: #444444;
+        opacity: 0.95;
+    }
+    
+    .event-department {
+        font-size: 0.65rem;
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1px 4px;
+        border-radius: 3px;
+        display: inline-block;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .event-title {
+        font-size: 0.75rem;
+        font-weight: bold;
+        color: #333333;
+        width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
-    /* "More" link styling */
+    /* Button styling */
+    .fc .fc-button {
+        background-color: rgba(255, 255, 255, 0.15) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+        font-weight: 500 !important;
+        padding: 0.4rem 0.8rem !important;
+        border-radius: 6px !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .fc .fc-button:hover {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        color: white !important;
+    }
+
+    .fc .fc-button-primary:not(:disabled).fc-button-active,
+    .fc .fc-button-primary:not(:disabled):active {
+        background-color: white !important;
+        border-color: white !important;
+        color: var(--primary-color) !important;
+        font-weight: 600 !important;
+    }
+
+    /* Today button */
+    .fc .fc-button-primary.fc-today-button {
+        background-color: white !important;
+        border-color: white !important;
+        color: var(--primary-color) !important;
+        font-weight: 600 !important;
+    }
+
+    .fc .fc-button-primary.fc-today-button:hover {
+        background-color: rgba(255, 255, 255, 0.9) !important;
+    }
+
+    /* More events link */
     .fc-daygrid-more-link {
         color: white !important;
-        background: rgba(36, 68, 140, 0.7) !important; /* Changed to dark blue */
-        padding: 3px 10px !important;
-        border-radius: 20px !important; /* Fully rounded edges */
-        font-size: 0.7rem !important;
-        font-weight: 500 !important;
-        margin-top: 4px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        transition: all 0.2s ease-in-out;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-        width: auto !important;
-        max-width: calc(100% - 10px) !important;
-        margin-left: 5px !important;
-        margin-right: 5px !important;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 2px 8px;
+        margin: 4px auto 0;
+        width: max-content;
     }
-
     
-
     .fc-daygrid-more-link:hover {
-        background-color: rgba(36, 68, 140, 0.9) !important;
-        color: white !important;
-        transform: translateY(-1px);
-        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+        background: rgba(255, 255, 255, 0.3);
     }
-
     
+    /* Day styling */
+    .fc-day-past {
+        opacity: 0.85;
+    }
     
-    /* Add a plus icon before the text */
-    .fc-daygrid-more-link::before {
-        content: '';
-        font-size: 0.7rem;
-        margin-right: 0px;
-        opacity: 0.9;
-    }
-
-    /* Mobile optimizations */
-    @media (max-width: 640px) {
-        .fc th {
-            font-size: 0.7rem !important;
-            padding: 0.5rem 0 !important;
-        }
-        
-        .fc-daygrid-day-number {
-            font-size: 0.8rem !important;
-            padding: 0.25rem 0.5rem !important;
-        }
-        
-        .fc-event-title {
-            font-size: 0.7rem !important;
-        }
-    }
-
-    /* Helper classes */
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-
-    /* Custom scrollbar for the modal */
+    /* Custom scrollbar */
     #moreEventsList::-webkit-scrollbar {
         width: 6px;
+        height: 6px;
     }
     
     #moreEventsList::-webkit-scrollbar-track {
-        background: rgba(55, 65, 81, 0.1);
+        background: rgba(0, 0, 0, 0.05);
         border-radius: 10px;
     }
     
     #moreEventsList::-webkit-scrollbar-thumb {
-        background: rgba(59, 130, 246, 0.5);
+        background: rgba(38, 69, 142, 0.5);
         border-radius: 10px;
     }
     
     #moreEventsList::-webkit-scrollbar-thumb:hover {
-        background: rgba(59, 130, 246, 0.7);
+        background: rgba(38, 69, 142, 0.7);
     }
-    
-    /* For Firefox */
-    #moreEventsList {
-        scrollbar-width: thin;
-        scrollbar-color: rgba(59, 130, 246, 0.5) rgba(55, 65, 81, 0.1);
-}
 </style>
 @endpush
 
@@ -712,10 +510,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             return timeStr;
         }
-
-
-
-
 
         // Calendar view control
         const viewBtns = document.querySelectorAll('.view-btn');
@@ -836,119 +630,104 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
         window.showMoreModal = function(hiddenEvents) {
-        moreEventsList.innerHTML = '';
+            moreEventsList.innerHTML = '';
+
+            // Get the date of the first event for the modal title
+            if (hiddenEvents.length > 0) {
+                const firstEvent = hiddenEvents[0];
+                const eventDate = new Date(firstEvent.start);
+                
+                // Format date for display: "Hari, DD Bulan YYYY"
+                const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+                const formattedDate = eventDate.toLocaleDateString('id-ID', options);
+                
+                // Capitalize first letter
+                const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+                
+                // Update modal title
+                document.querySelector('#moreModalTitle span:last-child').textContent = capitalizedDate;
+            }
 
             // Sort events by start time
-            hiddenEvents.sort((a, b) => {
-                // First sort multi-day events to the top
-                if (a.isMultiDay && !b.isMultiDay) return -1;
-                if (!a.isMultiDay && b.isMultiDay) return 1;
-                
-                // Then sort by start time
-                return new Date(a.start) - new Date(b.start);
-            });
+            hiddenEvents.sort((a, b) => new Date(a.start) - new Date(b.start));
             
-            // Group events by type (multi-day vs. regular)
-            const multiDayEvents = hiddenEvents.filter(ev => ev.isMultiDay);
-            const regularEvents = hiddenEvents.filter(ev => !ev.isMultiDay);
+            // Add each event to the list
+            hiddenEvents.forEach(ev => addEventCard(ev));
             
-            // Add section for multi-day events if any
-            if (multiDayEvents.length > 0) {
-                const multiDayHeader = document.createElement('div');
-                multiDayHeader.className = 'text-sm font-medium text-white/90 mb-2 mt-4 border-b border-white/20 pb-1';
-                multiDayHeader.textContent = 'Multi-day Events';
-                moreEventsList.appendChild(multiDayHeader);
-                
-                multiDayEvents.forEach(ev => addEventCard(ev));
-            }
-            
-            // Add section for regular events
-            if (regularEvents.length > 0) {
-                const regularHeader = document.createElement('div');
-                regularHeader.className = 'text-sm font-medium text-white/90 mb-2 mt-4 border-b border-white/20 pb-1';
-                regularHeader.textContent = regularEvents.length > 0 && multiDayEvents.length > 0 ? 'Regular Events' : '';
-                moreEventsList.appendChild(regularHeader);
-                
-                regularEvents.forEach(ev => addEventCard(ev));
-            }
-
             function addEventCard(ev) {
-                const config = getActivityConfig(ev.activity_type);
-                const isMultiDay = ev.isMultiDay;
+                const card = document.createElement('div');
+                card.classList.add('bg-white', 'rounded-lg', 'border', 'border-gray-100', 'shadow-sm', 'mb-3', 'overflow-hidden', 'transition-all', 'duration-200', 'cursor-pointer', 'hover:shadow-md', 'hover:border-gray-200');
                 
-            let card = document.createElement('div');
-                card.classList.add('p-3', 'rounded-lg', 'shadow-md', 'cursor-pointer', 'relative', 'transition-all', 'duration-200');
-                
-                // Different styling for multi-day events
-                if (isMultiDay) {
-                    card.style.background = 'rgba(36, 68, 140, 0.15)';
-                    card.style.borderLeft = '3px solid #24448c';
-                } else {
-                    card.style.background = 'rgba(31, 41, 55, 0.5)';
-                    card.style.borderLeft = `3px solid ${config.color}`;
-                }
-                
-            card.style.marginBottom = '8px';
-
-            // Hover effects
-            card.addEventListener('mouseenter', () => {
+                // Add hover style with JavaScript for more control
+                card.addEventListener('mouseenter', () => {
                     card.style.transform = 'translateY(-2px)';
-                    card.style.boxShadow = '0 5px 10px rgba(0, 0, 0, 0.2)';
-                    card.style.background = isMultiDay ? 'rgba(36, 68, 140, 0.25)' : 'rgba(31, 41, 55, 0.7)';
-            });
-
-            card.addEventListener('mouseleave', () => {
-                    card.style.transform = 'none';
-                    card.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-                    card.style.background = isMultiDay ? 'rgba(36, 68, 140, 0.15)' : 'rgba(31, 41, 55, 0.5)';
+                    card.style.backgroundColor = '#f9fafb';
                 });
-
-                // Format dates for display
-                let timeDisplay = '';
-                if (ev.time) {
-                    timeDisplay = ev.time;
-                } else if (ev.start && ev.end) {
-                    const start = new Date(ev.start);
-                    const end = new Date(ev.end);
-                    
-                    if (isMultiDay) {
-                        timeDisplay = `${start.getDate()}/${start.getMonth()+1} - ${end.getDate()}/${end.getMonth()+1}`;
-                    } else {
-                        timeDisplay = `${start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})} - ${end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}`;
-                    }
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                    card.style.backgroundColor = '#ffffff';
+                });
+                
+                // Determine which avatar icon to use based on activity type or department
+                let avatarIcon = 'fa-user';
+                let avatarColor = '#f0f0f0';
+                let avatarTextColor = '#777';
+                
+                if (ev.activity_type?.toLowerCase().includes('training') || 
+                    ev.activity_type?.toLowerCase().includes('education') ||
+                    ev.department?.toLowerCase().includes('hr')) {
+                    avatarIcon = 'fa-graduation-cap';
+                    avatarColor = '#e6efff';
+                    avatarTextColor = '#1a56db';
                 }
-
-            card.innerHTML = `
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0 rounded-full bg-opacity-20 p-2 mr-3" style="background-color: ${config.color}20">
-                            <i class="fas ${isMultiDay ? 'fa-calendar-week' : config.icon}" style="color: ${config.color}"></i>
-                </div>
-                        <div class="flex-1 overflow-hidden">
-                            <div class="font-semibold text-sm truncate" title="${ev.title}">${ev.title}</div>
-                            <div class="text-xs text-gray-300 mt-1 flex items-center">
-                                <i class="far fa-clock mr-1 opacity-75"></i> ${timeDisplay}
+                
+                // Format date for display
+                const start = new Date(ev.start);
+                const end = new Date(ev.end || ev.start);
+                
+                // Format: "DD Bulan, HH.MM - HH.MM"
+                const date = start.getDate();
+                const month = start.toLocaleString('id-ID', { month: 'long' });
+                const startTime = start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false});
+                const endTime = end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false});
+                
+                const dateTimeStr = `${date} ${month}, ${startTime} - ${endTime}`;
+                
+                // Get department abbreviation
+                const deptName = ev.department || '';
+                
+                card.innerHTML = `
+                    <div class="p-4">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: ${avatarColor}">
+                                <i class="fas ${avatarIcon} text-xl" style="color: ${avatarTextColor}"></i>
                             </div>
-                            <div class="text-xs mt-2 truncate text-gray-400" title="${ev.department || ''}">
-                                <i class="fas fa-building mr-1 opacity-75"></i> ${ev.department || 'No Department'}
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-gray-900">${ev.title}</h3>
+                                <div class="text-sm text-gray-600 mt-1">${dateTimeStr}</div>
+                                <div class="flex items-center mt-2">
+                                    <span class="inline-flex items-center bg-gray-100 text-gray-800 text-xs font-medium px-2 py-0.5 rounded">
+                                        <i class="fas fa-file-alt mr-1 opacity-70"></i> ${deptName}
+                                    </span>
+                                </div>
+                                ${ev.description ? `<div class="mt-3 text-sm text-gray-700">${ev.description}</div>` : ''}
                             </div>
                         </div>
                     </div>
-                    <div class="text-xs text-gray-400 mt-2 line-clamp-2" title="${ev.description || ''}">
-                        ${ev.description || 'No description available'}
-                    </div>
-            `;
-
-            card.addEventListener('click', () => {
-                closeMoreModal();
-                showEventModal(ev);
-            });
-
-            moreEventsList.appendChild(card);
+                `;
+                
+                card.addEventListener('click', () => {
+                    closeMoreModal();
+                    showEventModal(ev);
+                });
+                
+                moreEventsList.appendChild(card);
             }
 
-        moreModal.classList.remove('hidden');
-        moreModal.classList.add('flex');
-    }
+            moreModal.classList.remove('hidden');
+            moreModal.classList.add('flex');
+        }
 
     window.closeMoreModal = function() {
         moreModal.classList.add('hidden');
@@ -1016,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const modalTitleEl = document.getElementById('moreModalTitle');
                 // Update the icon and title
                 modalTitleEl.innerHTML = `
-                    <span class="bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                    <span class="bg-primary w-8 h-8 rounded-full flex items-center justify-center mr-3">
                         <i class="fas fa-calendar-day text-white"></i>
                     </span>
                     <span>${formattedDate}</span>
@@ -1073,10 +852,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             start: event.start,
                             end: event.end,
                                     allDay: isAllDay || isMultiDay,
-                                    backgroundColor: isMultiDay ? '#24448c' : config.color, // Different color for multi-day events
-                                    borderColor: isMultiDay ? '#24448c' : config.color,
+                                    backgroundColor: config.color, // Use same color scheme for all events
+                                    borderColor: config.color,
                             textColor: '#FFFFFF',
-                                    display: isMultiDay ? 'block' : 'auto',
+                                    display: 'auto', // Use auto display for all events
                                     classNames: isMultiDay ? ['multi-day-event'] : [],
                             extendedProps: {
                                 ...event.extendedProps,
@@ -1105,66 +884,89 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Create event container
                 const container = document.createElement('div');
-                container.className = 'event-content flex flex-col items-center justify-center w-full gap-1 relative';
+                container.className = 'p-1 w-full';
+                container.style.marginBottom = '2px';
                 
-                // Create date line (first line)
-                const dateLineContainer = document.createElement('div');
-                dateLineContainer.className = 'w-full text-center';
+                // Create top row with time and department
+                const topRow = document.createElement('div');
+                topRow.className = 'flex justify-between items-center w-full';
                 
-                const dateLine = document.createElement('div');
-                dateLine.className = 'event-date text-xs opacity-85 font-medium whitespace-nowrap overflow-hidden text-ellipsis';
+                // Time element
+                const timeEl = document.createElement('div');
+                timeEl.className = 'event-time';
                 
-                // Format date range
+                // Format time
                 const start = new Date(event.start);
                 const end = event.end ? new Date(event.end) : start;
                 
-                // Different date format based on multi-day status
                 if (isMultiDay) {
-                    // For multi-day: "4/7 - 8/7" format
-                    dateLine.innerText = `${start.getDate()}/${start.getMonth()+1} - ${end.getDate()}/${end.getMonth()+1}`;
+                    // Format multi-day events with the date range
+                    timeEl.innerText = `${start.getDate()}/${start.getMonth()+1}-${end.getDate()}/${end.getMonth()+1}`;
                 } else {
-                    // For single-day: "14:00 - 16:00" format
-                    dateLine.innerText = `${start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})} - ${end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}`;
+                    timeEl.innerText = `${start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}–${end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}`;
                 }
                 
-                dateLineContainer.appendChild(dateLine);
-                container.appendChild(dateLineContainer);
+                // Department badge
+                const deptEl = document.createElement('div');
+                deptEl.className = 'event-department';
                 
-                // Create centered icon
-                const iconContainer = document.createElement('div');
-                iconContainer.className = 'absolute inset-0 flex items-center justify-center opacity-20';
+                // Get department name and abbreviate if too long
+                let deptName = props.department || '';
+                if (deptName.length > 12) {
+                    // Try to create abbreviation if possible
+                    const words = deptName.split(' ');
+                    if (words.length > 1) {
+                        deptName = words.map(word => word.charAt(0)).join('');
+                    } else {
+                        deptName = deptName.substring(0, 10) + '...';
+                    }
+                }
+                deptEl.innerText = deptName;
                 
-                const config = getActivityConfig(props.activity_type);
-                const icon = document.createElement('i');
-                icon.className = `fas ${props.iconClass} text-xl`;
-                iconContainer.appendChild(icon);
-                container.appendChild(iconContainer);
+                topRow.appendChild(timeEl);
+                topRow.appendChild(deptEl);
+                container.appendChild(topRow);
                 
-                // Create name line (second line) - using event title as the creator name
-                const nameLineContainer = document.createElement('div');
-                nameLineContainer.className = 'w-full text-center';
+                // Name/title row
+                const nameEl = document.createElement('div');
+                nameEl.className = 'event-title mt-1';
+                nameEl.title = event.title; // Show full name on hover
                 
-                const nameLine = document.createElement('div');
-                nameLine.className = 'event-title text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis';
-                nameLine.title = event.title; // Show full name on hover
-                nameLine.innerText = event.title;
+                // Abbreviate long names if needed
+                let displayName = event.title;
+                if (displayName.length > 20) {
+                    const nameParts = displayName.split(' ');
+                    if (nameParts.length >= 2) {
+                        // For names like "First Middle Last", show "First L."
+                        displayName = nameParts[0] + ' ' + nameParts[nameParts.length - 1].charAt(0) + '.';
+                    } else {
+                        displayName = displayName.substring(0, 18) + '...';
+                    }
+                }
+                nameEl.innerText = displayName;
                 
-                nameLineContainer.appendChild(nameLine);
-                container.appendChild(nameLineContainer);
+                container.appendChild(nameEl);
                 
                 return { domNodes: [container] };
             },
 
-            // Make sure multi-day events display properly
+            // Make sure all events display properly with consistent spacing
         eventDidMount: function(info) {
-                // Apply multi-day styling
-            if (info.event.extendedProps.isMultiDay) {
-                    // Add a distinctive pattern to multi-day events
-                    if (info.view.type === 'dayGridMonth') {
-                        info.el.style.backgroundImage = 'linear-gradient(45deg, rgba(36, 68, 140, 0.9) 25%, rgba(42, 78, 160, 0.9) 25%, rgba(42, 78, 160, 0.9) 50%, rgba(36, 68, 140, 0.9) 50%, rgba(36, 68, 140, 0.9) 75%, rgba(42, 78, 160, 0.9) 75%, rgba(42, 78, 160, 0.9))';
-                        info.el.style.backgroundSize = '10px 10px';
-                        info.el.style.fontWeight = 'bold';
-                    }
+                // Apply styling to all events for consistent spacing
+                if (info.view.type === 'dayGridMonth') {
+                    // Consistent styling for all events
+                    info.el.style.backgroundColor = 'var(--event-bg-color)';
+                    info.el.style.color = 'var(--primary-color)';
+                    info.el.style.fontWeight = 'normal';
+                    // Add padding to ensure content displays properly
+                    info.el.style.padding = '2px';
+                    // Add margin for better spacing between events
+                    info.el.style.marginBottom = '4px';
+                    info.el.style.marginTop = '1px';
+                    // Add border radius for consistency
+                    info.el.style.borderRadius = '4px';
+                    // Add shadow
+                    info.el.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
                 }
             },
 
