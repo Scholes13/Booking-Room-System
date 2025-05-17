@@ -117,8 +117,8 @@
                         <th scope="col" class="px-5 py-3.5">Description</th>
                         <th scope="col" class="px-5 py-3.5">Status</th>
                         <th scope="col" class="px-5 py-3.5 text-right">Actions</th>
-                    </tr>
-                </thead>
+                </tr>
+            </thead>
                 <tbody id="activityTypesTableBody">
                     @foreach($activityTypes as $index => $activityType)
                     <tr class="border-b border-gray-200 hover:bg-gray-50 activity-type-row">
@@ -130,7 +130,7 @@
                                 @if($activityType->is_active) bg-green-100 text-green-800 @else bg-red-100 text-red-800 @endif">
                                 {{ $activityType->is_active ? 'Active' : 'Inactive' }}
                             </span>
-                        </td>
+                    </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
                                 <button type="button" class="edit-activity-type px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center"
@@ -149,12 +149,12 @@
                                     </svg>
                                     Delete
                                 </button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
             
             <!-- Mobile Card View (displayed only on mobile screens) -->
             <div class="md:hidden divide-y divide-gray-200">

@@ -182,12 +182,22 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
-                                <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center">
+                                <button type="button" class="edit-booking px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center" 
+                                    data-id="{{ $booking->id }}"
+                                    data-name="{{ $booking->nama }}"
+                                    data-department="{{ $booking->department }}"
+                                    data-room="{{ $booking->meeting_room_id }}"
+                                    data-date="{{ $booking->date }}"
+                                    data-start="{{ substr($booking->start_time, 0, 5) }}"
+                                    data-end="{{ substr($booking->end_time, 0, 5) }}"
+                                    data-description="{{ $booking->description }}"
+                                    data-booking-type="{{ $booking->booking_type }}"
+                                    data-external-description="{{ $booking->external_description }}">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
                                     Edit
-                                </a>
+                                </button>
                                 <button type="button" class="delete-booking px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors inline-flex items-center" data-id="{{ $booking->id }}">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -292,6 +302,155 @@
     </div>
 </div>
 
+<!-- Edit Booking Modal -->
+<div id="editBookingModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full mx-4 transform transition-transform duration-300 scale-100 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-bold">Edit Booking</h3>
+            <button type="button" id="closeEditBookingModal" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <div id="editBookingErrors" class="hidden bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <ul id="editBookingErrorsList" class="text-red-700"></ul>
+            </div>
+        </div>
+        
+        <form id="editBookingForm" method="POST" class="space-y-4">
+            @csrf
+            @method('PUT')
+            
+            <!-- Nama -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nama</label>
+                <select name="nama" 
+                        id="edit_employee_select"
+                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        required>
+                    <option value="">Pilih Karyawan</option>
+                    @foreach($employees as $employee)
+                        <option value="{{ $employee->name }}" 
+                                data-department="{{ $employee->department->name }}">
+                            {{ $employee->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Departemen -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                <select name="department" 
+                        id="edit_department_select"
+                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        required>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->name }}">
+                            {{ $department->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Ruang Meeting -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Ruang Meeting</label>
+                <select name="meeting_room_id" 
+                        id="edit_meeting_room_id"
+                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        required>
+                    @foreach($meetingRooms as $room)
+                        <option value="{{ $room->id }}">
+                            {{ $room->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Tanggal -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal</label>
+                <input type="date" 
+                       name="date" 
+                       id="edit_date"
+                       class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" 
+                       required>
+            </div>
+
+            <!-- Waktu -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jam Mulai</label>
+                    <input type="time" 
+                           name="start_time" 
+                           id="edit_start_time"
+                           class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" 
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jam Selesai</label>
+                    <input type="time" 
+                           name="end_time" 
+                           id="edit_end_time"
+                           class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" 
+                           required>
+                </div>
+            </div>
+
+            <!-- Deskripsi -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+                <textarea name="description" 
+                          id="edit_description"
+                          rows="3"
+                          class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"></textarea>
+            </div>
+
+            <!-- Booking Type -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                <select name="booking_type" 
+                        id="edit_booking_type"
+                        class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                        required>
+                    <option value="internal">Internal</option>
+                    <option value="external">Eksternal</option>
+                </select>
+            </div>
+
+            <!-- External Description -->
+            <div id="edit_external_description_container" class="hidden">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Eksternal</label>
+                <textarea name="external_description" 
+                          id="edit_external_description"
+                          rows="3"
+                          class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                          placeholder="Silakan isi detail terkait booking eksternal..."></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end gap-3 pt-4">
+                <button type="button"
+                        id="cancelEditBooking"
+                        class="px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-200">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2.5 bg-[#24448c] text-white rounded-lg font-medium hover:bg-[#1c3670] transition-colors focus:outline-none focus:ring-2 focus:ring-[#24448c]">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Delete Confirmation Modal (Hidden by default) -->
 <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
     <div class="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4 transform transition-transform duration-300 scale-100">
@@ -385,6 +544,257 @@
                 console.error('Search input not found');
             }
             
+            // Edit booking functionality
+            const editButtons = document.querySelectorAll('.edit-booking');
+            const editBookingModal = document.getElementById('editBookingModal');
+            const closeEditBookingModal = document.getElementById('closeEditBookingModal');
+            const cancelEditBooking = document.getElementById('cancelEditBooking');
+            const editBookingForm = document.getElementById('editBookingForm');
+            
+            let currentBookingId = null;
+            
+            if (editButtons && editButtons.length > 0 && editBookingModal && closeEditBookingModal && cancelEditBooking && editBookingForm) {
+                console.log('Edit functionality elements found');
+                
+                editButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent any default action
+                        console.log('Edit button clicked');
+                        
+                        // Get booking data from button attributes
+                        currentBookingId = this.getAttribute('data-id');
+                        const name = this.getAttribute('data-name');
+                        const department = this.getAttribute('data-department');
+                        const roomId = this.getAttribute('data-room');
+                        const date = this.getAttribute('data-date');
+                        const startTime = this.getAttribute('data-start');
+                        const endTime = this.getAttribute('data-end');
+                        const description = this.getAttribute('data-description');
+                        const bookingType = this.getAttribute('data-booking-type');
+                        const externalDescription = this.getAttribute('data-external-description');
+                        
+                        // Set form action
+                        editBookingForm.action = "{{ route('admin.bookings.update', '') }}/" + currentBookingId;
+                        
+                        // Fill form fields
+                        // Select employee in dropdown
+                        const employeeSelect = document.getElementById('edit_employee_select');
+                        for (let i = 0; i < employeeSelect.options.length; i++) {
+                            if (employeeSelect.options[i].value === name) {
+                                employeeSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // Select department in dropdown
+                        const departmentSelect = document.getElementById('edit_department_select');
+                        for (let i = 0; i < departmentSelect.options.length; i++) {
+                            if (departmentSelect.options[i].value === department) {
+                                departmentSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // Select meeting room in dropdown
+                        const roomSelect = document.getElementById('edit_meeting_room_id');
+                        for (let i = 0; i < roomSelect.options.length; i++) {
+                            if (roomSelect.options[i].value == roomId) {
+                                roomSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // Set other form values
+                        document.getElementById('edit_date').value = date;
+                        document.getElementById('edit_start_time').value = startTime;
+                        document.getElementById('edit_end_time').value = endTime;
+                        document.getElementById('edit_description').value = description || '';
+                        
+                        // Set booking type and handle external description visibility
+                        const bookingTypeSelect = document.getElementById('edit_booking_type');
+                        const externalDescContainer = document.getElementById('edit_external_description_container');
+                        const externalDescTextarea = document.getElementById('edit_external_description');
+                        
+                        // Select booking type in dropdown
+                        for (let i = 0; i < bookingTypeSelect.options.length; i++) {
+                            if (bookingTypeSelect.options[i].value === bookingType) {
+                                bookingTypeSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                        
+                        // Show/hide external description based on booking type
+                        if (bookingType === 'external') {
+                            externalDescContainer.classList.remove('hidden');
+                            externalDescTextarea.setAttribute('required', true);
+                            externalDescTextarea.value = externalDescription || '';
+                        } else {
+                            externalDescContainer.classList.add('hidden');
+                            externalDescTextarea.removeAttribute('required');
+                        }
+                        
+                        // Show modal
+                        editBookingModal.classList.remove('hidden');
+                        editBookingModal.classList.add('flex');
+                    });
+                });
+                
+                // Close modal events
+                closeEditBookingModal.addEventListener('click', closeEditModal);
+                cancelEditBooking.addEventListener('click', closeEditModal);
+                
+                function closeEditModal() {
+                    editBookingModal.classList.add('hidden');
+                    editBookingModal.classList.remove('flex');
+                    
+                    // Clear form errors
+                    const errorsDiv = document.getElementById('editBookingErrors');
+                    errorsDiv.classList.add('hidden');
+                    document.getElementById('editBookingErrorsList').innerHTML = '';
+                    
+                    // Reset borders
+                    document.getElementById('edit_start_time').style.borderColor = '';
+                    document.getElementById('edit_end_time').style.borderColor = '';
+                }
+                
+                // Handle booking type change to show/hide external description
+                const bookingTypeSelect = document.getElementById('edit_booking_type');
+                const externalDescContainer = document.getElementById('edit_external_description_container');
+                const externalDescTextarea = document.getElementById('edit_external_description');
+                
+                bookingTypeSelect.addEventListener('change', function() {
+                    if (this.value === 'external') {
+                        externalDescContainer.classList.remove('hidden');
+                        externalDescTextarea.setAttribute('required', true);
+                    } else {
+                        externalDescContainer.classList.add('hidden');
+                        externalDescTextarea.removeAttribute('required');
+                    }
+                });
+                
+                // Auto-populate department when employee is selected
+                const employeeSelect = document.getElementById('edit_employee_select');
+                const departmentSelect = document.getElementById('edit_department_select');
+
+                employeeSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption && selectedOption.dataset.department) {
+                        // Find and select the matching department option
+                        for (let i = 0; i < departmentSelect.options.length; i++) {
+                            if (departmentSelect.options[i].value === selectedOption.dataset.department) {
+                                departmentSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                });
+                
+                // Availability checker for edit form
+                const dateInput = document.getElementById('edit_date');
+                const roomSelect = document.getElementById('edit_meeting_room_id');
+                const startTimeInput = document.getElementById('edit_start_time');
+                const endTimeInput = document.getElementById('edit_end_time');
+                const submitButton = editBookingForm.querySelector('button[type="submit"]');
+                let timeoutId;
+                
+                // Function to check availability
+                async function checkAvailability() {
+                    if (!dateInput.value || !roomSelect.value || !startTimeInput.value || !endTimeInput.value) return;
+
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(async () => {
+                        try {
+                            const response = await fetch(`/admin/bookings/available-times?date=${dateInput.value}&meeting_room_id=${roomSelect.value}`);
+                            if (!response.ok) throw new Error('Network response was not ok');
+                            const bookings = await response.json();
+
+                            // Reset style input waktu dan button
+                            startTimeInput.style.borderColor = '';
+                            endTimeInput.style.borderColor = '';
+                            submitButton.disabled = false;
+                            
+                            // Cek setiap booking yang ada
+                            const currentStart = startTimeInput.value;
+                            const currentEnd = endTimeInput.value;
+                            
+                            let hasConflict = false;
+                            
+                            bookings.forEach(booking => {
+                                // Skip checking for the booking being edited
+                                if (booking.id && booking.id == currentBookingId) return;
+                                
+                                const bookingStart = booking.start;
+                                const bookingEnd = booking.end;
+                                
+                                if (currentStart < bookingEnd && currentEnd > bookingStart) {
+                                    hasConflict = true;
+                                }
+                            });
+                            
+                            if (hasConflict) {
+                                startTimeInput.style.borderColor = '#EF4444'; // red-500
+                                endTimeInput.style.borderColor = '#EF4444';
+                                submitButton.disabled = true;
+                                
+                                // Show error message
+                                showError('The selected time conflicts with an existing booking.');
+                            } else {
+                                hideError();
+                            }
+                        } catch (error) {
+                            console.error('Error checking availability:', error);
+                        }
+                    }, 300);
+                }
+
+                // Function to show error message
+                function showError(message) {
+                    let errorDiv = document.getElementById('time-error');
+                    if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.id = 'time-error';
+                        errorDiv.className = 'mt-2 text-red-600 text-sm';
+                        endTimeInput.parentNode.appendChild(errorDiv);
+                    }
+                    errorDiv.textContent = message;
+                }
+
+                // Function to hide error message
+                function hideError() {
+                    const errorDiv = document.getElementById('time-error');
+                    if (errorDiv) errorDiv.remove();
+                }
+                
+                // Add event listeners for availability checking
+                dateInput.addEventListener('change', checkAvailability);
+                roomSelect.addEventListener('change', checkAvailability);
+                startTimeInput.addEventListener('change', checkAvailability);
+                endTimeInput.addEventListener('change', checkAvailability);
+                
+                // Form submission handler with validation
+                editBookingForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Check for booking type and external description
+                    const bookingType = document.getElementById('edit_booking_type').value;
+                    const externalDesc = document.getElementById('edit_external_description').value;
+                    
+                    if (bookingType === 'external' && !externalDesc) {
+                        const errorsDiv = document.getElementById('editBookingErrors');
+                        const errorsList = document.getElementById('editBookingErrorsList');
+                        
+                        errorsDiv.classList.remove('hidden');
+                        errorsList.innerHTML = '<li>External description is required for external bookings.</li>';
+                        return;
+                    }
+                    
+                    // Submit the form
+                    this.submit();
+                });
+            } else {
+                console.error('Edit functionality elements not found properly');
+            }
+            
             // Delete booking functionality
             const deleteButtons = document.querySelectorAll('.delete-booking');
             const deleteModal = document.getElementById('deleteModal');
@@ -395,8 +805,11 @@
                 console.log('Delete functionality elements found');
                 
                 deleteButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const bookingId = this.dataset.id;
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent any default action
+                        console.log('Delete button clicked');
+                        
+                        const bookingId = this.getAttribute('data-id');
                         console.log('Delete clicked for booking ID:', bookingId);
                         
                         deleteForm.action = `{{ route('admin.bookings.delete', '') }}/${bookingId}`;
@@ -405,13 +818,14 @@
                     });
                 });
                 
-                cancelDelete.addEventListener('click', function() {
+                cancelDelete.addEventListener('click', function(e) {
+                    e.preventDefault();
                     console.log('Delete cancelled');
                     deleteModal.classList.add('hidden');
                     deleteModal.classList.remove('flex');
                 });
             } else {
-                console.warn('Delete functionality elements not found properly');
+                console.error('Delete functionality elements not found properly');
             }
             
         } catch (error) {

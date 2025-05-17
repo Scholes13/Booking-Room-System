@@ -612,6 +612,12 @@
                 }
             });
             
+            // Check for existing date parameter
+            const currentDate = "{{ request('date') }}";
+            if (currentDate) {
+                datePicker.setDate(currentDate);
+            }
+            
             console.log('Flatpickr initialized successfully');
             
             // Search functionality
@@ -646,7 +652,10 @@
                 console.log('Edit functionality elements found');
                 
                 editButtons.forEach(button => {
-                    button.addEventListener('click', function() {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent any default action
+                        console.log('Edit button clicked');
+                        
                         // Get booking data from button attributes
                         currentBookingId = this.getAttribute('data-id');
                         const name = this.getAttribute('data-name');
@@ -877,6 +886,8 @@
                     // Submit the form
                     this.submit();
                 });
+            } else {
+                console.error('Edit functionality elements not found properly');
             }
             
             // Delete booking functionality
@@ -889,29 +900,27 @@
                 console.log('Delete functionality elements found');
                 
                 deleteButtons.forEach(button => {
-                    button.addEventListener('click', function() {
-                        const bookingId = this.dataset.id;
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault(); // Prevent any default action
+                        console.log('Delete button clicked');
+                        
+                        const bookingId = this.getAttribute('data-id');
                         console.log('Delete clicked for booking ID:', bookingId);
                         
-                        deleteForm.action = "{{ route('bas.bookings.delete', '') }}/" + bookingId;
+                        deleteForm.action = `{{ route('bas.bookings.delete', '') }}/${bookingId}`;
                         deleteModal.classList.remove('hidden');
                         deleteModal.classList.add('flex');
                     });
                 });
                 
-                cancelDelete.addEventListener('click', function() {
+                cancelDelete.addEventListener('click', function(e) {
+                    e.preventDefault();
                     console.log('Delete cancelled');
                     deleteModal.classList.add('hidden');
                     deleteModal.classList.remove('flex');
                 });
             } else {
-                console.warn('Delete functionality elements not found properly');
-            }
-            
-            // Check for existing date parameter
-            const currentDate = "{{ request('date') }}";
-            if (currentDate) {
-                datePicker.setDate(currentDate);
+                console.error('Delete functionality elements not found properly');
             }
             
         } catch (error) {

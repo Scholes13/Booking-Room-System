@@ -151,7 +151,21 @@ class BookingController extends Controller
            'external_description' => $request->input('external_description'),
        ]);
 
-       $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 'admin.';
+       // Determine the appropriate route prefix based on user role
+       $prefix = 'admin.';
+       if (Auth::check()) {
+           switch (Auth::user()->role) {
+               case 'admin_bas':
+                   $prefix = 'bas.';
+                   break;
+               case 'superadmin':
+                   $prefix = 'superadmin.';
+                   break;
+               default:
+                   $prefix = 'admin.';
+           }
+       }
+       
        return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil diperbarui!');
    }
 
@@ -291,7 +305,21 @@ class BookingController extends Controller
        $booking = Booking::findOrFail($id);
        $booking->delete();
        
-       $prefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'bas.' : 'admin.';
+       // Determine the appropriate route prefix based on user role
+       $prefix = 'admin.';
+       if (Auth::check()) {
+           switch (Auth::user()->role) {
+               case 'admin_bas':
+                   $prefix = 'bas.';
+                   break;
+               case 'superadmin':
+                   $prefix = 'superadmin.';
+                   break;
+               default:
+                   $prefix = 'admin.';
+           }
+       }
+       
        return redirect()->route($prefix . 'bookings.index')->with('success', 'Booking berhasil dihapus!');
    }
 
@@ -366,8 +394,15 @@ class BookingController extends Controller
                           ->orderBy('name', 'asc')
                           ->get();
        
-       if (Auth::check() && Auth::user()->role === 'admin_bas') {
-           return view('admin_bas.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
+       if (Auth::check()) {
+           switch (Auth::user()->role) {
+               case 'admin_bas':
+                   return view('admin_bas.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
+               case 'superadmin':
+                   return view('superadmin.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
+               default:
+                   return view('admin.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
+           }
        }
        
        return view('admin.bookings.index', compact('bookings', 'departments', 'meetingRooms', 'employees'));
