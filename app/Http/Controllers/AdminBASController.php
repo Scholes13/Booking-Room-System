@@ -59,9 +59,19 @@ class AdminBASController extends Controller
     {
         $query = Activity::with('room');
         
-        // Filter by search
+        // Filter by search - enhanced to search across multiple fields
         if ($request->has('search') && !empty($request->search)) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('description', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('activity_type', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('city', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('province', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('department', function($subq) use ($searchTerm) {
+                      $subq->where('name', 'like', '%' . $searchTerm . '%');
+                  });
+            });
         }
         
         // Filter by status - collect results first since status is a computed attribute
@@ -300,17 +310,6 @@ class AdminBASController extends Controller
         $events = [];
         
         foreach ($activities as $activity) {
-            // Format dates for proper handling of multi-day events
-            $startDateTime = Carbon::parse($activity->start_datetime);
-            $endDateTime = Carbon::parse($activity->end_datetime);
-            
-            // For multi-day events, FullCalendar needs end date to be exclusive
-            // If end date doesn't end at 00:00, add 1 day for proper display
-            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
-                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
-                $endDateTime = $endDateTime->addDay()->startOfDay();
-            }
-            
             // Get status - default to 'scheduled' if not set
             $status = $activity->status ?? 'scheduled';
             
@@ -318,14 +317,14 @@ class AdminBASController extends Controller
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $endDateTime->format('Y-m-d H:i:s'),
+                'end' => $activity->end_datetime,
                 'status' => $status,
                 'extendedProps' => [
                     'description' => $activity->description,
                     'room' => $activity->room ? $activity->room->name : null,
                     'organizer' => $activity->organizer ?? null,
                     'department' => $activity->department ? $activity->department->name : null,
-                    'original_end' => $activity->end_datetime, // Store original end date
+                    'original_end' => $activity->end_datetime,
                     'status' => $status
                 ]
             ];
@@ -458,24 +457,25 @@ class AdminBASController extends Controller
             });
         }
         
-        // Sort by
-        $sortField = $request->sort_by ?? 'name';
-        $sortDirection = $request->sort_direction ?? 'asc';
-        $query->orderBy($sortField, $sortDirection);
+        // Use a CASE statement to sort by position hierarchy
+        $query->orderByRaw("
+            CASE 
+                WHEN position LIKE '%CEO%' THEN 1
+                WHEN position LIKE '%Managing Director%' THEN 2
+                WHEN position LIKE '%HOD%' THEN 3
+                WHEN position LIKE '%Coordinator%' THEN 4
+                WHEN position LIKE '%Staff%' THEN 5
+                ELSE 6
+            END ASC, 
+            name ASC
+        ");
         
         // Count by gender
         $maleCount = Employee::where('gender', 'L')->count();
         $femaleCount = Employee::where('gender', 'P')->count();
         
-        // Pagination
-        $employees = $query->paginate(15)->appends([
-            'department_id' => $request->department_id,
-            'gender' => $request->gender,
-            'search' => $request->search,
-            'sort_by' => $sortField,
-            'sort_direction' => $sortDirection,
-            'query' => $request->query()
-        ]);
+        // Standard pagination instead of manual pagination
+        $employees = $query->paginate(15);
 
         $departments = Department::all();
 
@@ -502,6 +502,15 @@ class AdminBASController extends Controller
             'phone' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
         ]);
+
+        // Generate employee ID automatically
+        $departmentCode = Department::find($validated['department_id'])->name ?? 'EMP';
+        $departmentCode = substr(strtoupper($departmentCode), 0, 3);
+        $timestamp = now()->format('ymd');
+        $count = Employee::whereDate('created_at', today())->count() + 1;
+        $sequence = str_pad($count, 3, '0', STR_PAD_LEFT);
+        
+        $validated['employee_id'] = "{$departmentCode}{$timestamp}{$sequence}";
 
         $employee = Employee::create($validated);
         
@@ -536,6 +545,11 @@ class AdminBASController extends Controller
 
         $employee = Employee::findOrFail($id);
         $oldData = $employee->toArray();
+        
+        // Pertahankan employee_id yang sudah ada
+        if ($employee->employee_id) {
+            $validated['employee_id'] = $employee->employee_id;
+        }
         
         $employee->update($validated);
         

@@ -4,7 +4,6 @@
     <table class="w-full text-sm text-left hidden md:table">
         <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
             <tr>
-                <th scope="col" class="px-5 py-3.5">No</th>
                 <th scope="col" class="px-5 py-3.5">Name</th>
                 <th scope="col" class="px-5 py-3.5">Gender</th>
                 <th scope="col" class="px-5 py-3.5">Department</th>
@@ -17,7 +16,6 @@
         <tbody>
             @forelse($employees as $index => $employee)
             <tr class="border-b border-gray-200 hover:bg-gray-50">
-                <td class="px-5 py-4">{{ $employees->firstItem() + $index }}</td>
                 <td class="px-5 py-4 font-medium text-gray-900">{{ $employee->name }}</td>
                 <td class="px-5 py-4">
                     <span class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full {{ $employee->gender == 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
@@ -36,6 +34,8 @@
                     } elseif (strpos($position, 'Managing Director') !== false) {
                         $positionClasses = 'bg-indigo-100 text-indigo-800';
                         $paddingClass = 'px-3 py-1 whitespace-nowrap';
+                    } elseif (strpos($position, 'HOD') !== false) {
+                        $positionClasses = 'bg-red-100 text-red-800';
                     } elseif (strpos($position, 'Coordinator') !== false) {
                         $positionClasses = 'bg-blue-100 text-blue-800';
                     } elseif (strpos($position, 'Staff') !== false) {
@@ -57,12 +57,20 @@
                 <td class="px-5 py-4 text-gray-500 hidden lg:table-cell">{{ $employee->email ?? '-' }}</td>
                 <td class="px-5 py-4 text-right">
                     <div class="flex items-center justify-end space-x-2">
-                        <a href="{{ route('bas.employees.edit', $employee->id) }}" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center">
+                        <button type="button" class="edit-employee px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center" 
+                            data-id="{{ $employee->id }}"
+                            data-name="{{ $employee->name }}"
+                            data-employee-id="{{ $employee->employee_id }}"
+                            data-department="{{ $employee->department_id }}"
+                            data-position="{{ $employee->position }}"
+                            data-gender="{{ $employee->gender }}"
+                            data-phone="{{ $employee->phone }}"
+                            data-email="{{ $employee->email }}">
                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             Edit
-                        </a>
+                        </button>
                         <button type="button" class="delete-employee px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors inline-flex items-center" data-id="{{ $employee->id }}">
                             <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
@@ -95,7 +103,6 @@
             <div class="flex flex-col gap-3">
                 <!-- Employee number and name -->
                 <div class="flex justify-between items-center flex-wrap gap-2">
-                    <span class="text-xs text-gray-500">Employee #{{ $employees->firstItem() + $index }}</span>
                     <span class="px-2.5 py-0.5 inline-flex text-xs font-medium rounded-full {{ $employee->gender == 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800' }}">
                         {{ $employee->gender_label }}
                     </span>
@@ -121,6 +128,8 @@
                             $positionClasses = 'bg-purple-100 text-purple-800';
                         } elseif (strpos($position, 'Managing Director') !== false) {
                             $positionClasses = 'bg-indigo-100 text-indigo-800';
+                        } elseif (strpos($position, 'HOD') !== false) {
+                            $positionClasses = 'bg-red-100 text-red-800';
                         } elseif (strpos($position, 'Coordinator') !== false) {
                             $positionClasses = 'bg-blue-100 text-blue-800';
                         } elseif (strpos($position, 'Staff') !== false) {
@@ -153,12 +162,20 @@
                 
                 <!-- Action Buttons -->
                 <div class="flex justify-end gap-2 mt-2">
-                    <a href="{{ route('bas.employees.edit', $employee->id) }}" class="px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center">
+                    <button type="button" class="edit-employee px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center"
+                        data-id="{{ $employee->id }}"
+                        data-name="{{ $employee->name }}"
+                        data-employee-id="{{ $employee->employee_id }}"
+                        data-department="{{ $employee->department_id }}"
+                        data-position="{{ $employee->position }}"
+                        data-gender="{{ $employee->gender }}"
+                        data-phone="{{ $employee->phone }}"
+                        data-email="{{ $employee->email }}">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         Edit
-                    </a>
+                    </button>
                     <button type="button" class="delete-employee px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors inline-flex items-center" data-id="{{ $employee->id }}">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>

@@ -15,7 +15,8 @@ class Employee extends Model
         'department_id',
         'position',
         'phone',
-        'email'
+        'email',
+        'employee_id'
     ];
 
     /**
@@ -41,4 +42,6 @@ class Employee extends Model
     {
         return $this->belongsTo(Department::class);
     }
+
+    // Look for the Employee model file and add an array/orderBy function for the numbered positions
 }

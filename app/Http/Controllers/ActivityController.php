@@ -201,24 +201,11 @@ class ActivityController extends Controller
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
             
-            // Format tanggal untuk memastikan event multi-hari ditampilkan dengan benar
-            $startDateTime = Carbon::parse($activity->start_datetime);
-            $endDateTime = Carbon::parse($activity->end_datetime);
-            
-            // Untuk event multi-hari, FullCalendar membutuhkan end date exclusive
-            // Jika end datenya tidak berakhir pada pukul 00:00, tambahkan 1 hari
-            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
-                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
-                // Jika waktu akhir bukan 00:00, FullCalendar akan menganggapnya hari ini saja
-                // sehingga perlu ditambahkan 1 hari agar mencakup hari terakhir penuh
-                $endDateTime = $endDateTime->addDay()->startOfDay();
-            }
-
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $endDateTime->format('Y-m-d H:i:s'),
+                'end' => $activity->end_datetime,
                 'extendedProps' => [
                     'department' => $activity->department->name,
                     'activity_type' => $displayActivityType,
@@ -228,7 +215,7 @@ class ActivityController extends Controller
                     'location' => ($activity->city && $activity->province) 
                                 ? $activity->city . ', ' . $activity->province 
                                 : ($activity->city ?: $activity->province ?: 'No location'),
-                    'original_end' => $activity->end_datetime // Simpan tanggal akhir asli
+                    'original_end' => $activity->end_datetime
                 ]
             ];
         }
@@ -568,24 +555,11 @@ class ActivityController extends Controller
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
             
-            // Format tanggal untuk memastikan event multi-hari ditampilkan dengan benar
-            $startDateTime = Carbon::parse($activity->start_datetime);
-            $endDateTime = Carbon::parse($activity->end_datetime);
-            
-            // Untuk event multi-hari, FullCalendar membutuhkan end date exclusive
-            // Jika end datenya tidak berakhir pada pukul 00:00, tambahkan 1 hari
-            if ($startDateTime->format('Y-m-d') !== $endDateTime->format('Y-m-d') && 
-                !($endDateTime->hour === 0 && $endDateTime->minute === 0)) {
-                // Jika waktu akhir bukan 00:00, FullCalendar akan menganggapnya hari ini saja
-                // sehingga perlu ditambahkan 1 hari agar mencakup hari terakhir penuh
-                $endDateTime = $endDateTime->addDay()->startOfDay();
-            }
-
             $events[] = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
-                'end' => $endDateTime->format('Y-m-d H:i:s'),
+                'end' => $activity->end_datetime,
                 'extendedProps' => [
                     'department' => $activity->department->name,
                     'activity_type' => $displayActivityType,
@@ -595,7 +569,7 @@ class ActivityController extends Controller
                     'location' => ($activity->city && $activity->province) 
                                 ? $activity->city . ', ' . $activity->province 
                                 : ($activity->city ?: $activity->province ?: 'No location'),
-                    'original_end' => $activity->end_datetime // Simpan tanggal akhir asli
+                    'original_end' => $activity->end_datetime
                 ]
             ];
         }

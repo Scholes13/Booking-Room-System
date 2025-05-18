@@ -17,6 +17,9 @@ class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
+        // Determine if we're in superadmin context based on the route
+        $isSuperAdmin = $request->route()->getName() === 'superadmin.employees';
+        
         $employeesQuery = Employee::with('department')
             ->when($request->filled('search'), function ($query) use ($request) {
                 $search = trim($request->search);
@@ -33,49 +36,34 @@ class EmployeeController extends Controller
             ->when($request->filled('gender'), function ($query) use ($request) {
                 $query->where('gender', $request->gender);
             });
-
-        // Manually sort by job title hierarchy
-        $employees = $employeesQuery->get()->sort(function ($a, $b) {
-            $positions = [
-                'CEO' => 1,
-                'Managing Director' => 2,
-                'Manager' => 3, 
-                'Coordinator' => 4,
-                'Supervisor' => 5,
-                'Staff' => 6
-            ];
             
-            $posA = array_key_exists($a->position, $positions) ? $positions[$a->position] : 999;
-            $posB = array_key_exists($b->position, $positions) ? $positions[$b->position] : 999;
-            
-            if ($posA === $posB) {
-                return $a->name <=> $b->name; // If positions are the same, sort by name
-            }
-            
-            return $posA <=> $posB; // Sort by position weight
-        });
+        // Use a CASE statement to sort by position hierarchy
+        $employeesQuery->orderByRaw("
+            CASE 
+                WHEN position LIKE '%CEO%' THEN 1
+                WHEN position LIKE '%Managing Director%' THEN 2
+                WHEN position LIKE '%HOD%' THEN 3
+                WHEN position LIKE '%Coordinator%' THEN 4
+                WHEN position LIKE '%Staff%' THEN 5
+                ELSE 6
+            END ASC, 
+            name ASC
+        ");
 
         // Count employees by gender - menggunakan query terpisah untuk menghindari masalah dengan filter
         $maleCount = Employee::where('gender', 'L')->count();
         $femaleCount = Employee::where('gender', 'P')->count();
 
-        // Apply pagination manually after sorting
-        $page = $request->get('page', 1);
-        $perPage = 10;
-        $total = $employees->count();
-        $currentItems = $employees->slice(($page - 1) * $perPage, $perPage);
-        $employees = new LengthAwarePaginator($currentItems, $total, $perPage, $page, [
-            'path' => $request->url(),
-            'query' => $request->query()
-        ]);
+        // Standard pagination instead of manual pagination
+        $employees = $employeesQuery->paginate(10);
 
         $departments = Department::all();
 
         if ($request->ajax()) {
-            return view('admin.employees.partials.table', compact('employees', 'departments', 'maleCount', 'femaleCount'));
+            return view('admin.employees.partials.table', compact('employees', 'departments', 'maleCount', 'femaleCount', 'isSuperAdmin'));
         }
 
-        return view('admin.employees.index', compact('employees', 'departments', 'maleCount', 'femaleCount'));
+        return view('admin.employees.index', compact('employees', 'departments', 'maleCount', 'femaleCount', 'isSuperAdmin'));
     }
 
     public function create()
@@ -95,7 +83,12 @@ class EmployeeController extends Controller
             $request->validated()
         );
 
-        return redirect()->route('admin.employees')
+        // Determine the correct route based on the current request
+        $routeName = strpos($request->route()->getName(), 'superadmin') !== false 
+            ? 'superadmin.employees' 
+            : 'admin.employees';
+
+        return redirect()->route($routeName)
             ->with('success', 'Karyawan berhasil ditambahkan!');
     }
 
@@ -123,7 +116,12 @@ class EmployeeController extends Controller
             ]
         );
 
-        return redirect()->route('admin.employees')
+        // Determine the correct route based on the current request
+        $routeName = strpos($request->route()->getName(), 'superadmin') !== false 
+            ? 'superadmin.employees' 
+            : 'admin.employees';
+
+        return redirect()->route($routeName)
             ->with('success', 'Data karyawan berhasil diupdate!');
     }
 
@@ -142,7 +140,12 @@ class EmployeeController extends Controller
                 $employeeData
             );
             
-            return redirect()->route('admin.employees')
+            // Determine the correct route based on the current request
+            $routeName = strpos(request()->route()->getName(), 'superadmin') !== false 
+                ? 'superadmin.employees' 
+                : 'admin.employees';
+
+            return redirect()->route($routeName)
                 ->with('success', 'Karyawan berhasil dihapus!');
         } catch (\Exception $e) {
             return redirect()->back()
