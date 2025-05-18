@@ -109,4 +109,12 @@ class Activity extends Model
     {
         return $this->belongsTo(MeetingRoom::class, 'meeting_room_id');
     }
+    
+    /**
+     * Get the sales mission details associated with this activity.
+     */
+    public function salesMissionDetail()
+    {
+        return $this->hasOne(SalesMissionDetail::class);
+    }
 }

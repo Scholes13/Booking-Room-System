@@ -130,7 +130,7 @@
                         name="activity_type"
                         class="form-select appearance-none w-full rounded-md pl-4 pr-10 py-2.5 text-sm"
                         required
-                        onchange="checkOtherActivity()"
+                        onchange="checkOtherActivity(); checkSalesMission();"
                     >
                         <option value="">Pilih Tipe Kegiatan</option>
                         @foreach($activityTypes as $type)
@@ -159,6 +159,82 @@
                             placeholder="Masukkan tipe kegiatan lainnya"
                             value="{{ old('activity_type_other') }}"
                         >
+                    </div>
+                </div>
+
+                <!-- "Sales Mission" Fields - hanya muncul ketika "Sales Mission" dipilih -->
+                <div id="sales_mission_container" class="mt-4 space-y-4 p-4 rounded-md bg-white/10 border border-white/30" style="display: {{ old('activity_type') === 'Sales Mission' ? 'block' : 'none' }}">
+                    <h3 class="font-medium text-white text-lg mb-3">Detail Sales Mission</h3>
+                    
+                    <!-- Company Name -->
+                    <div>
+                        <label for="company_name" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-building mr-2 opacity-80"></i>
+                            Nama Perusahaan
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="company_name" 
+                                name="company_name" 
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                                placeholder="Masukkan nama perusahaan"
+                                value="{{ old('company_name') }}"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Company PIC -->
+                    <div>
+                        <label for="company_pic" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-user-tie mr-2 opacity-80"></i>
+                            PIC Perusahaan
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="company_pic" 
+                                name="company_pic" 
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                                placeholder="Masukkan nama PIC"
+                                value="{{ old('company_pic') }}"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Company Contact -->
+                    <div>
+                        <label for="company_contact" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-phone mr-2 opacity-80"></i>
+                            Kontak PIC
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="company_contact" 
+                                name="company_contact" 
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                                placeholder="Telepon / Email PIC"
+                                value="{{ old('company_contact') }}"
+                            >
+                        </div>
+                    </div>
+                    
+                    <!-- Company Address -->
+                    <div>
+                        <label for="company_address" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-map-marker-alt mr-2 opacity-80"></i>
+                            Alamat Perusahaan
+                        </label>
+                        <div class="relative">
+                            <textarea 
+                                id="company_address"
+                                name="company_address"
+                                rows="3"
+                                placeholder="Masukkan alamat lengkap perusahaan"
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm"
+                            >{{ old('company_address') }}</textarea>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -586,7 +662,34 @@ function checkOtherActivity() {
     }
 }
 
+// Fungsi untuk menampilkan/menyembunyikan field "Sales Mission"
+function checkSalesMission() {
+    const activityType = document.getElementById('activity_type');
+    const salesMissionContainer = document.getElementById('sales_mission_container');
+    const companyNameInput = document.getElementById('company_name');
+    const companyPicInput = document.getElementById('company_pic');
+    const companyContactInput = document.getElementById('company_contact');
+    const companyAddressInput = document.getElementById('company_address');
+    
+    if (activityType.value === 'Sales Mission') {
+        salesMissionContainer.style.display = 'block';
+        companyNameInput.required = true;
+        companyPicInput.required = true;
+        companyContactInput.required = true;
+        companyAddressInput.required = true;
+    } else {
+        salesMissionContainer.style.display = 'none';
+        companyNameInput.required = false;
+        companyPicInput.required = false;
+        companyContactInput.required = false;
+        companyAddressInput.required = false;
+    }
+}
+
 // Jalankan sekali saat halaman dimuat
-document.addEventListener('DOMContentLoaded', checkOtherActivity);
+document.addEventListener('DOMContentLoaded', function() {
+    checkOtherActivity();
+    checkSalesMission();
+});
 </script>
 @endpush

@@ -116,6 +116,30 @@
                     <p class="font-semibold w-28">Location:</p>
                     <p id="modalLocation" class="flex-1"></p>
                 </div>
+                
+                <!-- Sales Mission specific fields - hidden by default -->
+                <div id="salesMissionDetails" class="space-y-2 p-3 rounded-lg bg-amber-50 border border-amber-200 hidden">
+                    <h4 class="font-bold text-amber-700 flex items-center">
+                        <i class="fas fa-building mr-2"></i>Sales Mission Details
+                    </h4>
+                    <div class="text-gray-600 flex">
+                        <p class="font-semibold w-28">Company:</p>
+                        <p id="modalCompanyName" class="flex-1"></p>
+                    </div>
+                    <div class="text-gray-600 flex">
+                        <p class="font-semibold w-28">PIC:</p>
+                        <p id="modalCompanyPic" class="flex-1"></p>
+                    </div>
+                    <div class="text-gray-600 flex">
+                        <p class="font-semibold w-28">Contact:</p>
+                        <p id="modalCompanyContact" class="flex-1"></p>
+                    </div>
+                    <div class="text-gray-600">
+                        <p class="font-semibold mb-1">Address:</p>
+                        <p id="modalCompanyAddress" class="bg-white p-2 rounded-md text-sm"></p>
+                    </div>
+                </div>
+                
                 <div class="text-gray-600">
                     <p class="font-semibold mb-1">Description:</p>
                     <p id="modalDescription" class="bg-gray-50 p-3 rounded-md text-sm"></p>
@@ -190,6 +214,27 @@
         color: var(--primary-color);
         font-weight: 500;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Custom styling for Sales Mission events */
+    .sales-mission-event {
+        background-color: #f59e0b !important; /* Amber color for WG sales mission */
+        border-left: 4px solid #d97706 !important;
+        color: #7f1d1d !important; /* Dark red text */
+    }
+    
+    .sales-mission-event .fc-event-title {
+        font-weight: 600 !important;
+    }
+    
+    .sales-mission-event .fc-event-title:before {
+        content: "📈 ";
+    }
+    
+    .sales-mission-event .fc-event-title-container {
+        background-color: rgba(255, 255, 255, 0.2);
+        padding-top: 2px;
+        padding-bottom: 2px;
     }
     
     /* Responsiveness */
@@ -675,21 +720,40 @@ document.addEventListener('DOMContentLoaded', function() {
     const moreEventsList = document.getElementById('moreEventsList');
 
         window.showEventModal = function(evt) {
-        document.getElementById('modalTitle').textContent = evt.title || 'No Title';
-            document.getElementById('modalTime').textContent = evt.time || '';
-        document.getElementById('modalDepartment').textContent = evt.department || '';
-        document.getElementById('modalActivityType').textContent = evt.activity_type || '';
-        document.getElementById('modalLocation').textContent = evt.location || '';
-        document.getElementById('modalDescription').textContent = evt.description || '';
-
-        eventModal.classList.remove('hidden');
-        eventModal.classList.add('flex');
+        // Update modal content with event data
+        document.getElementById('modalTitle').innerText = evt.title;
+        document.getElementById('modalTime').querySelector('span').innerText = evt.time;
+        document.getElementById('modalDepartment').innerText = evt.department;
+        document.getElementById('modalActivityType').innerText = evt.activity_type;
+        document.getElementById('modalLocation').innerText = evt.location || 'Not specified';
+        document.getElementById('modalDescription').innerText = evt.description || 'No description provided.';
+        
+        // Handle Sales Mission details
+        const salesMissionDetails = document.getElementById('salesMissionDetails');
+        if (evt.salesMissionDetails && evt.salesMissionDetails.isSalesMission) {
+            // Populate Sales Mission fields
+            document.getElementById('modalCompanyName').innerText = evt.salesMissionDetails.company_name || 'N/A';
+            document.getElementById('modalCompanyPic').innerText = evt.salesMissionDetails.company_pic || 'N/A';
+            document.getElementById('modalCompanyContact').innerText = evt.salesMissionDetails.company_contact || 'N/A';
+            document.getElementById('modalCompanyAddress').innerText = evt.salesMissionDetails.company_address || 'N/A';
+            
+            // Show Sales Mission section
+            salesMissionDetails.classList.remove('hidden');
+        } else {
+            // Hide Sales Mission section
+            salesMissionDetails.classList.add('hidden');
+        }
+        
+        // Show the modal
+        document.getElementById('eventModal').style.display = 'flex';
     }
 
-    window.closeModal = function() {
-        eventModal.classList.add('hidden');
-        eventModal.classList.remove('flex');
+    function closeModal() {
+        document.getElementById('eventModal').style.display = 'none';
     }
+
+    // Make it globally accessible for onclick attribute
+    window.closeModal = closeModal;
 
     eventModal.addEventListener('click', function(e) {
         if (e.target === eventModal) {
@@ -1089,13 +1153,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     hour12: false
                 }) : '';
 
+                // Prepare Sales Mission details if available
+                const salesMissionDetails = {
+                    isSalesMission: props.activity_type === 'Sales Mission',
+                    company_name: props.company_name || '',
+                    company_pic: props.company_pic || '',
+                    company_contact: props.company_contact || '',
+                    company_address: props.company_address || ''
+                };
+
                 showEventModal({
                     title: event.title,
                     time: `${startStr} - ${endStr}`,
                     department: props.department,
                     activity_type: props.activity_type,
                     location: props.location,
-                    description: props.description
+                    description: props.description,
+                    salesMissionDetails: salesMissionDetails
                 });
             },
             

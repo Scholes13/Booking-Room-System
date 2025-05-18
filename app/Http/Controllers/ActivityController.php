@@ -67,7 +67,7 @@ class ActivityController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
+        // Validasi input dasar
         $validationRules = [
             'name'           => 'required|exists:employees,name',
             'department_id'  => 'required|exists:departments,id',
@@ -82,6 +82,14 @@ class ActivityController extends Controller
         // Tambahkan validasi untuk tipe kegiatan "Lainnya"
         if ($request->activity_type === 'Lainnya') {
             $validationRules['activity_type_other'] = 'required|string|max:100';
+        }
+        
+        // Tambahkan validasi untuk tipe kegiatan "Sales Mission"
+        if ($request->activity_type === 'Sales Mission') {
+            $validationRules['company_name'] = 'required|string|max:255';
+            $validationRules['company_pic'] = 'required|string|max:255';
+            $validationRules['company_contact'] = 'required|string|max:255';
+            $validationRules['company_address'] = 'required|string';
         }
         
         $request->validate($validationRules);
@@ -105,7 +113,17 @@ class ActivityController extends Controller
         }
 
         // Simpan data kegiatan
-        Activity::create($activityData);
+        $activity = Activity::create($activityData);
+        
+        // Jika tipe kegiatan adalah "Sales Mission", simpan detail sales mission
+        if ($request->activity_type === 'Sales Mission') {
+            $activity->salesMissionDetail()->create([
+                'company_name' => $request->input('company_name'),
+                'company_pic' => $request->input('company_pic'),
+                'company_contact' => $request->input('company_contact'),
+                'company_address' => $request->input('company_address'),
+            ]);
+        }
 
         return redirect()->route('activity.create')->with('success', 'Kegiatan berhasil dibuat!');
     }
@@ -145,8 +163,8 @@ class ActivityController extends Controller
      */
     public function calendarEvents(Request $request)
     {
-        // Query dasar dengan eager loading department
-        $query = Activity::with('department');
+        // Query dasar dengan eager loading department dan salesMissionDetail
+        $query = Activity::with(['department', 'salesMissionDetail']);
         
         // Filter berdasarkan department jika ada
         if ($request->filled('department_id')) {
@@ -171,7 +189,12 @@ class ActivityController extends Controller
                   ->orWhere('description', 'like', "%{$search}%")
                   ->orWhere('activity_type', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('province', 'like', "%{$search}%");
+                  ->orWhere('province', 'like', "%{$search}%")
+                  // Tambah pencarian untuk sales mission detail
+                  ->orWhereHas('salesMissionDetail', function($sq) use ($search) {
+                      $sq->where('company_name', 'like', "%{$search}%")
+                        ->orWhere('company_pic', 'like', "%{$search}%");
+                  });
             });
         }
         
@@ -201,7 +224,8 @@ class ActivityController extends Controller
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
             
-            $events[] = [
+            // Default event data
+            $eventData = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
@@ -218,6 +242,19 @@ class ActivityController extends Controller
                     'original_end' => $activity->end_datetime
                 ]
             ];
+            
+            // Khusus untuk Sales Mission, modifikasi tampilan
+            if ($activity->activity_type === 'Sales Mission' && $activity->salesMissionDetail) {
+                $eventData['title'] = $activity->salesMissionDetail->company_name;
+                $eventData['extendedProps']['department'] = 'WG';
+                $eventData['extendedProps']['company_name'] = $activity->salesMissionDetail->company_name;
+                $eventData['extendedProps']['company_pic'] = $activity->salesMissionDetail->company_pic;
+                $eventData['extendedProps']['company_contact'] = $activity->salesMissionDetail->company_contact;
+                $eventData['extendedProps']['company_address'] = $activity->salesMissionDetail->company_address;
+                $eventData['className'] = 'sales-mission-event'; // Tambahkan class khusus untuk styling
+            }
+            
+            $events[] = $eventData;
         }
         
         return response()->json($events);
@@ -499,8 +536,8 @@ class ActivityController extends Controller
      */
     public function adminCalendarEvents(Request $request)
     {
-        // Query dasar dengan eager loading department
-        $query = Activity::with('department');
+        // Query dasar dengan eager loading department dan salesMissionDetail
+        $query = Activity::with(['department', 'salesMissionDetail']);
         
         // Filter berdasarkan department jika ada
         if ($request->filled('department_id')) {
@@ -525,7 +562,12 @@ class ActivityController extends Controller
                   ->orWhere('description', 'like', "%{$search}%")
                   ->orWhere('activity_type', 'like', "%{$search}%")
                   ->orWhere('city', 'like', "%{$search}%")
-                  ->orWhere('province', 'like', "%{$search}%");
+                  ->orWhere('province', 'like', "%{$search}%")
+                  // Tambah pencarian untuk sales mission detail
+                  ->orWhereHas('salesMissionDetail', function($sq) use ($search) {
+                      $sq->where('company_name', 'like', "%{$search}%")
+                        ->orWhere('company_pic', 'like', "%{$search}%");
+                  });
             });
         }
         
@@ -555,7 +597,8 @@ class ActivityController extends Controller
             // Tentukan tipe aktivitas yang ditampilkan
             $displayActivityType = $activity->activity_type;
             
-            $events[] = [
+            // Default event data
+            $eventData = [
                 'id' => $activity->id,
                 'title' => $activity->name,
                 'start' => $activity->start_datetime,
@@ -572,6 +615,19 @@ class ActivityController extends Controller
                     'original_end' => $activity->end_datetime
                 ]
             ];
+            
+            // Khusus untuk Sales Mission, modifikasi tampilan
+            if ($activity->activity_type === 'Sales Mission' && $activity->salesMissionDetail) {
+                $eventData['title'] = $activity->salesMissionDetail->company_name;
+                $eventData['extendedProps']['department'] = 'WG';
+                $eventData['extendedProps']['company_name'] = $activity->salesMissionDetail->company_name;
+                $eventData['extendedProps']['company_pic'] = $activity->salesMissionDetail->company_pic;
+                $eventData['extendedProps']['company_contact'] = $activity->salesMissionDetail->company_contact;
+                $eventData['extendedProps']['company_address'] = $activity->salesMissionDetail->company_address;
+                $eventData['className'] = 'sales-mission-event'; // Tambahkan class khusus untuk styling
+            }
+            
+            $events[] = $eventData;
         }
         
         return response()->json($events);
