@@ -53,6 +53,7 @@
                     <option value="">Pilih Role</option>
                     <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
                     <option value="admin_bas" {{ old('role') == 'admin_bas' ? 'selected' : '' }}>Admin BAS</option>
+                    <option value="sales_mission" {{ old('role') == 'sales_mission' ? 'selected' : '' }}>Sales Mission</option>
                     <option value="superadmin" {{ old('role') == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
                 </select>
                 @error('role')

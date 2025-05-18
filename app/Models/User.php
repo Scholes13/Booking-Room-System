@@ -16,6 +16,7 @@ class User extends Authenticatable
     const ROLE_ADMIN = 'admin';
     const ROLE_SUPERADMIN = 'superadmin';
     const ROLE_ADMIN_BAS = 'admin_bas';
+    const ROLE_SALES_MISSION = 'sales_mission';
 
     /**
      * Field yang boleh diisi secara mass assignment.
@@ -65,5 +66,13 @@ class User extends Authenticatable
     public function isAdminBAS()
     {
         return $this->role === self::ROLE_ADMIN_BAS;
+    }
+
+    /**
+     * Check if user is Sales Mission
+     */
+    public function isSalesMission()
+    {
+        return $this->role === self::ROLE_SALES_MISSION;
     }
 }

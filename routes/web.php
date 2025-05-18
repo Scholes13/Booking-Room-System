@@ -10,6 +10,7 @@ use App\Http\Controllers\ActivityReportController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
+use App\Http\Controllers\SalesMissionController;
 use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------------------
@@ -297,4 +298,62 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::post('/data', [ReportController::class, 'getData'])->name('bas.reports.data');
         Route::post('/export', [ReportController::class, 'export'])->name('bas.reports.export');
     });
+});
+
+// -------------------------------------------------------------------
+//                   ROUTE AREA SALES MISSION
+// -------------------------------------------------------------------
+Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMissionMiddleware::class], function() {
+    Route::get('/dashboard', [SalesMissionController::class, 'dashboard'])->name('sales_mission.dashboard');
+    
+    // Activities Management Routes
+    Route::prefix('activities')->group(function () {
+        Route::get('/', [SalesMissionController::class, 'activitiesIndex'])->name('sales_mission.activities.index');
+        Route::get('/{activity}/edit', [SalesMissionController::class, 'editActivity'])->name('sales_mission.activities.edit');
+        Route::put('/{activity}', [SalesMissionController::class, 'updateActivity'])->name('sales_mission.activities.update');
+        Route::delete('/{activity}', [SalesMissionController::class, 'destroyActivity'])->name('sales_mission.activities.destroy');
+        Route::get('/calendar', [SalesMissionController::class, 'activitiesCalendar'])->name('sales_mission.activities.calendar');
+        Route::get('/json', [SalesMissionController::class, 'activitiesJson'])->name('sales_mission.activities.json');
+    });
+    
+    // Reports Routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [SalesMissionController::class, 'reports'])->name('sales_mission.reports');
+        Route::post('/data', [SalesMissionController::class, 'getReportData'])->name('sales_mission.reports.data');
+        Route::post('/export', [SalesMissionController::class, 'exportReport'])->name('sales_mission.reports.export');
+    });
+});
+
+// Add a test route at the bottom of the file
+Route::get('/generate-test-sales-mission', function() {
+    $department = \App\Models\Department::first();
+    if (!$department) {
+        $department = \App\Models\Department::create([
+            'name' => 'Sales Department',
+            'code' => 'SALES'
+        ]);
+    }
+    
+    // Create sample activity
+    $activity = \App\Models\Activity::create([
+        'name' => 'John Doe',
+        'department_id' => $department->id,
+        'activity_type' => 'Sales Mission',
+        'description' => 'Meeting with PT ABC for product presentation',
+        'city' => 'Jakarta',
+        'province' => 'DKI Jakarta',
+        'start_datetime' => now()->subDays(5),
+        'end_datetime' => now()->subDays(5)->addHours(2),
+    ]);
+    
+    // Create sample sales mission detail
+    \App\Models\SalesMissionDetail::create([
+        'activity_id' => $activity->id,
+        'company_name' => 'PT ABC Technology',
+        'company_pic' => 'Michael Johnson',
+        'company_contact' => '081234567890',
+        'company_address' => 'Jl. Sudirman No. 123, Jakarta Pusat'
+    ]);
+    
+    return "Created test sales mission data. <a href='/sales/reports?debug=1'>View Reports</a>";
 });

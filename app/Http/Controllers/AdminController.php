@@ -59,6 +59,9 @@ class AdminController extends Controller
             } elseif ($user->role === 'admin_bas') {
                 return redirect()->route('bas.dashboard')
                                ->with('success', 'Selamat datang, Admin BAS!');
+            } elseif ($user->role === 'sales_mission') {
+                return redirect()->route('sales_mission.dashboard')
+                               ->with('success', 'Selamat datang, Sales Mission!');
             } else {
                 // Jika role tidak valid, logout dan kembalikan error
                 Auth::logout();
@@ -181,6 +184,7 @@ class AdminController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
+            'role'     => 'required|in:admin,admin_bas,superadmin,sales_mission',
         ]);
 
         // Buat user baru dengan role = 'admin'
@@ -190,7 +194,7 @@ class AdminController extends Controller
             // Jika di model User ada cast 'password' => 'hashed',
             // password akan otomatis di-hash.
             'password' => $validated['password'],
-            'role'     => 'admin',
+            'role'     => $validated['role'],
         ]);
 
         return redirect()->route('superadmin.dashboard')
@@ -536,7 +540,7 @@ class AdminController extends Controller
      */
     public function users()
     {
-        $users = User::whereIn('role', ['admin', 'admin_bas'])->orderBy('name')->paginate(10);
+        $users = User::whereIn('role', ['admin', 'admin_bas', 'sales_mission'])->orderBy('name')->paginate(10);
         return view('superadmin.users.index', compact('users'));
     }
 
@@ -557,7 +561,7 @@ class AdminController extends Controller
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
             'password' => 'required|min:6',
-            'role'     => 'required|in:admin,admin_bas,superadmin',
+            'role'     => 'required|in:admin,admin_bas,superadmin,sales_mission',
         ]);
 
         // Buat user baru dengan role sesuai input
@@ -598,7 +602,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email,' . $id,
-            'role'     => 'required|in:admin,admin_bas,superadmin',
+            'role'     => 'required|in:admin,admin_bas,superadmin,sales_mission',
             'password' => 'nullable|min:6',
         ]);
         

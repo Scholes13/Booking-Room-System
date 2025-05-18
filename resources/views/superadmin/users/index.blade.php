@@ -49,6 +49,8 @@
                             <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
                                 @if($user->role == 'admin_bas')
                                     Admin BAS
+                                @elseif($user->role == 'sales_mission')
+                                    Sales Mission
                                 @else
                                     {{ ucfirst($user->role) }}
                                 @endif

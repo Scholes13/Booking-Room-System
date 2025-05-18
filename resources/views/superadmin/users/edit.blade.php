@@ -54,6 +54,7 @@
                     <option value="">Pilih Role</option>
                     <option value="admin" {{ (old('role', $user->role) == 'admin') ? 'selected' : '' }}>Admin</option>
                     <option value="admin_bas" {{ (old('role', $user->role) == 'admin_bas') ? 'selected' : '' }}>Admin BAS</option>
+                    <option value="sales_mission" {{ (old('role', $user->role) == 'sales_mission') ? 'selected' : '' }}>Sales Mission</option>
                     <option value="superadmin" {{ (old('role', $user->role) == 'superadmin') ? 'selected' : '' }}>Super Admin</option>
                 </select>
                 @error('role')
