@@ -11,6 +11,7 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
 use App\Http\Controllers\SalesMissionController;
+use App\Http\Controllers\SalesOfficerController;
 use Illuminate\Support\Facades\Route;
 
 // -------------------------------------------------------------------
@@ -126,6 +127,9 @@ Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\Sup
         Route::delete('/{id}', [ActivityController::class, 'destroy'])->name('superadmin.activities.delete');
         Route::get('/calendar', [ActivityController::class, 'adminCalendar'])->name('superadmin.activities.calendar');
         Route::get('/calendar/events', [ActivityController::class, 'adminCalendarEvents'])->name('superadmin.activities.calendar.events');
+        
+        // Sales Mission Activities Management
+        Route::get('/sales-mission', [SalesMissionController::class, 'superAdminIndex'])->name('superadmin.activities.sales_mission');
     });
     
     // Meeting Rooms Routes - mirip dengan admin routes tapi dengan prefix superadmin
@@ -322,6 +326,60 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
         Route::post('/data', [SalesMissionController::class, 'getReportData'])->name('sales_mission.reports.data');
         Route::post('/export', [SalesMissionController::class, 'exportReport'])->name('sales_mission.reports.export');
     });
+    
+    // Logs functionality removed - only accessible to superadmin
+});
+
+// -------------------------------------------------------------------
+//                   ROUTE AREA SALES OFFICER
+// -------------------------------------------------------------------
+Route::group(['prefix' => 'officer', 'middleware' => \App\Http\Middleware\SalesOfficerMiddleware::class], function() {
+    Route::get('/dashboard', [SalesOfficerController::class, 'dashboard'])->name('sales_officer.dashboard');
+    
+    // Activities Management Routes
+    Route::prefix('activities')->group(function () {
+        Route::get('/', [SalesOfficerController::class, 'activitiesIndex'])->name('sales_officer.activities.index');
+        Route::get('/create', [SalesOfficerController::class, 'createActivity'])->name('sales_officer.activities.create');
+        Route::post('/', [SalesOfficerController::class, 'storeActivity'])->name('sales_officer.activities.store');
+        Route::get('/{activity}/edit', [SalesOfficerController::class, 'editActivity'])->name('sales_officer.activities.edit');
+        Route::put('/{activity}', [SalesOfficerController::class, 'updateActivity'])->name('sales_officer.activities.update');
+        Route::delete('/{activity}', [SalesOfficerController::class, 'destroyActivity'])->name('sales_officer.activities.destroy');
+    });
+    
+    // Calendar Routes
+    Route::get('/calendar', [SalesOfficerController::class, 'calendar'])->name('sales_officer.calendar');
+    Route::get('/calendar/events', [SalesOfficerController::class, 'calendarEvents'])->name('sales_officer.calendar.events');
+    
+    // Reports Routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/', [SalesOfficerController::class, 'reports'])->name('sales_officer.reports.index');
+        Route::post('/data', [SalesOfficerController::class, 'getReportData'])->name('sales_officer.reports.data');
+        Route::post('/export', [SalesOfficerController::class, 'exportReport'])->name('sales_officer.reports.export');
+    });
+    
+    // Contacts Routes
+    Route::prefix('contacts')->group(function () {
+        Route::get('/', [SalesOfficerController::class, 'contactsIndex'])->name('sales_officer.contacts.index');
+        Route::get('/create', [SalesOfficerController::class, 'createContact'])->name('sales_officer.contacts.create');
+        Route::post('/', [SalesOfficerController::class, 'storeContact'])->name('sales_officer.contacts.store');
+        Route::get('/mission/{id}', [SalesOfficerController::class, 'getSalesMissionContact'])->name('sales_officer.contacts.mission');
+        Route::get('/{contact}/edit', [SalesOfficerController::class, 'editContact'])->name('sales_officer.contacts.edit');
+        Route::put('/{contact}', [SalesOfficerController::class, 'updateContact'])->name('sales_officer.contacts.update');
+        Route::delete('/{contact}', [SalesOfficerController::class, 'destroyContact'])->name('sales_officer.contacts.destroy');
+        Route::get('/{contact}', [SalesOfficerController::class, 'viewContact'])->name('sales_officer.contacts.show');
+    });
+    
+    // API Routes for activity form
+    Route::get('/api/companies', [SalesOfficerController::class, 'getCompanies'])
+        ->name('sales_officer.api.companies');
+    Route::get('/api/company/{company_id}/divisions', [SalesOfficerController::class, 'getCompanyDivisions'])
+        ->name('sales_officer.api.company.divisions');
+    Route::get('/api/company/{company_id}/pics', [SalesOfficerController::class, 'getCompanyPICs'])
+        ->name('sales_officer.api.company.pics');
+    Route::get('/api/division/{division_id}/pics', [SalesOfficerController::class, 'getDivisionPICs'])
+        ->name('sales_officer.api.division.pics');
+    Route::get('/api/company/{company_id}/follow-up-history', [SalesOfficerController::class, 'getCompanyFollowUpHistory'])
+        ->name('sales_officer.api.company.follow-up-history');
 });
 
 // Add a test route at the bottom of the file
@@ -356,4 +414,47 @@ Route::get('/generate-test-sales-mission', function() {
     ]);
     
     return "Created test sales mission data. <a href='/sales/reports?debug=1'>View Reports</a>";
+});
+
+// Add a debug route to check user roles
+Route::get('/debug-users', function() {
+    $users = \App\Models\User::all();
+    return $users->map(function($user) {
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role
+        ];
+    });
+});
+
+// Add a route to create a test sales mission user
+Route::get('/create-sales-user', function() {
+    $user = \App\Models\User::where('email', 'sales@example.com')->first();
+    if (!$user) {
+        $user = \App\Models\User::create([
+            'name' => 'Test Sales User',
+            'email' => 'sales@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'sales_mission'
+        ]);
+        return "Sales Mission user created successfully.";
+    }
+    return "Sales Mission user already exists.";
+});
+
+// Add a route to create a test sales officer user
+Route::get('/create-officer-user', function() {
+    $user = \App\Models\User::where('email', 'officer@example.com')->first();
+    if (!$user) {
+        $user = \App\Models\User::create([
+            'name' => 'Test Sales Officer',
+            'email' => 'officer@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'sales_officer'
+        ]);
+        return "Sales Officer user created successfully.";
+    }
+    return "Sales Officer user already exists.";
 });

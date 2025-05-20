@@ -13,7 +13,9 @@ class SalesMissionDetail extends Model
         'activity_id',
         'company_name',
         'company_pic',
+        'company_position',
         'company_contact',
+        'company_email',
         'company_address'
     ];
 
@@ -23,5 +25,13 @@ class SalesMissionDetail extends Model
     public function activity()
     {
         return $this->belongsTo(Activity::class);
+    }
+    
+    /**
+     * Get the sales officer contact that was created from this sales mission detail.
+     */
+    public function salesOfficerContact()
+    {
+        return $this->hasOne(SalesOfficerContact::class);
     }
 }

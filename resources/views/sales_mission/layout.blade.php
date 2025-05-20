@@ -265,23 +265,10 @@
                             <span class="text-sm font-medium sidebar-text">Reports</span>
                         </a>
                     </li>
+                                        <!-- Activity Logs removed - only available to superadmin -->
                 </ul>
             </nav>
             
-            <!-- Quick Stats -->
-            <div class="px-4 mt-6 quick-stats-section">
-                <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Quick Stats</h4>
-                <div class="p-3 rounded-lg bg-gray-50 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm">Total Missions</span>
-                        <span class="font-medium text-primary">{{ \App\Models\Activity::where('activity_type', 'Sales Mission')->whereHas('salesMissionDetail')->count() }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm">This Month</span>
-                        <span class="font-medium text-primary">{{ \App\Models\Activity::where('activity_type', 'Sales Mission')->whereHas('salesMissionDetail')->whereMonth('start_datetime', now()->month)->whereYear('start_datetime', now()->year)->count() }}</span>
-                    </div>
-                </div>
-            </div>
         </div>
         
         <div class="mt-auto p-4 border-t border-gray-200">
@@ -310,21 +297,6 @@
         </div>
         
         <!-- Flash Messages -->
-        @if(session('success'))
-            <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded shadow animate-fade-in">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm">{{ session('success') }}</p>
-                    </div>
-                </div>
-            </div>
-        @endif
-
         @if(session('error'))
             <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded shadow animate-fade-in">
                 <div class="flex">
@@ -393,6 +365,33 @@
                 const isMinimized = sidebar.classList.contains('collapsed');
                 localStorage.setItem('sales_mission_sidebar_collapsed', isMinimized);
             });
+            
+            // SweetAlert notifications for flash messages
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            @endif
+            
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            @endif
             
             // Initialize SweetAlert2 for delete confirmations
             document.querySelectorAll('.delete-confirm').forEach(button => {

@@ -88,7 +88,9 @@ class ActivityController extends Controller
         if ($request->activity_type === 'Sales Mission') {
             $validationRules['company_name'] = 'required|string|max:255';
             $validationRules['company_pic'] = 'required|string|max:255';
+            $validationRules['company_position'] = 'required|string|max:255';
             $validationRules['company_contact'] = 'required|string|max:255';
+            $validationRules['company_email'] = 'required|email|max:255';
             $validationRules['company_address'] = 'required|string';
         }
         
@@ -120,7 +122,9 @@ class ActivityController extends Controller
             $activity->salesMissionDetail()->create([
                 'company_name' => $request->input('company_name'),
                 'company_pic' => $request->input('company_pic'),
+                'company_position' => $request->input('company_position'),
                 'company_contact' => $request->input('company_contact'),
+                'company_email' => $request->input('company_email'),
                 'company_address' => $request->input('company_address'),
             ]);
         }
@@ -249,7 +253,9 @@ class ActivityController extends Controller
                 $eventData['extendedProps']['department'] = 'WG';
                 $eventData['extendedProps']['company_name'] = $activity->salesMissionDetail->company_name;
                 $eventData['extendedProps']['company_pic'] = $activity->salesMissionDetail->company_pic;
+                $eventData['extendedProps']['company_position'] = $activity->salesMissionDetail->company_position;
                 $eventData['extendedProps']['company_contact'] = $activity->salesMissionDetail->company_contact;
+                $eventData['extendedProps']['company_email'] = $activity->salesMissionDetail->company_email;
                 $eventData['extendedProps']['company_address'] = $activity->salesMissionDetail->company_address;
                 $eventData['className'] = 'sales-mission-event'; // Tambahkan class khusus untuk styling
             }
@@ -622,7 +628,9 @@ class ActivityController extends Controller
                 $eventData['extendedProps']['department'] = 'WG';
                 $eventData['extendedProps']['company_name'] = $activity->salesMissionDetail->company_name;
                 $eventData['extendedProps']['company_pic'] = $activity->salesMissionDetail->company_pic;
+                $eventData['extendedProps']['company_position'] = $activity->salesMissionDetail->company_position;
                 $eventData['extendedProps']['company_contact'] = $activity->salesMissionDetail->company_contact;
+                $eventData['extendedProps']['company_email'] = $activity->salesMissionDetail->company_email;
                 $eventData['extendedProps']['company_address'] = $activity->salesMissionDetail->company_address;
                 $eventData['className'] = 'sales-mission-event'; // Tambahkan class khusus untuk styling
             }

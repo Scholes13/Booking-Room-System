@@ -341,6 +341,33 @@
                 // Save preference to localStorage
                 localStorage.setItem('admin_bas_sidebar_collapsed', sidebar.classList.contains('collapsed'));
             });
+            
+            // Display SweetAlert2 notifications for flash messages
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            @endif
+            
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}",
+                    timer: 3000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false
+                });
+            @endif
         });
     </script>
     

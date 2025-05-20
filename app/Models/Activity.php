@@ -21,7 +21,8 @@ class Activity extends Model
         'province',
         'start_datetime',
         'end_datetime',
-        'status'
+        'status',
+        'created_by'
     ];
 
     protected $casts = [
@@ -97,6 +98,11 @@ class Activity extends Model
                     $activity->status = 'completed';
                 }
             }
+            
+            // Set created_by if not explicitly set
+            if (!$activity->created_by && auth()->check()) {
+                $activity->created_by = auth()->id();
+            }
         });
     }
 
@@ -116,5 +122,13 @@ class Activity extends Model
     public function salesMissionDetail()
     {
         return $this->hasOne(SalesMissionDetail::class);
+    }
+    
+    /**
+     * Get the user who created this activity.
+     */
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

@@ -131,8 +131,16 @@
                         <p id="modalCompanyPic" class="flex-1"></p>
                     </div>
                     <div class="text-gray-600 flex">
+                        <p class="font-semibold w-28">Jabatan:</p>
+                        <p id="modalCompanyPosition" class="flex-1"></p>
+                    </div>
+                    <div class="text-gray-600 flex">
                         <p class="font-semibold w-28">Contact:</p>
                         <p id="modalCompanyContact" class="flex-1"></p>
+                    </div>
+                    <div class="text-gray-600 flex">
+                        <p class="font-semibold w-28">Email:</p>
+                        <p id="modalCompanyEmail" class="flex-1"></p>
                     </div>
                     <div class="text-gray-600">
                         <p class="font-semibold mb-1">Address:</p>
@@ -734,7 +742,9 @@ document.addEventListener('DOMContentLoaded', function() {
             // Populate Sales Mission fields
             document.getElementById('modalCompanyName').innerText = evt.salesMissionDetails.company_name || 'N/A';
             document.getElementById('modalCompanyPic').innerText = evt.salesMissionDetails.company_pic || 'N/A';
+            document.getElementById('modalCompanyPosition').innerText = evt.salesMissionDetails.company_position || 'N/A';
             document.getElementById('modalCompanyContact').innerText = evt.salesMissionDetails.company_contact || 'N/A';
+            document.getElementById('modalCompanyEmail').innerText = evt.salesMissionDetails.company_email || 'N/A';
             document.getElementById('modalCompanyAddress').innerText = evt.salesMissionDetails.company_address || 'N/A';
             
             // Show Sales Mission section
@@ -1158,7 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     isSalesMission: props.activity_type === 'Sales Mission',
                     company_name: props.company_name || '',
                     company_pic: props.company_pic || '',
+                    company_position: props.company_position || '',
                     company_contact: props.company_contact || '',
+                    company_email: props.company_email || '',
                     company_address: props.company_address || ''
                 };
 

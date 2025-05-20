@@ -15,6 +15,15 @@ class ActivityLogController extends Controller
     {
         $query = ActivityLog::with('user')
             ->orderBy('created_at', 'desc');
+            
+        // Determine which section we're in (superadmin, admin, or sales_mission)
+        $isSuperAdmin = $request->route()->getName() === 'superadmin.logs.index';
+        $isSalesMission = $request->route()->getName() === 'sales_mission.logs.index';
+        
+        // For sales mission, only show sales_mission module logs
+        if ($isSalesMission) {
+            $query->where('module', 'sales_mission');
+        }
         
         // Filter by user if specified
         if ($request->has('user_id') && !empty($request->user_id)) {
@@ -48,15 +57,22 @@ class ActivityLogController extends Controller
         $logs = $query->paginate(15);
         
         // Include all admin types (admin and admin_bas) in the dropdown
-        $admins = User::whereIn('role', ['admin', 'admin_bas'])->orderBy('name')->get();
+        $admins = User::whereIn('role', ['admin', 'admin_bas', 'superadmin', 'sales_mission'])->orderBy('name')->get();
         
         // Get unique action types for filter dropdowns
         $actions = ActivityLog::distinct()->pluck('action');
         
-        // Restrict modules to only the two main modules: bookings and activities
-        $modules = collect(['bookings', 'activities']);
-        
-        return view('superadmin.logs.index', compact('logs', 'admins', 'actions', 'modules'));
+        // Set modules based on the section
+        if ($isSalesMission) {
+            $modules = collect(['sales_mission']);
+            
+            return view('sales_mission.logs.index', compact('logs', 'admins', 'actions', 'modules', 'isSuperAdmin', 'isSalesMission'));
+        } else {
+            // Restrict modules to only the main modules for superadmin
+            $modules = collect(['bookings', 'activities', 'sales_mission']);
+            
+            return view('superadmin.logs.index', compact('logs', 'admins', 'actions', 'modules', 'isSuperAdmin', 'isSalesMission'));
+        }
     }
     
     /**
@@ -124,6 +140,15 @@ class ActivityLogController extends Controller
     public function show($id)
     {
         $log = ActivityLog::with('user')->findOrFail($id);
-        return view('superadmin.logs.show', compact('log'));
+        
+        // Determine which section we're in
+        $isSuperAdmin = request()->route()->getName() === 'superadmin.logs.show';
+        $isSalesMission = request()->route()->getName() === 'sales_mission.logs.show';
+        
+        if ($isSalesMission) {
+            return view('sales_mission.logs.show', compact('log', 'isSuperAdmin', 'isSalesMission'));
+        } else {
+            return view('superadmin.logs.show', compact('log', 'isSuperAdmin', 'isSalesMission'));
+        }
     }
 }

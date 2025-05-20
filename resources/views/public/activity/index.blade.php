@@ -202,11 +202,29 @@
                         </div>
                     </div>
                     
+                    <!-- Company Position -->
+                    <div>
+                        <label for="company_position" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-user-tag mr-2 opacity-80"></i>
+                            Jabatan PIC
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="company_position" 
+                                name="company_position" 
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                                placeholder="Masukkan jabatan PIC"
+                                value="{{ old('company_position') }}"
+                            >
+                        </div>
+                    </div>
+                    
                     <!-- Company Contact -->
                     <div>
                         <label for="company_contact" class="block text-sm font-medium text-white mb-2 flex items-center">
-                            <i class="fas fa-phone mr-2 opacity-80"></i>
-                            Kontak PIC
+                            <i class="fas fa-phone-alt mr-2 opacity-80"></i>
+                            Kontak Perusahaan
                         </label>
                         <div class="relative">
                             <input 
@@ -214,9 +232,33 @@
                                 id="company_contact" 
                                 name="company_contact" 
                                 class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
-                                placeholder="Telepon / Email PIC"
+                                placeholder="Masukkan nomor kontak"
                                 value="{{ old('company_contact') }}"
                             >
+                            <div class="absolute inset-y-0 right-4 flex items-center text-white/50 pointer-events-none">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Company Email -->
+                    <div>
+                        <label for="company_email" class="block text-sm font-medium text-white mb-2 flex items-center">
+                            <i class="fas fa-envelope mr-2 opacity-80"></i>
+                            Email Perusahaan
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="email" 
+                                id="company_email" 
+                                name="company_email" 
+                                class="form-input rounded-md pl-4 pr-4 py-2.5 w-full text-sm" 
+                                placeholder="Masukkan email perusahaan"
+                                value="{{ old('company_email') }}"
+                            >
+                            <div class="absolute inset-y-0 right-4 flex items-center text-white/50 pointer-events-none">
+                                <i class="fas fa-envelope"></i>
+                            </div>
                         </div>
                     </div>
                     
@@ -668,20 +710,26 @@ function checkSalesMission() {
     const salesMissionContainer = document.getElementById('sales_mission_container');
     const companyNameInput = document.getElementById('company_name');
     const companyPicInput = document.getElementById('company_pic');
+    const companyPositionInput = document.getElementById('company_position');
     const companyContactInput = document.getElementById('company_contact');
+    const companyEmailInput = document.getElementById('company_email');
     const companyAddressInput = document.getElementById('company_address');
     
     if (activityType.value === 'Sales Mission') {
         salesMissionContainer.style.display = 'block';
         companyNameInput.required = true;
         companyPicInput.required = true;
+        companyPositionInput.required = true;
         companyContactInput.required = true;
+        companyEmailInput.required = true;
         companyAddressInput.required = true;
     } else {
         salesMissionContainer.style.display = 'none';
         companyNameInput.required = false;
         companyPicInput.required = false;
+        companyPositionInput.required = false;
         companyContactInput.required = false;
+        companyEmailInput.required = false;
         companyAddressInput.required = false;
     }
 }

@@ -7,6 +7,7 @@ use App\Models\SalesMissionDetail;
 use App\Models\Department;
 use App\Models\Employee;
 use App\Models\ActivityType;
+use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +22,22 @@ class SalesMissionController extends Controller
      */
     public function dashboard()
     {
-        // Total Sales Mission
+        // Total Sales Mission (modified - only count activities that have already started for all time)
         $totalSalesMissions = Activity::where('activity_type', 'Sales Mission')
             ->whereHas('salesMissionDetail')
+            ->where('start_datetime', '<=', now())
             ->count();
             
-        // Sales Mission bulan ini
+        // Sales Mission bulan ini (modified - only count activities that have already started)
         $thisMonthSalesMissions = Activity::where('activity_type', 'Sales Mission')
+            ->whereHas('salesMissionDetail')
+            ->whereMonth('start_datetime', now()->month)
+            ->whereYear('start_datetime', now()->year)
+            ->where('start_datetime', '<=', now())
+            ->count();
+            
+        // Janji temu bulan ini
+        $appointmentsThisMonth = Activity::where('activity_type', 'Sales Mission')
             ->whereHas('salesMissionDetail')
             ->whereMonth('start_datetime', now()->month)
             ->whereYear('start_datetime', now()->year)
@@ -74,7 +84,7 @@ class SalesMissionController extends Controller
         }
         
         // Data untuk lokasi - Sales Mission per provinsi
-        $locationData = Activity::where('activity_type', 'Sales Mission')
+        $provinceData = Activity::where('activity_type', 'Sales Mission')
             ->whereHas('salesMissionDetail')
             ->select('province', DB::raw('COUNT(*) as count'))
             ->groupBy('province')
@@ -82,28 +92,154 @@ class SalesMissionController extends Controller
             ->limit(5)
             ->get();
             
+        // Data untuk lokasi - Sales Mission per kota
+        $cityData = Activity::where('activity_type', 'Sales Mission')
+            ->whereHas('salesMissionDetail')
+            ->select('city', DB::raw('COUNT(*) as count'))
+            ->groupBy('city')
+            ->orderBy('count', 'desc')
+            ->limit(5)
+            ->get();
+            
         return view('sales_mission.dashboard.index', compact(
             'totalSalesMissions',
             'thisMonthSalesMissions',
-            'totalCompanies',
+            'appointmentsThisMonth',
             'recentSalesMissions',
             'chartData',
-            'locationData'
+            'provinceData',
+            'cityData'
         ));
     }
     
     /**
      * Daftar aktivitas Sales Mission
      */
-    public function activitiesIndex()
+    public function activitiesIndex(Request $request)
     {
-        $activities = Activity::where('activity_type', 'Sales Mission')
+        $query = Activity::where('activity_type', 'Sales Mission')
             ->whereHas('salesMissionDetail')
-            ->with('department', 'salesMissionDetail')
-            ->orderBy('start_datetime', 'desc')
-            ->paginate(10);
+            ->with('department', 'salesMissionDetail');
             
+        // Filter by search
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereHas('salesMissionDetail', function($sq) use ($searchTerm) {
+                    $sq->where('company_name', 'like', "%{$searchTerm}%")
+                       ->orWhere('company_pic', 'like', "%{$searchTerm}%")
+                       ->orWhere('company_contact', 'like', "%{$searchTerm}%");
+                })
+                ->orWhere('description', 'like', "%{$searchTerm}%")
+                ->orWhere('name', 'like', "%{$searchTerm}%")
+                ->orWhere('city', 'like', "%{$searchTerm}%")
+                ->orWhere('province', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filter by date range
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->where(function($q) use ($request) {
+                $startDate = Carbon::parse($request->start_date)->startOfDay();
+                $endDate = Carbon::parse($request->end_date)->endOfDay();
+                
+                // Activities that start within the date range
+                $q->whereBetween('start_datetime', [$startDate, $endDate])
+                  // OR activities that end within the date range
+                  ->orWhereBetween('end_datetime', [$startDate, $endDate])
+                  // OR activities that span the entire date range
+                  ->orWhere(function($subq) use ($startDate, $endDate) {
+                      $subq->where('start_datetime', '<=', $startDate)
+                           ->where('end_datetime', '>=', $endDate);
+                  });
+            });
+        } 
+        // Filter by single start date only
+        else if ($request->filled('start_date')) {
+            $query->whereDate('start_datetime', '>=', $request->start_date);
+        }
+        // Filter by single end date only
+        else if ($request->filled('end_date')) {
+            $query->whereDate('end_datetime', '<=', $request->end_date);
+        }
+        
+        // Order by start date descending
+        $query->orderBy('start_datetime', 'desc');
+        
+        $activities = $query->paginate(10);
+        $activities->appends($request->all()); // Maintain filters in pagination
+        
         return view('sales_mission.activities.index', compact('activities'));
+    }
+    
+    /**
+     * Daftar aktivitas Sales Mission untuk Superadmin
+     */
+    public function superAdminIndex(Request $request)
+    {
+        $query = Activity::where('activity_type', 'Sales Mission')
+            ->whereHas('salesMissionDetail')
+            ->with('department', 'salesMissionDetail');
+            
+        // Filter by search
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereHas('salesMissionDetail', function($sq) use ($searchTerm) {
+                    $sq->where('company_name', 'like', "%{$searchTerm}%")
+                       ->orWhere('company_pic', 'like', "%{$searchTerm}%")
+                       ->orWhere('company_contact', 'like', "%{$searchTerm}%");
+                })
+                ->orWhere('description', 'like', "%{$searchTerm}%")
+                ->orWhere('name', 'like', "%{$searchTerm}%")
+                ->orWhere('city', 'like', "%{$searchTerm}%")
+                ->orWhere('province', 'like', "%{$searchTerm}%");
+            });
+        }
+        
+        // Filter by status
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        
+        // Filter by date range
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->where(function($q) use ($request) {
+                $startDate = Carbon::parse($request->start_date)->startOfDay();
+                $endDate = Carbon::parse($request->end_date)->endOfDay();
+                
+                // Activities that start within the date range
+                $q->whereBetween('start_datetime', [$startDate, $endDate])
+                  // OR activities that end within the date range
+                  ->orWhereBetween('end_datetime', [$startDate, $endDate])
+                  // OR activities that span the entire date range
+                  ->orWhere(function($subq) use ($startDate, $endDate) {
+                      $subq->where('start_datetime', '<=', $startDate)
+                           ->where('end_datetime', '>=', $endDate);
+                  });
+            });
+        } 
+        // Filter by single start date only
+        else if ($request->filled('start_date')) {
+            $query->whereDate('start_datetime', '>=', $request->start_date);
+        }
+        // Filter by single end date only
+        else if ($request->filled('end_date')) {
+            $query->whereDate('end_datetime', '<=', $request->end_date);
+        }
+        
+        // Order by start date descending
+        $query->orderBy('start_datetime', 'desc');
+        
+        $activities = $query->paginate(15);
+        $activities->appends($request->all()); // Maintain filters in pagination
+        
+        return view('superadmin.activities.sales_mission', compact('activities'));
     }
     
     /**
@@ -180,7 +316,9 @@ class SalesMissionController extends Controller
                         'location' => $activity->city . ', ' . $activity->province,
                         'company_name' => $activity->salesMissionDetail->company_name,
                         'company_pic' => $activity->salesMissionDetail->company_pic,
+                        'company_position' => $activity->salesMissionDetail->company_position,
                         'company_contact' => $activity->salesMissionDetail->company_contact,
+                        'company_email' => $activity->salesMissionDetail->company_email,
                         'company_address' => $activity->salesMissionDetail->company_address
                     ]
                 ];
@@ -251,7 +389,9 @@ class SalesMissionController extends Controller
             'end_datetime' => 'required|date_format:Y-m-d H:i|after:start_datetime',
             'company_name' => 'required|string|max:255',
             'company_pic' => 'required|string|max:255',
+            'company_position' => 'required|string|max:255',
             'company_contact' => 'required|string|max:255',
+            'company_email' => 'required|email|max:255',
             'company_address' => 'required|string'
         ]);
         
@@ -270,9 +410,24 @@ class SalesMissionController extends Controller
         $activity->salesMissionDetail->update([
             'company_name' => $request->company_name,
             'company_pic' => $request->company_pic,
+            'company_position' => $request->company_position,
             'company_contact' => $request->company_contact,
+            'company_email' => $request->company_email,
             'company_address' => $request->company_address,
         ]);
+        
+        // Log the activity
+        ActivityLogService::logUpdate(
+            'sales_mission',
+            'Updated sales mission to ' . $request->company_name,
+            [
+                'activity_id' => $activity->id,
+                'company_name' => $request->company_name,
+                'city' => $request->city,
+                'province' => $request->province,
+                'start_date' => $request->start_datetime
+            ]
+        );
         
         return redirect()->route('sales_mission.activities.index')
             ->with('success', 'Data sales mission berhasil diperbarui.');
@@ -290,6 +445,20 @@ class SalesMissionController extends Controller
             return redirect()->route('sales_mission.activities.index')
                 ->with('error', 'Data sales mission tidak ditemukan.');
         }
+        
+        $companyName = $activity->salesMissionDetail ? $activity->salesMissionDetail->company_name : 'Unknown';
+        
+        // Log the activity before deletion
+        ActivityLogService::logDelete(
+            'sales_mission',
+            'Deleted sales mission to ' . $companyName,
+            [
+                'activity_id' => $activity->id,
+                'company_name' => $companyName,
+                'city' => $activity->city,
+                'province' => $activity->province
+            ]
+        );
         
         // Activity::delete akan otomatis menghapus salesMissionDetail karena relasi onDelete('cascade')
         $activity->delete();
@@ -414,7 +583,9 @@ class SalesMissionController extends Controller
                 'id' => $activity->id,
                 'company_name' => $detail ? $detail->company_name : $activity->id . ' - No company info',
                 'company_pic' => $detail ? $detail->company_pic : '-',
+                'company_position' => $detail ? $detail->company_position : '-',
                 'company_contact' => $detail ? $detail->company_contact : '-',
+                'company_email' => $detail ? $detail->company_email : '-',
                 'location' => $activity->city . ', ' . $activity->province,
                 'date' => Carbon::parse($activity->start_datetime)->format('d M Y'),
                 'employee' => $activity->name,
@@ -525,7 +696,7 @@ class SalesMissionController extends Controller
         
         // Add headers based on report type
         if ($reportType === 'sales_missions' || empty($reportType)) {
-            $headers = ['Company', 'PIC', 'Contact', 'Date', 'Location', 'Employee', 'Department', 'Description'];
+            $headers = ['Company', 'PIC', 'Position', 'Contact', 'Email', 'Date', 'Location', 'Employee', 'Department', 'Description'];
             $writer->addRow(Row::fromValues($headers, $headerStyle));
             
             // Add data rows
@@ -535,6 +706,8 @@ class SalesMissionController extends Controller
                     if (!$activity->salesMissionDetail) {
                         $writer->addRow(Row::fromValues([
                             $activity->id . " - No company info", // Use ID as identifier
+                            "-",
+                            "-",
                             "-",
                             "-",
                             Carbon::parse($activity->start_datetime)->format('Y-m-d H:i'),
@@ -549,7 +722,9 @@ class SalesMissionController extends Controller
                     $writer->addRow(Row::fromValues([
                         $activity->salesMissionDetail->company_name,
                         $activity->salesMissionDetail->company_pic,
+                        $activity->salesMissionDetail->company_position,
                         $activity->salesMissionDetail->company_contact,
+                        $activity->salesMissionDetail->company_email,
                         Carbon::parse($activity->start_datetime)->format('Y-m-d H:i'),
                         $activity->city . ', ' . $activity->province,
                         $activity->name,
@@ -560,6 +735,8 @@ class SalesMissionController extends Controller
                     // Log the error but continue processing
                     $writer->addRow(Row::fromValues([
                         "Error with ID " . $activity->id . ": " . $e->getMessage(),
+                        "-",
+                        "-",
                         "-",
                         "-",
                         "-",
@@ -579,7 +756,9 @@ class SalesMissionController extends Controller
                     $companies[$companyName] = [
                         'company_name' => $companyName,
                         'company_pic' => $activity->salesMissionDetail->company_pic,
+                        'company_position' => $activity->salesMissionDetail->company_position,
                         'company_contact' => $activity->salesMissionDetail->company_contact,
+                        'company_email' => $activity->salesMissionDetail->company_email,
                         'visits' => 0,
                         'last_visit' => null
                     ];
@@ -594,7 +773,7 @@ class SalesMissionController extends Controller
             }
             
             // Add headers
-            $headers = ['Company', 'PIC', 'Contact', 'Visits', 'Last Visit'];
+            $headers = ['Company', 'PIC', 'Position', 'Contact', 'Email', 'Visits', 'Last Visit'];
             $writer->addRow(Row::fromValues($headers, $headerStyle));
             
             // Add company data
@@ -602,7 +781,9 @@ class SalesMissionController extends Controller
                 $writer->addRow(Row::fromValues([
                     $company['company_name'],
                     $company['company_pic'],
+                    $company['company_position'],
                     $company['company_contact'],
+                    $company['company_email'],
                     $company['visits'],
                     $company['last_visit']
                 ]));

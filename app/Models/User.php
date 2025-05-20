@@ -17,6 +17,7 @@ class User extends Authenticatable
     const ROLE_SUPERADMIN = 'superadmin';
     const ROLE_ADMIN_BAS = 'admin_bas';
     const ROLE_SALES_MISSION = 'sales_mission';
+    const ROLE_SALES_OFFICER = 'sales_officer';
 
     /**
      * Field yang boleh diisi secara mass assignment.
@@ -74,5 +75,29 @@ class User extends Authenticatable
     public function isSalesMission()
     {
         return $this->role === self::ROLE_SALES_MISSION;
+    }
+
+    /**
+     * Check if user is Sales Officer
+     */
+    public function isSalesOfficer()
+    {
+        return $this->role === self::ROLE_SALES_OFFICER;
+    }
+    
+    /**
+     * Get the sales officer activities owned by this user.
+     */
+    public function salesOfficerActivities()
+    {
+        return $this->hasMany(SalesOfficerActivity::class);
+    }
+    
+    /**
+     * Get the sales officer contacts owned by this user.
+     */
+    public function salesOfficerContacts()
+    {
+        return $this->hasMany(SalesOfficerContact::class);
     }
 }
