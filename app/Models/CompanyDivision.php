@@ -12,8 +12,7 @@ class CompanyDivision extends Model
     protected $fillable = [
         'contact_id',
         'name',
-        'visit_count',
-        'notes'
+        'visit_count'
     ];
 
     /**

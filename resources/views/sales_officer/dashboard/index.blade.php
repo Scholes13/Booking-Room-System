@@ -61,35 +61,11 @@
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 gap-6">
     <!-- Activities Chart -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 md:col-span-2">
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
         <h4 class="text-base font-semibold text-gray-800 mb-4">Activities {{ now()->year }}</h4>
         <div id="monthlyChart" class="h-80 w-full"></div>
-    </div>
-
-    <!-- Top Departments -->
-    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-        <div class="flex justify-between items-center mb-4">
-            <h4 class="text-base font-semibold text-gray-800">Top Departments</h4>
-        </div>
-        <div class="space-y-4">
-            @forelse($topDepartments as $dept)
-                <div class="flex items-center">
-                    <div class="w-full">
-                        <div class="flex justify-between mb-1">
-                            <span class="text-sm font-medium text-gray-700">{{ $dept->department->name ?? 'Unknown' }}</span>
-                            <span class="text-sm font-medium text-gray-700">{{ $dept->count }}</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-primary h-2 rounded-full" style="width: {{ ($dept->count / $topDepartments->max('count')) * 100 }}%"></div>
-                        </div>
-                    </div>
-                </div>
-            @empty
-                <p class="text-gray-500 text-sm">No department data available</p>
-            @endforelse
-        </div>
     </div>
 </div>
 
@@ -105,7 +81,6 @@
                 <tr>
                     <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
                     <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
                     <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                     <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                 </tr>
@@ -118,9 +93,6 @@
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $activity->activity_type }}</div>
-                        </td>
-                        <td class="px-4 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $activity->department->name ?? 'N/A' }}</div>
                         </td>
                         <td class="px-4 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $activity->city }}, {{ $activity->province }}</div>

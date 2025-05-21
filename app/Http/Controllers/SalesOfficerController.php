@@ -44,8 +44,7 @@ class SalesOfficerController extends Controller
             ->count();
             
         // Recent activities - Using dedicated Sales Officer table
-        $recentActivities = SalesOfficerActivity::with(['department'])
-            ->where('user_id', auth()->id())
+        $recentActivities = SalesOfficerActivity::where('user_id', auth()->id())
             ->orderBy('start_datetime', 'desc')
             ->limit(5)
             ->get();
@@ -78,22 +77,11 @@ class SalesOfficerController extends Controller
             ];
         }
         
-        // Top departments with most activities - Using dedicated Sales Officer table
-        $topDepartments = SalesOfficerActivity::select('department_id', DB::raw('COUNT(*) as count'))
-            ->with('department')
-            ->where('user_id', auth()->id())
-            ->whereNotNull('department_id')
-            ->groupBy('department_id')
-            ->orderBy('count', 'desc')
-            ->limit(5)
-            ->get();
-        
         return view('sales_officer.dashboard.index', compact(
             'currentMonthActivities',
             'totalSalesMissions',
             'recentActivities',
-            'chartData',
-            'topDepartments'
+            'chartData'
         ));
     }
 
@@ -200,15 +188,14 @@ class SalesOfficerController extends Controller
             // No need to validate here - the form request handles validation
             $validated = $request->validated();
             
-            // STEP 1: Process the company
-            $contact_id = null;
-            $visit_count = 1;
-            
-            if ($request->company_selector === 'new') {
-                // Log the potential_revenue value for debugging
-                \Illuminate\Support\Facades\Log::info('Creating new company with potential_revenue: ' . $request->potential_revenue);
+            // Menggunakan DB transaction untuk memastikan konsistensi data
+            return \DB::transaction(function() use ($request, $startDatetime, $endDatetime) {
+                // STEP 1: Process the company
+                $contact_id = null;
+                $visit_count = 1;
+                $contact = null;
                 
-                try {
+                if ($request->company_selector === 'new') {
                     // Create a new company contact
                     $contact = SalesOfficerContact::create([
                         'user_id' => auth()->id(),
@@ -233,26 +220,14 @@ class SalesOfficerController extends Controller
                         'contact_id' => $contact_id,
                         'company_name' => $request->company_name
                     ]);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Error creating company', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                    return redirect()->back()->withInput()->withErrors(['company_error' => 'Failed to create company: ' . $e->getMessage()]);
-                }
-            } else {
-                // Use existing company
-                try {
+                } else {
                     // Use existing company and increment visit count
                     $contact_id = $request->company_selector;
                     $contact = SalesOfficerContact::findOrFail($contact_id);
                     $contact->incrementVisitCount();
                     $visit_count = $contact->visit_count;
                     
-                    // Log the potential_revenue value for debugging
-                    \Illuminate\Support\Facades\Log::info('Updating existing company with potential_revenue: ' . $request->potential_revenue);
-                    
-                    // Update company address, location, and business details if changed
+                    // Update company details
                     $contact->update([
                         'line_of_business' => $request->line_of_business,
                         'company_address' => $request->company_address,
@@ -267,24 +242,12 @@ class SalesOfficerController extends Controller
                         'potential_revenue' => $request->potential_revenue,
                         'potential_project_count' => $request->potential_project_count,
                     ]);
-                    \Illuminate\Support\Facades\Log::info('Updated existing company successfully', [
-                        'contact_id' => $contact_id,
-                        'company_name' => $contact->company_name
-                    ]);
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Error updating company', [
-                        'error' => $e->getMessage(),
-                        'trace' => $e->getTraceAsString()
-                    ]);
-                    return redirect()->back()->withInput()->withErrors(['company_error' => 'Failed to update company: ' . $e->getMessage()]);
                 }
-            }
-            
-            // STEP 2: Process the division
-            $division_id = null;
-            $division_visit_count = 1;
-            
-            try {
+
+                // STEP 2: Process the division
+                $division_id = null;
+                $division_visit_count = 1;
+                
                 if ($request->filled('division_selector')) {
                     if ($request->division_selector === 'new' && $request->filled('division_name')) {
                         // Create a new division
@@ -302,29 +265,11 @@ class SalesOfficerController extends Controller
                         $division_visit_count = $division->visit_count;
                     }
                 }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error processing division', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                return redirect()->back()->withInput()->withErrors(['division_error' => 'Failed to process division: ' . $e->getMessage()]);
-            }
-            
-            // STEP 3: Process the PIC
-            $pic_id = null;
-            
-            try {
+                
+                // STEP 3: Process the PIC
+                $pic_id = null;
+                
                 if ($request->pic_selector === 'new') {
-                    // Log PIC data for debugging
-                    \Illuminate\Support\Facades\Log::info('About to create new PIC with exact data', [
-                        'name' => $request->pic_name,
-                        'phone' => $request->filled('pic_phone') ? $request->pic_phone : 'N/A (empty field)',
-                        'email' => $request->filled('pic_email') ? $request->pic_email : 'N/A (empty field)',
-                        'position' => $request->position,
-                        'company_id' => $contact_id,
-                        'division_id' => $division_id
-                    ]);
-                    
                     // Ensure PIC name is not empty
                     if (empty($request->pic_name)) {
                         throw new \Exception('PIC name cannot be empty');
@@ -335,24 +280,15 @@ class SalesOfficerController extends Controller
                         'contact_id' => $contact_id,
                         'division_id' => $division_id,
                         'title' => $request->pic_title ?? 'Mr',
-                        'name' => $request->pic_name, // Never set to N/A
+                        'name' => $request->pic_name,
                         'position' => $request->position,
                         'phone_number' => $request->filled('pic_phone') ? $request->pic_phone : '0',
                         'email' => $request->filled('pic_email') ? $request->pic_email : 'blank@werkudara.com',
                         // Auto-set as primary if it's the first PIC for this company
-                        'is_primary' => ContactPerson::where('contact_id', $contact_id)->count() == 0
+                        'is_primary' => ContactPerson::where('contact_id', $contact_id)->count() == 0,
+                        'source' => 'Activity'
                     ]);
                     $pic_id = $pic->id;
-                    
-                    // Double-check what was actually saved
-                    $savedPic = ContactPerson::find($pic_id);
-                    \Illuminate\Support\Facades\Log::info('Actual PIC saved to database', [
-                        'id' => $savedPic->id,
-                        'name' => $savedPic->name,
-                        'phone' => $savedPic->phone_number,
-                        'email' => $savedPic->email,
-                        'position' => $savedPic->position
-                    ]);
                 } else if ($request->pic_selector && $request->pic_selector !== 'new') {
                     // Use existing PIC
                     $pic_id = $request->pic_selector;
@@ -362,7 +298,6 @@ class SalesOfficerController extends Controller
                     ]);
                 } else {
                     // No PIC selected, create a default one
-                    \Illuminate\Support\Facades\Log::info('No PIC selected, creating default placeholder');
                     $pic = ContactPerson::create([
                         'contact_id' => $contact_id,
                         'division_id' => $division_id,
@@ -371,24 +306,16 @@ class SalesOfficerController extends Controller
                         'position' => $request->position,
                         'phone_number' => '0',
                         'email' => 'blank@werkudara.com',
-                        'is_primary' => ContactPerson::where('contact_id', $contact_id)->count() == 0
+                        'is_primary' => ContactPerson::where('contact_id', $contact_id)->count() == 0,
+                        'source' => 'Activity'
                     ]);
                     $pic_id = $pic->id;
                 }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error processing PIC', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                return redirect()->back()->withInput()->withErrors(['pic_error' => 'Failed to process PIC: ' . $e->getMessage()]);
-            }
-            
-            // STEP 4: Create the activity
-            try {
+                
+                // STEP 4: Create the activity
                 $activity = SalesOfficerActivity::create([
                     'title' => 'Visit to ' . $contact->company_name,
                     'user_id' => auth()->id(),
-                    'department_id' => 1, // Default department or get from user
                     'activity_type' => $request->activity_type,
                     'meeting_type' => $request->meeting_type,
                     'description' => $request->general_information . ' ' . 
@@ -401,8 +328,8 @@ class SalesOfficerController extends Controller
                     'country' => $request->country,
                     'province' => $request->province,
                     'city' => $request->city,
-                    'start_datetime' => $request->start_datetime,
-                    'end_datetime' => $request->end_datetime,
+                    'start_datetime' => $startDatetime,
+                    'end_datetime' => $endDatetime,
                     'month_number' => $request->month_number,
                     'week_number' => $request->week_number,
                     'contact_id' => $contact_id,
@@ -425,7 +352,7 @@ class SalesOfficerController extends Controller
                         'activity_id' => $activity->id,
                         'type' => $request->activity_type,
                         'company' => $contact->company_name,
-                        'start_date' => $request->start_datetime,
+                        'start_date' => $startDatetime,
                     ]
                 );
                 
@@ -436,20 +363,14 @@ class SalesOfficerController extends Controller
                 
                 return redirect()->route('sales_officer.activities.index')
                     ->with('success', 'Activity created successfully.');
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Error creating activity', [
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString()
-                ]);
-                return redirect()->back()->withInput()->withErrors(['activity_error' => 'Failed to create activity: ' . $e->getMessage()]);
-            }
+            });
         } catch (\Exception $e) {
-            // Catch any overall exceptions
-            \Illuminate\Support\Facades\Log::error('Unhandled error in activity creation', [
+            // Log error and return with error message
+            \Illuminate\Support\Facades\Log::error('Error in activity creation', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            return redirect()->back()->withInput()->withErrors(['general_error' => 'An unexpected error occurred: ' . $e->getMessage()]);
+            return redirect()->back()->withInput()->withErrors(['general_error' => 'An error occurred: ' . $e->getMessage()]);
         }
     }
 
@@ -501,91 +422,97 @@ class SalesOfficerController extends Controller
      */
     public function updateActivity(SalesOfficerActivityRequest $request, $id)
     {
-        // No need to validate here - the form request handles validation
-        $validated = $request->validated();
-        
-        // Find the activity
-        $activity = SalesOfficerActivity::findOrFail($id);
-        
-        // Process dates
-        $next_follow_up = $request->next_follow_up;
-        // No need to convert to Carbon since column is now text type
-        
-        // Update the PIC's position if needed
-        if ($activity->pic_id) {
-            ContactPerson::where('id', $activity->pic_id)->update([
-                'position' => $request->position,
-                'phone_number' => $request->filled('pic_phone') ? $request->pic_phone : '0',
-                'email' => $request->filled('pic_email') ? $request->pic_email : 'blank@werkudara.com'
+        try {
+            // No need to validate here - the form request handles validation
+            $validated = $request->validated();
+            
+            // Find the activity
+            $activity = SalesOfficerActivity::findOrFail($id);
+            
+            // Process dates
+            $next_follow_up = $request->next_follow_up;
+            
+            // Use transaction to ensure data consistency
+            return \DB::transaction(function() use ($request, $activity, $next_follow_up, $id) {
+                // Update the PIC's position if needed
+                if ($activity->pic_id) {
+                    ContactPerson::where('id', $activity->pic_id)->update([
+                        'position' => $request->position,
+                        'phone_number' => $request->filled('pic_phone') ? $request->pic_phone : '0',
+                        'email' => $request->filled('pic_email') ? $request->pic_email : 'blank@werkudara.com'
+                    ]);
+                }
+                
+                // Update the contact's business details
+                if ($activity->contact_id) {
+                    $contact = SalesOfficerContact::findOrFail($activity->contact_id);
+                    $contact->update([
+                        'company_address' => $request->company_address,
+                        'country' => $request->country,
+                        'province' => $request->province,
+                        'city' => $request->city,
+                        'general_information' => $request->general_information,
+                        'current_event' => $request->current_event,
+                        'target_business' => $request->target_business,
+                        'project_type' => $request->project_type,
+                        'project_estimation' => $request->project_estimation,
+                        'potential_revenue' => $request->potential_revenue,
+                        'potential_project_count' => $request->potential_project_count,
+                    ]);
+                }
+                
+                // Update the activity
+                $activity->update([
+                    'activity_type' => $request->activity_type,
+                    'meeting_type' => $request->meeting_type,
+                    'description' => $request->general_information . ' ' . 
+                                   ($request->current_event ? 'Current Event: ' . $request->current_event . ' ' : '') . 
+                                   ($request->target_business ? 'Target Business: ' . $request->target_business . ' ' : '') . 
+                                   ($request->project_type ? 'Project Type: ' . $request->project_type . ' ' : '') . 
+                                   ($request->project_estimation ? 'Project / Tender: ' . $request->project_estimation . ' ' : '') . 
+                                   ($request->potential_revenue ? 'Potential Revenue: Rp ' . number_format($request->potential_revenue, 0, ',', '.') . ' ' : '') . 
+                                   ($request->potential_project_count ? 'Potential Projects: ' . $request->potential_project_count : ''),
+                    'country' => $request->country,
+                    'province' => $request->province,
+                    'city' => $request->city,
+                    'start_datetime' => $request->start_datetime,
+                    'end_datetime' => $request->end_datetime,
+                    'month_number' => $request->month_number,
+                    'week_number' => $request->week_number,
+                    'account_status' => $request->account_status,
+                    'products_discussed' => $request->products_discussed,
+                    'status' => $request->status,
+                    'next_follow_up' => $next_follow_up,
+                    'follow_up_type' => $request->follow_up_type,
+                    'follow_up_frequency' => $request->follow_up_frequency,
+                    'jso_lead_status' => $request->jso_lead_status,
+                ]);
+                
+                // Log the activity update
+                ActivityLogService::logUpdate(
+                    'sales_officer_activities',
+                    'Updated activity: ' . $activity->title,
+                    [
+                        'activity_id' => $activity->id,
+                        'type' => $request->activity_type,
+                        'company' => $activity->contact ? $activity->contact->company_name : 'N/A',
+                        'start_date' => $request->start_datetime,
+                    ]
+                );
+                
+                return redirect()->route('sales_officer.activities.index')
+                    ->with('success', 'Activity updated successfully.');
+            });
+        } catch (\Exception $e) {
+            // Log the error
+            \Illuminate\Support\Facades\Log::error('Error updating activity', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'activity_id' => $id
             ]);
             
-            // Log PIC contact updates
-            \Illuminate\Support\Facades\Log::info('Updated PIC contact info', [
-                'pic_id' => $activity->pic_id,
-                'phone_number' => $request->filled('pic_phone') ? $request->pic_phone : '0',
-                'email' => $request->filled('pic_email') ? $request->pic_email : 'blank@werkudara.com'
-            ]);
+            return redirect()->back()->withInput()->withErrors(['general_error' => 'An error occurred: ' . $e->getMessage()]);
         }
-        
-        // Update the contact's business details
-        if ($activity->contact_id) {
-            $contact = SalesOfficerContact::findOrFail($activity->contact_id);
-            $contact->update([
-                'company_address' => $request->company_address,
-                'country' => $request->country,
-                'province' => $request->province,
-                'city' => $request->city,
-                'general_information' => $request->general_information,
-                'current_event' => $request->current_event,
-                'target_business' => $request->target_business,
-                'project_type' => $request->project_type,
-                'project_estimation' => $request->project_estimation,
-                'potential_revenue' => $request->potential_revenue,
-                'potential_project_count' => $request->potential_project_count,
-            ]);
-        }
-        
-        // Update the activity
-        $activity->update([
-            'activity_type' => $request->activity_type,
-            'meeting_type' => $request->meeting_type,
-            'description' => $request->general_information . ' ' . 
-                           ($request->current_event ? 'Current Event: ' . $request->current_event . ' ' : '') . 
-                           ($request->target_business ? 'Target Business: ' . $request->target_business . ' ' : '') . 
-                           ($request->project_type ? 'Project Type: ' . $request->project_type . ' ' : '') . 
-                           ($request->project_estimation ? 'Project / Tender: ' . $request->project_estimation . ' ' : '') . 
-                           ($request->potential_revenue ? 'Potential Revenue: Rp ' . number_format($request->potential_revenue, 0, ',', '.') . ' ' : '') . 
-                           ($request->potential_project_count ? 'Potential Projects: ' . $request->potential_project_count : ''),
-            'country' => $request->country,
-            'province' => $request->province,
-            'city' => $request->city,
-            'start_datetime' => $request->start_datetime,
-            'end_datetime' => $request->end_datetime,
-            'month_number' => $request->month_number,
-            'week_number' => $request->week_number,
-            'account_status' => $request->account_status,
-            'products_discussed' => $request->products_discussed,
-            'status' => $request->status,
-            'next_follow_up' => $next_follow_up,
-            'follow_up_type' => $request->follow_up_type,
-            'follow_up_frequency' => $request->follow_up_frequency,
-            'jso_lead_status' => $request->jso_lead_status,
-        ]);
-        
-        // Log the activity update
-        ActivityLogService::logUpdate(
-            'sales_officer_activities',
-            'Updated activity: ' . $activity->title,
-            [
-                'activity_id' => $activity->id,
-                'type' => $request->activity_type,
-                'company' => $activity->contact ? $activity->contact->company_name : 'N/A',
-                'start_date' => $request->start_datetime,
-            ]
-        );
-        
-        return redirect()->route('sales_officer.activities.index')
-            ->with('success', 'Activity updated successfully.');
     }
 
     /**
@@ -647,7 +574,6 @@ class SalesOfficerController extends Controller
                 'location' => $activity->city . ', ' . $activity->province,
                 'classNames' => ['sales-officer-event'],
                 'extendedProps' => [
-                    'department' => $activity->department ? $activity->department->name : '',
                     'type' => $activity->activity_type
                 ]
             ];
@@ -669,16 +595,11 @@ class SalesOfficerController extends Controller
      */
     public function getReportData(Request $request)
     {
-        $query = Activity::with('department');
+        $query = Activity::query();
         
         // Filter by date range
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->whereBetween('start_datetime', [$request->start_date, $request->end_date]);
-        }
-        
-        // Filter by department
-        if ($request->filled('department_id')) {
-            $query->where('department_id', $request->department_id);
         }
         
         // Filter by activity type
@@ -762,24 +683,110 @@ class SalesOfficerController extends Controller
     {
         // Find Sales Mission details that haven't been imported yet
         $salesMissionDetails = SalesMissionDetail::whereDoesntHave('salesOfficerContact')
+            ->with('activity') // Load the related activity with eager loading
             ->get();
             
         foreach ($salesMissionDetails as $detail) {
+            // Default location
+            $location = ['city' => null, 'province' => null, 'country' => 'Indonesia'];
+            
+            // Get location data from the related activity if available
+            if ($detail->activity) {
+                $location['city'] = $detail->activity->city;
+                $location['province'] = $detail->activity->province;
+            }
+            
+            // If location is still not available, try to extract from address as fallback
+            if (empty($location['city']) && !empty($detail->company_address)) {
+                // Try to extract location data from address
+                $addressParts = explode(',', $detail->company_address);
+                $partsCount = count($addressParts);
+                
+                if ($partsCount >= 1) {
+                    // Last part is usually the city/region
+                    $cityPart = trim(end($addressParts));
+                    
+                    // Try to extract city name
+                    if (strpos($cityPart, 'Jakarta') !== false) {
+                        // Check for Jakarta districts
+                        if (strpos($cityPart, 'Jakarta Selatan') !== false) {
+                            $location['city'] = 'Jakarta Selatan';
+                        } elseif (strpos($cityPart, 'Jakarta Utara') !== false) {
+                            $location['city'] = 'Jakarta Utara';
+                        } elseif (strpos($cityPart, 'Jakarta Barat') !== false) {
+                            $location['city'] = 'Jakarta Barat';
+                        } elseif (strpos($cityPart, 'Jakarta Timur') !== false) {
+                            $location['city'] = 'Jakarta Timur';
+                        } elseif (strpos($cityPart, 'Jakarta Pusat') !== false) {
+                            $location['city'] = 'Jakarta Pusat';
+                        } else {
+                            $location['city'] = 'Jakarta';
+                        }
+                        $location['province'] = 'DKI Jakarta';
+                    } elseif (strpos($cityPart, 'Bandung') !== false) {
+                        $location['city'] = 'Bandung';
+                        $location['province'] = 'Jawa Barat';
+                    } elseif (strpos($cityPart, 'Surabaya') !== false) {
+                        $location['city'] = 'Surabaya';
+                        $location['province'] = 'Jawa Timur';
+                    } elseif (preg_match('/(\w+)(?:\s+\w+)*$/', $cityPart, $matches)) {
+                        // Extract last word from address as city if we can't match known cities
+                        $location['city'] = $matches[0];
+                    }
+                }
+            }
+            
             // Create a Sales Officer Contact from Sales Mission Detail
             try {
-                SalesOfficerContact::create([
+                $contact = SalesOfficerContact::create([
                     'user_id' => auth()->id(), // Assign to current user
                     'company_name' => $detail->company_name,
                     'line_of_business' => $detail->line_of_business ?? 'Other', // Add line_of_business with default 'Other'
                     'company_address' => $detail->company_address,
+                    'city' => $location['city'],
+                    'province' => $location['province'],
+                    'country' => $location['country'],
                     'contact_name' => $detail->company_pic,
                     'position' => $detail->company_position,
                     'phone_number' => $detail->company_contact,
                     'email' => $detail->company_email,
                     'sales_mission_detail_id' => $detail->id,
                     'status' => 'active',
+                    'source' => 'Sales Mission', // Set the source to "Sales Mission"
                     'notes' => 'Imported from Sales Mission'
                 ]);
+                
+                // Also create a PIC (Contact Person) automatically if PIC information is available
+                if (!empty($detail->company_pic)) {
+                    // Determine title based on name (simple logic)
+                    $title = 'Mr'; // Default
+                    $picName = $detail->company_pic;
+                    
+                    // Check for common female titles/prefixes in the name
+                    $femalePrefixes = ['ibu', 'bu', 'mrs', 'ms', 'miss', 'ny', 'nyonya'];
+                    $lowercaseName = strtolower($picName);
+                    foreach ($femalePrefixes as $prefix) {
+                        if (strpos($lowercaseName, $prefix) === 0) {
+                            $title = 'Mrs';
+                            // Remove the prefix from the name
+                            $picName = trim(substr($picName, strlen($prefix)));
+                            break;
+                        }
+                    }
+                    
+                    // Create the contact person
+                    ContactPerson::create([
+                        'contact_id' => $contact->id,
+                        'division_id' => null, // No division initially as requested
+                        'title' => $title,
+                        'name' => $picName,
+                        'position' => $detail->company_position,
+                        'phone_number' => $detail->company_contact,
+                        'email' => $detail->company_email,
+                        'is_primary' => true, // Set as primary contact
+                        'source' => 'Imported', // Set source to identify it was imported
+                    ]);
+                }
             } catch (\Exception $e) {
                 // Log error but continue with other imports
                 \Log::error('Failed to import sales mission contact: ' . $e->getMessage());
@@ -833,6 +840,7 @@ class SalesOfficerController extends Controller
             'sales_mission_detail_id' => $request->sales_mission_detail_id,
             'notes' => $request->notes,
             'status' => 'active',
+            'source' => 'Contact', // Set the source to "Contact"
         ]);
         
         // Log the contact creation
@@ -968,7 +976,19 @@ class SalesOfficerController extends Controller
                 ->with('error', 'You do not have permission to view this contact.');
         }
         
-        return view('sales_officer.contacts.show', compact('contact'));
+        // Get activities related to this contact for communication history
+        $allActivities = SalesOfficerActivity::where('contact_id', $contact->id)
+            ->orderBy('start_datetime', 'desc')
+            ->get();
+            
+        // Group activities by date for timeline display
+        $activitiesByDate = [];
+        foreach ($allActivities as $activity) {
+            $dateKey = $activity->start_datetime->format('Y-m-d');
+            $activitiesByDate[$dateKey][] = $activity;
+        }
+        
+        return view('sales_officer.contacts.show', compact('contact', 'activitiesByDate'));
     }
 
     /**
@@ -977,7 +997,56 @@ class SalesOfficerController extends Controller
     public function getSalesMissionContact($id)
     {
         $detail = SalesMissionDetail::findOrFail($id);
-        return response()->json($detail);
+        
+        // Extract location from address if possible
+        $location = ['city' => null, 'province' => null, 'country' => 'Indonesia'];
+        
+        if (!empty($detail->company_address)) {
+            // Try to extract location data from address
+            $addressParts = explode(',', $detail->company_address);
+            $partsCount = count($addressParts);
+            
+            if ($partsCount >= 1) {
+                // Last part is usually the city/region
+                $cityPart = trim(end($addressParts));
+                
+                // Try to extract city name
+                if (strpos($cityPart, 'Jakarta') !== false) {
+                    // Check for Jakarta districts
+                    if (strpos($cityPart, 'Jakarta Selatan') !== false) {
+                        $location['city'] = 'Jakarta Selatan';
+                    } elseif (strpos($cityPart, 'Jakarta Utara') !== false) {
+                        $location['city'] = 'Jakarta Utara';
+                    } elseif (strpos($cityPart, 'Jakarta Barat') !== false) {
+                        $location['city'] = 'Jakarta Barat';
+                    } elseif (strpos($cityPart, 'Jakarta Timur') !== false) {
+                        $location['city'] = 'Jakarta Timur';
+                    } elseif (strpos($cityPart, 'Jakarta Pusat') !== false) {
+                        $location['city'] = 'Jakarta Pusat';
+                    } else {
+                        $location['city'] = 'Jakarta';
+                    }
+                    $location['province'] = 'DKI Jakarta';
+                } elseif (strpos($cityPart, 'Bandung') !== false) {
+                    $location['city'] = 'Bandung';
+                    $location['province'] = 'Jawa Barat';
+                } elseif (strpos($cityPart, 'Surabaya') !== false) {
+                    $location['city'] = 'Surabaya';
+                    $location['province'] = 'Jawa Timur';
+                } elseif (preg_match('/(\w+)(?:\s+\w+)*$/', $cityPart, $matches)) {
+                    // Extract last word from address as city if we can't match known cities
+                    $location['city'] = $matches[0];
+                }
+            }
+        }
+        
+        // Add location data to the detail
+        $detailWithLocation = $detail->toArray();
+        $detailWithLocation['city'] = $location['city'];
+        $detailWithLocation['province'] = $location['province'];
+        $detailWithLocation['country'] = $location['country'];
+        
+        return response()->json($detailWithLocation);
     }
 
     /**
@@ -1078,5 +1147,318 @@ class SalesOfficerController extends Controller
             // On error, return empty array with status 200 to avoid breaking the UI
             return response()->json([]);
         }
+    }
+    
+    /**
+     * Store a new contact person (PIC) for a company.
+     */
+    public function storePIC(Request $request, $contactId)
+    {
+        // Validate the request
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:10',
+            'position' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'division_id' => 'nullable|exists:company_divisions,id',
+            'is_primary' => 'nullable|boolean',
+        ]);
+        
+        // Find the contact/company
+        $contact = SalesOfficerContact::findOrFail($contactId);
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to add contact persons to this company.');
+        }
+        
+        // Create the PIC
+        $pic = ContactPerson::create([
+            'contact_id' => $contactId,
+            'division_id' => $request->division_id ?: null,
+            'title' => $request->title,
+            'name' => $request->name,
+            'position' => $request->position,
+            'phone_number' => $request->phone_number,
+            'email' => $request->email,
+            'is_primary' => $request->has('is_primary') ? true : false,
+            'source' => 'Activity'
+        ]);
+        
+        // If this is marked as primary, update other PICs
+        if ($request->has('is_primary')) {
+            $pic->markAsPrimary();
+        }
+        
+        // Log the creation
+        ActivityLogService::logCreate(
+            'contact_people',
+            'Added new contact person: ' . $pic->name . ' to ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'pic_id' => $pic->id,
+                'pic_name' => $pic->name,
+            ]
+        );
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Contact person added successfully.');
+    }
+    
+    /**
+     * Show form to edit a contact person.
+     */
+    public function editPIC($id)
+    {
+        $pic = ContactPerson::with('contact', 'division')->findOrFail($id);
+        $contact = $pic->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to edit this contact person.');
+        }
+        
+        // Get divisions for dropdown
+        $divisions = $contact->divisions()->orderBy('name')->get();
+        
+        return view('sales_officer.contacts.edit_pic', compact('pic', 'contact', 'divisions'));
+    }
+    
+    /**
+     * Update the specified contact person.
+     */
+    public function updatePIC(Request $request, $id)
+    {
+        // Validate the request
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'title' => 'required|string|max:10',
+            'position' => 'nullable|string|max:255',
+            'phone_number' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+            'division_id' => 'nullable|exists:company_divisions,id',
+            'is_primary' => 'nullable|boolean',
+        ]);
+        
+        // Find the PIC
+        $pic = ContactPerson::with('contact')->findOrFail($id);
+        $contact = $pic->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to edit this contact person.');
+        }
+        
+        // Update the PIC
+        $pic->update([
+            'title' => $request->title,
+            'name' => $request->name,
+            'position' => $request->position,
+            'phone_number' => $request->phone_number,
+            'email' => $request->email,
+            'division_id' => $request->division_id ?: null,
+            'is_primary' => $request->has('is_primary') ? true : false,
+        ]);
+        
+        // If this is marked as primary, update other PICs
+        if ($request->has('is_primary')) {
+            $pic->markAsPrimary();
+        }
+        
+        // Log the update
+        ActivityLogService::logUpdate(
+            'contact_people',
+            'Updated contact person: ' . $pic->name . ' for ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'pic_id' => $pic->id,
+                'pic_name' => $pic->name,
+            ]
+        );
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Contact person updated successfully.');
+    }
+    
+    /**
+     * Remove the specified contact person.
+     */
+    public function destroyPIC($id)
+    {
+        $pic = ContactPerson::with('contact')->findOrFail($id);
+        $contact = $pic->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to delete this contact person.');
+        }
+        
+        $picName = $pic->name;
+        
+        // Log the deletion
+        ActivityLogService::logDelete(
+            'contact_people',
+            'Deleted contact person: ' . $picName . ' from ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'pic_id' => $pic->id,
+                'pic_name' => $picName,
+            ]
+        );
+        
+        // Delete the PIC
+        $pic->delete();
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Contact person deleted successfully.');
+    }
+    
+    /**
+     * Store a new division for a company.
+     */
+    public function storeDivision(Request $request, $contactId)
+    {
+        // Validate the request
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        
+        // Find the contact/company
+        $contact = SalesOfficerContact::findOrFail($contactId);
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to add divisions to this company.');
+        }
+        
+        // Create the division
+        $division = CompanyDivision::create([
+            'contact_id' => $contactId,
+            'name' => $request->name,
+            'visit_count' => 0,
+        ]);
+        
+        // Log the creation
+        ActivityLogService::logCreate(
+            'company_divisions',
+            'Added new division: ' . $division->name . ' to ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'division_id' => $division->id,
+                'division_name' => $division->name,
+            ]
+        );
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Division added successfully.');
+    }
+    
+    /**
+     * Show form to edit a division.
+     */
+    public function editDivision($id)
+    {
+        $division = CompanyDivision::with('contact')->findOrFail($id);
+        $contact = $division->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to edit this division.');
+        }
+        
+        return view('sales_officer.contacts.edit_division', compact('division', 'contact'));
+    }
+    
+    /**
+     * Update the specified division.
+     */
+    public function updateDivision(Request $request, $id)
+    {
+        // Validate the request
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+        
+        // Find the division
+        $division = CompanyDivision::with('contact')->findOrFail($id);
+        $contact = $division->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to edit this division.');
+        }
+        
+        // Update the division
+        $division->update([
+            'name' => $request->name,
+        ]);
+        
+        // Log the update
+        ActivityLogService::logUpdate(
+            'company_divisions',
+            'Updated division: ' . $division->name . ' for ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'division_id' => $division->id,
+                'division_name' => $division->name,
+            ]
+        );
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Division updated successfully.');
+    }
+    
+    /**
+     * Remove the specified division.
+     */
+    public function destroyDivision($id)
+    {
+        $division = CompanyDivision::with('contact')->findOrFail($id);
+        $contact = $division->contact;
+        
+        // Check if user has permission
+        if ($contact->user_id != auth()->id() && !$contact->sales_mission_detail_id) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'You do not have permission to delete this division.');
+        }
+        
+        // Check if there are PICs associated with this division
+        if ($division->contactPeople()->count() > 0) {
+            return redirect()->route('sales_officer.contacts.show', $contact->id)
+                ->with('error', 'Cannot delete division that has contact people. Please reassign or delete the contact people first.');
+        }
+        
+        $divisionName = $division->name;
+        
+        // Log the deletion
+        ActivityLogService::logDelete(
+            'company_divisions',
+            'Deleted division: ' . $divisionName . ' from ' . $contact->company_name,
+            [
+                'contact_id' => $contact->id,
+                'company' => $contact->company_name,
+                'division_id' => $division->id,
+                'division_name' => $divisionName,
+            ]
+        );
+        
+        // Delete the division
+        $division->delete();
+        
+        return redirect()->route('sales_officer.contacts.show', $contact->id)
+            ->with('success', 'Division deleted successfully.');
     }
 }

@@ -1,27 +1,26 @@
-@extends('sales_officer.layout')
+<?php $__env->startSection('title', 'Contact Details'); ?>
+<?php $__env->startSection('header', 'Contact Details'); ?>
+<?php $__env->startSection('description', 'Detailed view of contact information'); ?>
 
-@section('title', 'Contact Details')
-@section('header', 'Contact Details')
-@section('description', 'Detailed view of contact information')
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
     <!-- Company Header with Quick Actions -->
     <div class="flex justify-between items-center mb-6">
         <div class="flex items-center gap-3">
-            <h4 class="text-lg font-semibold text-gray-800">{{ $contact->company_name }}</h4>
-            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $contact->sales_mission_detail_id ? 'green' : 'blue' }}-100 text-{{ $contact->sales_mission_detail_id ? 'green' : 'blue' }}-800">
-                {{ $contact->sales_mission_detail_id ? 'Sales Mission' : 'Sales Officer' }}
+            <h4 class="text-lg font-semibold text-gray-800"><?php echo e($contact->company_name); ?></h4>
+            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo e($contact->sales_mission_detail_id ? 'green' : 'blue'); ?>-100 text-<?php echo e($contact->sales_mission_detail_id ? 'green' : 'blue'); ?>-800">
+                <?php echo e($contact->sales_mission_detail_id ? 'Sales Mission' : 'Sales Officer'); ?>
+
             </span>
         </div>
         <div class="space-x-2">
-            <a href="{{ route('sales_officer.contacts.edit', $contact->id) }}" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
+            <a href="<?php echo e(route('sales_officer.contacts.edit', $contact->id)); ?>" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
                 Edit Company
             </a>
             <button id="addContactBtn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-medium">
                 Add Contact Person
             </button>
-            <a href="{{ route('sales_officer.contacts.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            <a href="<?php echo e(route('sales_officer.contacts.index')); ?>" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Back to Contacts
             </a>
         </div>
@@ -35,9 +34,9 @@
             <button class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" 
                     data-tab="business-info">Business Details</button>
             <button class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" 
-                    data-tab="divisions">Divisions ({{ $contact->divisions->count() }})</button>
+                    data-tab="divisions">Divisions (<?php echo e($contact->divisions->count()); ?>)</button>
             <button class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" 
-                    data-tab="contacts">Contact People ({{ $contact->contactPeople->count() }})</button>
+                    data-tab="contacts">Contact People (<?php echo e($contact->contactPeople->count()); ?>)</button>
             <button class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" 
                     data-tab="communication">Communication History</button>
         </nav>
@@ -49,58 +48,60 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Company Name</div>
-                <div class="text-base text-gray-900">{{ $contact->company_name }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->company_name); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Line of Business</div>
-                <div class="text-base text-gray-900">{{ $contact->line_of_business ?: 'Not specified' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->line_of_business ?: 'Not specified'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Address</div>
-                <div class="text-base text-gray-900">{{ $contact->company_address ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->company_address ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Location</div>
                 <div class="text-base text-gray-900">
-                    @if($contact->city || $contact->province || $contact->country)
-                        {{ collect([$contact->city, $contact->province, $contact->country])->filter()->join(', ') }}
-                    @else
+                    <?php if($contact->city || $contact->province || $contact->country): ?>
+                        <?php echo e(collect([$contact->city, $contact->province, $contact->country])->filter()->join(', ')); ?>
+
+                    <?php else: ?>
                         Not provided
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Visit Count</div>
-                <div class="text-base text-gray-900">{{ $contact->visit_count }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->visit_count); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Source</div>
                 <div class="text-base text-gray-900">
-                    @if($contact->sales_mission_detail_id)
+                    <?php if($contact->sales_mission_detail_id): ?>
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             Sales Mission
                         </span>
-                    @else
+                    <?php else: ?>
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                             Sales Officer
                         </span>
-                    @endif
-                    @if($contact->source)
+                    <?php endif; ?>
+                    <?php if($contact->source): ?>
                         <span class="ml-2 text-sm text-gray-500">
-                            Added as: {{ $contact->source }}
+                            Added as: <?php echo e($contact->source); ?>
+
                         </span>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Notes</div>
-                <div class="text-base text-gray-900">{{ $contact->notes ?: 'No notes' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->notes ?: 'No notes'); ?></div>
             </div>
         </div>
     </div>
@@ -110,43 +111,43 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">General Information</div>
-                <div class="text-base text-gray-900">{{ $contact->general_information ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->general_information ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Current Event</div>
-                <div class="text-base text-gray-900">{{ $contact->current_event ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->current_event ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Target Business</div>
-                <div class="text-base text-gray-900">{{ $contact->target_business ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->target_business ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Project Type</div>
-                <div class="text-base text-gray-900">{{ $contact->project_type ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->project_type ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Project / Tender Estimation</div>
-                <div class="text-base text-gray-900">{{ $contact->project_estimation ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->project_estimation ?: 'Not provided'); ?></div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Potential Revenue</div>
                 <div class="text-base text-gray-900 font-medium">
-                    @if($contact->potential_revenue)
-                        <span class="text-green-600">Rp {{ number_format($contact->potential_revenue, 0, ',', '.') }}</span>
-                    @else
+                    <?php if($contact->potential_revenue): ?>
+                        <span class="text-green-600">Rp <?php echo e(number_format($contact->potential_revenue, 0, ',', '.')); ?></span>
+                    <?php else: ?>
                         <span class="text-gray-500">Not provided</span>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
             
             <div>
                 <div class="text-sm font-medium text-gray-500 mb-1">Potential Projects / Partnerships</div>
-                <div class="text-base text-gray-900">{{ $contact->potential_project_count ?: 'Not provided' }}</div>
+                <div class="text-base text-gray-900"><?php echo e($contact->potential_project_count ?: 'Not provided'); ?></div>
             </div>
         </div>
     </div>
@@ -160,35 +161,35 @@
             </button>
         </div>
         
-        @if($contact->divisions->count() > 0)
+        <?php if($contact->divisions->count() > 0): ?>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($contact->divisions as $division)
+                <?php $__currentLoopData = $contact->divisions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $division): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="border rounded-lg p-4 hover:bg-gray-50">
                         <div class="flex justify-between items-start">
-                            <h4 class="font-semibold text-gray-800">{{ $division->name }}</h4>
-                            <span class="text-sm text-gray-500">Visits: {{ $division->visit_count }}</span>
+                            <h4 class="font-semibold text-gray-800"><?php echo e($division->name); ?></h4>
+                            <span class="text-sm text-gray-500">Visits: <?php echo e($division->visit_count); ?></span>
                         </div>
                         <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
                             <div class="text-sm">
-                                <span class="font-medium">{{ $division->contactPeople->count() }}</span> contacts in this division
+                                <span class="font-medium"><?php echo e($division->contactPeople->count()); ?></span> contacts in this division
                             </div>
                             <div class="flex space-x-2">
-                                <a href="{{ route('sales_officer.contacts.edit_division', $division->id) }}" class="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
-                                @if($division->contactPeople->count() == 0)
-                                    <form action="{{ route('sales_officer.contacts.destroy_division', $division->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
+                                <a href="<?php echo e(route('sales_officer.contacts.edit_division', $division->id)); ?>" class="text-blue-600 hover:text-blue-800 text-sm">Edit</a>
+                                <?php if($division->contactPeople->count() == 0): ?>
+                                    <form action="<?php echo e(route('sales_officer.contacts.destroy_division', $division->id)); ?>" method="POST" class="inline">
+                                        <?php echo csrf_field(); ?>
+                                        <?php echo method_field('DELETE'); ?>
                                         <button type="submit" class="text-red-600 hover:text-red-800 text-sm" onclick="return confirm('Are you sure you want to delete this division?')">
                                             Delete
                                         </button>
                                     </form>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-        @else
+        <?php else: ?>
             <div class="text-gray-500 text-sm flex flex-col items-center justify-center py-8">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -198,7 +199,7 @@
                     Add First Division
                 </button>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
     
     <!-- Contact People Tab -->
@@ -210,66 +211,68 @@
             </button>
         </div>
         
-        @if($contact->contactPeople->count() > 0)
+        <?php if($contact->contactPeople->count() > 0): ?>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                @foreach($contact->contactPeople as $pic)
+                <?php $__currentLoopData = $contact->contactPeople; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pic): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                        <div class="p-4 {{ $pic->is_primary ? 'bg-green-50' : 'bg-white' }}">
+                        <div class="p-4 <?php echo e($pic->is_primary ? 'bg-green-50' : 'bg-white'); ?>">
                             <div class="flex justify-between items-start mb-2">
-                                <h4 class="font-semibold text-gray-800">{{ $pic->title }} {{ $pic->name }}</h4>
+                                <h4 class="font-semibold text-gray-800"><?php echo e($pic->title); ?> <?php echo e($pic->name); ?></h4>
                                 <div class="flex gap-1">
-                                    @if($pic->is_primary)
+                                    <?php if($pic->is_primary): ?>
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                             Primary
                                         </span>
-                                    @endif
+                                    <?php endif; ?>
                                     <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-600">
-                                        {{ $pic->created_at->diffForHumans() }}
+                                        <?php echo e($pic->created_at->diffForHumans()); ?>
+
                                     </span>
-                                    @php
+                                    <?php
                                         $sourceBg = match($pic->source) {
                                             'Manual' => 'bg-indigo-100 text-indigo-800',
                                             'Activity' => 'bg-green-100 text-green-800',
                                             'Imported' => 'bg-blue-100 text-blue-800',
                                             default => 'bg-gray-100 text-gray-800'
                                         };
-                                    @endphp
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold {{ $sourceBg }}">
-                                        {{ $pic->source }}
+                                    ?>
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold <?php echo e($sourceBg); ?>">
+                                        <?php echo e($pic->source); ?>
+
                                     </span>
                                 </div>
                             </div>
-                            <p class="text-sm text-gray-600">{{ $pic->position ?: 'No position' }}</p>
-                            <p class="text-sm text-gray-600">{{ $pic->division ? $pic->division->name : 'General' }}</p>
+                            <p class="text-sm text-gray-600"><?php echo e($pic->position ?: 'No position'); ?></p>
+                            <p class="text-sm text-gray-600"><?php echo e($pic->division ? $pic->division->name : 'General'); ?></p>
                             
                             <div class="mt-4 space-y-2">
-                                @if($pic->phone_number)
+                                <?php if($pic->phone_number): ?>
                                     <div class="flex items-center text-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                         </svg>
-                                        <a href="tel:{{ $pic->phone_number }}" class="text-blue-600 hover:underline">{{ $pic->phone_number }}</a>
+                                        <a href="tel:<?php echo e($pic->phone_number); ?>" class="text-blue-600 hover:underline"><?php echo e($pic->phone_number); ?></a>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                                 
-                                @if($pic->email)
+                                <?php if($pic->email): ?>
                                     <div class="flex items-center text-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
-                                        <a href="mailto:{{ $pic->email }}" class="text-blue-600 hover:underline">{{ $pic->email }}</a>
+                                        <a href="mailto:<?php echo e($pic->email); ?>" class="text-blue-600 hover:underline"><?php echo e($pic->email); ?></a>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="px-4 py-2 bg-gray-50 flex justify-end space-x-2">
-                            <button class="edit-contact-btn text-blue-600 hover:text-blue-800 text-sm" data-id="{{ $pic->id }}">Edit</button>
-                            <button class="delete-contact-btn text-red-600 hover:text-red-800 text-sm" data-id="{{ $pic->id }}">Delete</button>
+                            <button class="edit-contact-btn text-blue-600 hover:text-blue-800 text-sm" data-id="<?php echo e($pic->id); ?>">Edit</button>
+                            <button class="delete-contact-btn text-red-600 hover:text-red-800 text-sm" data-id="<?php echo e($pic->id); ?>">Delete</button>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
-        @else
+        <?php else: ?>
             <div class="text-gray-500 text-sm flex flex-col items-center justify-center py-8">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -279,7 +282,7 @@
                     Add First Contact
                 </button>
             </div>
-        @endif
+        <?php endif; ?>
     </div>
     
     <!-- Communication History Tab -->
@@ -296,78 +299,83 @@
                     <option value="Negotiation">Negotiations</option>
                     <option value="Presentation">Presentations</option>
                 </select>
-                <a href="{{ route('sales_officer.activities.create') }}" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium">
+                <a href="<?php echo e(route('sales_officer.activities.create')); ?>" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium">
                     Add Activity
                 </a>
             </div>
         </div>
         
         <div class="timeline-container mb-8">
-            @if(count($activitiesByDate) > 0)
-                @foreach($activitiesByDate as $date => $dateActivities)
+            <?php if(count($activitiesByDate) > 0): ?>
+                <?php $__currentLoopData = $activitiesByDate; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $date => $dateActivities): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <div class="date-divider my-4">
                         <div class="flex items-center">
                             <div class="flex-grow h-px bg-gray-200"></div>
                             <span class="mx-4 flex-shrink bg-gray-100 text-gray-600 px-3 py-1 rounded text-sm">
-                                {{ \Carbon\Carbon::parse($date)->format('d M Y') }}
+                                <?php echo e(\Carbon\Carbon::parse($date)->format('d M Y')); ?>
+
                             </span>
                             <div class="flex-grow h-px bg-gray-200"></div>
                         </div>
                     </div>
                     
-                    @foreach($dateActivities as $activity)
-                        <div class="timeline-item border-l-2 border-gray-300 pl-4 pb-6 relative ml-4 activity-item" data-type="{{ $activity->activity_type }}">
+                    <?php $__currentLoopData = $dateActivities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $activity): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <div class="timeline-item border-l-2 border-gray-300 pl-4 pb-6 relative ml-4 activity-item" data-type="<?php echo e($activity->activity_type); ?>">
                             <div class="timeline-bullet absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500"></div>
                             <div class="bg-white rounded-lg border p-4 shadow-sm hover:shadow transition-shadow">
                                 <div class="flex justify-between items-start">
                                     <div>
                                         <span class="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
-                                            {{ $activity->activity_type }}
+                                            <?php echo e($activity->activity_type); ?>
+
                                         </span>
-                                        <h5 class="font-semibold mt-1">{{ $activity->title }}</h5>
+                                        <h5 class="font-semibold mt-1"><?php echo e($activity->title); ?></h5>
                                     </div>
-                                    <span class="text-xs text-gray-500">{{ $activity->start_datetime->format('H:i') }}</span>
+                                    <span class="text-xs text-gray-500"><?php echo e($activity->start_datetime->format('H:i')); ?></span>
                                 </div>
                                 
-                                @if($activity->status)
+                                <?php if($activity->status): ?>
                                     <div class="mt-1">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                            {{ $activity->status == 'completed' ? 'bg-green-100 text-green-800' : 
+                                            <?php echo e($activity->status == 'completed' ? 'bg-green-100 text-green-800' : 
                                               ($activity->status == 'ongoing' ? 'bg-blue-100 text-blue-800' : 
-                                              'bg-yellow-100 text-yellow-800') }}">
-                                            {{ ucfirst($activity->status) }}
+                                              'bg-yellow-100 text-yellow-800')); ?>">
+                                            <?php echo e(ucfirst($activity->status)); ?>
+
                                         </span>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                                 
-                                <p class="mt-2 text-sm text-gray-600">{{ $activity->description }}</p>
+                                <p class="mt-2 text-sm text-gray-600"><?php echo e($activity->description); ?></p>
                                 
-                                @if($activity->pic)
+                                <?php if($activity->pic): ?>
                                     <div class="mt-3 text-xs text-gray-500">
-                                        <span class="font-medium">Contact Person:</span> {{ $activity->pic->title }} {{ $activity->pic->name }}
-                                        @if($activity->pic->position)
-                                            ({{ $activity->pic->position }})
-                                        @endif
+                                        <span class="font-medium">Contact Person:</span> <?php echo e($activity->pic->title); ?> <?php echo e($activity->pic->name); ?>
+
+                                        <?php if($activity->pic->position): ?>
+                                            (<?php echo e($activity->pic->position); ?>)
+                                        <?php endif; ?>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                                 
-                                @if($activity->jso_lead_status)
+                                <?php if($activity->jso_lead_status): ?>
                                     <div class="mt-2">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                                            Lead Status: {{ $activity->jso_lead_status }}
+                                            Lead Status: <?php echo e($activity->jso_lead_status); ?>
+
                                         </span>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                                 
-                                @if($activity->next_follow_up)
-                                    @php
+                                <?php if($activity->next_follow_up): ?>
+                                    <?php
                                         $isValidDate = true;
                                         try {
                                             $followUpDate = \Carbon\Carbon::parse($activity->next_follow_up);
                                         } catch (\Exception $e) {
                                             $isValidDate = false;
                                         }
-                                    @endphp
+                                    ?>
                                     
                                     <div class="mt-3 flex items-center gap-2 bg-indigo-50 p-2 rounded">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -376,33 +384,35 @@
                                         <div>
                                             <span class="text-xs font-medium text-indigo-800">
                                                 Follow-up: 
-                                                @if($isValidDate)
-                                                    {{ $followUpDate->format('d M Y') }}
-                                                @else
-                                                    {{ $activity->next_follow_up }}
-                                                @endif
+                                                <?php if($isValidDate): ?>
+                                                    <?php echo e($followUpDate->format('d M Y')); ?>
+
+                                                <?php else: ?>
+                                                    <?php echo e($activity->next_follow_up); ?>
+
+                                                <?php endif; ?>
                                             </span>
-                                            @if($activity->follow_up_type)
-                                                <span class="ml-1 text-xs text-indigo-600">({{ $activity->follow_up_type }})</span>
-                                            @endif
+                                            <?php if($activity->follow_up_type): ?>
+                                                <span class="ml-1 text-xs text-indigo-600">(<?php echo e($activity->follow_up_type); ?>)</span>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </div>
-                    @endforeach
-                @endforeach
-            @else
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php else: ?>
                 <div class="text-gray-500 text-sm flex flex-col items-center justify-center py-8">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                     </svg>
                     <p>No communication history found for this company.</p>
-                    <a href="{{ route('sales_officer.activities.create') }}" class="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
+                    <a href="<?php echo e(route('sales_officer.activities.create')); ?>" class="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
                         Add First Activity
                     </a>
                 </div>
-            @endif
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -413,9 +423,9 @@
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">Add New Contact Person</h3>
         </div>
-        <form id="contactForm" action="{{ route('sales_officer.contacts.store_pic', $contact->id) }}" method="POST" class="p-6">
-            @csrf
-            <input type="hidden" name="contact_id" value="{{ $contact->id }}">
+        <form id="contactForm" action="<?php echo e(route('sales_officer.contacts.store_pic', $contact->id)); ?>" method="POST" class="p-6">
+            <?php echo csrf_field(); ?>
+            <input type="hidden" name="contact_id" value="<?php echo e($contact->id); ?>">
             
             <div class="grid grid-cols-2 gap-4 mb-4">
                 <div>
@@ -432,9 +442,9 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Division</label>
                     <select name="division_id" class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
                         <option value="">General (No Division)</option>
-                        @foreach($contact->divisions as $division)
-                            <option value="{{ $division->id }}">{{ $division->name }}</option>
-                        @endforeach
+                        <?php $__currentLoopData = $contact->divisions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $division): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($division->id); ?>"><?php echo e($division->name); ?></option>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                     </select>
                 </div>
             </div>
@@ -484,9 +494,9 @@
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">Add New Division</h3>
         </div>
-        <form id="divisionForm" action="{{ route('sales_officer.contacts.store_division', $contact->id) }}" method="POST" class="p-6">
-            @csrf
-            <input type="hidden" name="contact_id" value="{{ $contact->id }}">
+        <form id="divisionForm" action="<?php echo e(route('sales_officer.contacts.store_division', $contact->id)); ?>" method="POST" class="p-6">
+            <?php echo csrf_field(); ?>
+            <input type="hidden" name="contact_id" value="<?php echo e($contact->id); ?>">
             
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Division Name</label>
@@ -505,7 +515,7 @@
     </div>
 </div>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Tab switching functionality
@@ -612,5 +622,6 @@
         }
     });
 </script>
-@endpush
-@endsection 
+<?php $__env->stopPush(); ?>
+<?php $__env->stopSection(); ?> 
+<?php echo $__env->make('sales_officer.layout', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH F:\Project\Booking-Room-System\resources\views/sales_officer/contacts/show.blade.php ENDPATH**/ ?>

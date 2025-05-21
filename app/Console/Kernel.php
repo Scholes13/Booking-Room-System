@@ -29,4 +29,12 @@ class Kernel extends ConsoleKernel
 
         require base_path('routes/console.php');
     }
+
+    protected $commands = [
+        // ... existing commands ...
+        \App\Console\Commands\UpdateSalesMissionLocations::class,
+        \App\Console\Commands\UpdateJakartaLocations::class,
+        \App\Console\Commands\UpdateAllSalesMissionLocations::class,
+        \App\Console\Commands\ImportPicsFromSalesMission::class,
+    ];
 } 

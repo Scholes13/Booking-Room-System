@@ -29,6 +29,7 @@ class SalesOfficerContact extends Model
         'sales_mission_detail_id',
         'notes',
         'status',
+        'source',
         'visit_count',
         'country',
         'province',

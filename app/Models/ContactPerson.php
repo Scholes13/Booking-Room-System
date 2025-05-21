@@ -18,7 +18,8 @@ class ContactPerson extends Model
         'phone_number',
         'email',
         'notes',
-        'is_primary'
+        'is_primary',
+        'source'
     ];
 
     /**

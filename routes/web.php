@@ -367,6 +367,18 @@ Route::group(['prefix' => 'officer', 'middleware' => \App\Http\Middleware\SalesO
         Route::put('/{contact}', [SalesOfficerController::class, 'updateContact'])->name('sales_officer.contacts.update');
         Route::delete('/{contact}', [SalesOfficerController::class, 'destroyContact'])->name('sales_officer.contacts.destroy');
         Route::get('/{contact}', [SalesOfficerController::class, 'viewContact'])->name('sales_officer.contacts.show');
+        
+        // Contact Person Management
+        Route::post('/{contact}/pic', [SalesOfficerController::class, 'storePIC'])->name('sales_officer.contacts.store_pic');
+        Route::get('/edit-pic/{id}', [SalesOfficerController::class, 'editPIC'])->name('sales_officer.contacts.edit_pic');
+        Route::put('/update-pic/{id}', [SalesOfficerController::class, 'updatePIC'])->name('sales_officer.contacts.update_pic');
+        Route::delete('/delete-pic/{id}', [SalesOfficerController::class, 'destroyPIC'])->name('sales_officer.contacts.destroy_pic');
+        
+        // Division Management
+        Route::post('/{contact}/division', [SalesOfficerController::class, 'storeDivision'])->name('sales_officer.contacts.store_division');
+        Route::get('/edit-division/{id}', [SalesOfficerController::class, 'editDivision'])->name('sales_officer.contacts.edit_division');
+        Route::put('/update-division/{id}', [SalesOfficerController::class, 'updateDivision'])->name('sales_officer.contacts.update_division');
+        Route::delete('/delete-division/{id}', [SalesOfficerController::class, 'destroyDivision'])->name('sales_officer.contacts.destroy_division');
     });
     
     // API Routes for activity form
