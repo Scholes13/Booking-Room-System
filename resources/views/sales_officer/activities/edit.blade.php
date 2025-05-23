@@ -84,16 +84,17 @@
                     <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Province <span class="text-red-500">*</span></label>
                     <select id="province" name="province" required class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
                         <option value="">Select Province</option>
-                        @foreach($provinces as $province)
-                            <option value="{{ $province }}" {{ old('province', $activity->province) == $province ? 'selected' : '' }}>{{ $province }}</option>
-                        @endforeach
+                        <!-- Options will be loaded dynamically -->
                     </select>
                     @error('province')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                 </div>
                 
                 <div>
                     <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City <span class="text-red-500">*</span></label>
-                    <input type="text" id="city" name="city" value="{{ old('city', $activity->city) }}" required class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                    <select id="city" name="city" required class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                        <option value="">Select City</option>
+                        <!-- Options will be loaded dynamically -->
+                    </select>
                     @error('city')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                 </div>
             </div>
@@ -303,103 +304,188 @@
     </form>
 </div>
 
+<input type="hidden" id="country_id" name="country_id" value="{{ old('country_id', $activity->country_id) }}">
+<input type="hidden" id="state_id" name="state_id" value="{{ old('state_id', $activity->state_id) }}">
+<input type="hidden" id="city_id" name="city_id" value="{{ old('city_id', $activity->city_id) }}">
+
 @push('scripts')
+<script src="{{ asset('js/location-data.js') }}"></script>
+<script src="{{ asset('js/location-dropdowns.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Initialize datepicker
-        flatpickr('.datepicker', {
-            enableTime: false,
-            dateFormat: "Y-m-d"
+        // Initialize datetime picker
+        flatpickr(".datetimepicker", {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            time_24hr: true
         });
         
-        // Auto-populate month and week based on selected date
-        const startDatetime = document.getElementById('start_datetime');
-        startDatetime.addEventListener('change', function() {
-            if (this.value) {
-                const date = new Date(this.value);
-                
-                // Set month
-                const month = date.getMonth() + 1; // JavaScript months are 0-indexed
-                document.getElementById('month_number').value = month;
-                
-                // Calculate week of month
-                const day = date.getDate();
-                let weekOfMonth = Math.ceil(day / 7);
-                if (weekOfMonth > 5) weekOfMonth = 5;
-                
-                document.getElementById('week_number').value = weekOfMonth;
-                
-                // Set end_datetime to the same date
-                document.getElementById('end_datetime').value = this.value;
-            }
-        });
-        
-        // Location data - this would typically come from your backend
-        const locationData = {
-            'Indonesia': {
-                'DKI Jakarta': ['Jakarta Pusat', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur', 'Jakarta Utara', 'Kepulauan Seribu'],
-                'Jawa Barat': ['Bandung', 'Bekasi', 'Bogor', 'Cimahi', 'Cirebon', 'Depok', 'Sukabumi', 'Tasikmalaya'],
-                'Jawa Tengah': ['Semarang', 'Solo', 'Magelang', 'Salatiga', 'Pekalongan', 'Tegal'],
-                'Jawa Timur': ['Surabaya', 'Malang', 'Kediri', 'Blitar', 'Madiun', 'Mojokerto'],
-                'Bali': ['Denpasar', 'Badung', 'Gianyar', 'Tabanan']
-            },
-            'Malaysia': {
-                'Kuala Lumpur': ['Kuala Lumpur'],
-                'Selangor': ['Shah Alam', 'Petaling Jaya', 'Subang Jaya'],
-                'Johor': ['Johor Bahru', 'Iskandar Puteri', 'Muar']
-            },
-            'Singapore': {
-                'Singapore': ['Singapore City', 'Jurong East', 'Tampines', 'Woodlands']
-            },
-            'Thailand': {
-                'Bangkok': ['Bangkok City'],
-                'Chiang Mai': ['Chiang Mai City'],
-                'Phuket': ['Phuket City', 'Patong']
-            },
-            'Philippines': {
-                'Metro Manila': ['Manila', 'Quezon City', 'Makati', 'Pasig'],
-                'Cebu': ['Cebu City', 'Mandaue', 'Lapu-Lapu']
-            }
-        };
-        
-        // Handle form submission with loading indicator
-        const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            // Prevent default form submission
-            e.preventDefault();
-            
-            // Show loading indicator
-            Swal.fire({
-                title: 'Updating Activity...',
-                text: 'Please wait while we update your activity data',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                allowEnterKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
-            
-            // Submit the form
-            this.submit();
-        });
-
-        // Currency formatting for Rupiah input
-        document.querySelectorAll('.currency-input').forEach(function(input) {
+        // Initialize currency input formatting
+        const currencyInputs = document.querySelectorAll('.currency-input');
+        currencyInputs.forEach(input => {
             input.addEventListener('input', function(e) {
-                // Remove non-digits and leading zeros
-                let value = e.target.value.replace(/[^\d]/g, '').replace(/^0+/, '');
+                // Remove all non-digits
+                let value = this.value.replace(/\D/g, '');
                 
                 // Format with thousand separators
                 if (value.length > 0) {
-                    value = new Intl.NumberFormat('id-ID').format(value);
+                    value = parseInt(value).toLocaleString('id-ID');
                 }
                 
-                // Set the formatted value back
-                e.target.value = value;
+                this.value = value;
             });
         });
+        
+        // Country, Province and City dropdowns logic
+        const countryDropdown = document.getElementById('country');
+        const provinceDropdown = document.getElementById('province');
+        const cityDropdown = document.getElementById('city');
+        
+        // Hidden input fields for IDs
+        const countryIdInput = document.getElementById('country_id');
+        const stateIdInput = document.getElementById('state_id');
+        const cityIdInput = document.getElementById('city_id');
+        
+        // Function to load provinces based on country
+        function loadProvinces(country) {
+            provinceDropdown.innerHTML = '<option value="">Select Province</option>';
+            cityDropdown.innerHTML = '<option value="">Select Province First</option>';
+            
+            // Reset state and city IDs when country changes
+            stateIdInput.value = '';
+            cityIdInput.value = '';
+            
+            if (country && locationData[country] && locationData[country].provinces) {
+                locationData[country].provinces.forEach((province, index) => {
+                    const option = document.createElement('option');
+                    option.value = province;
+                    option.textContent = province;
+                    option.dataset.id = index + 1; // Simple ID generation
+                    
+                    if (province === "{{ old('province', $activity->province) }}") {
+                        option.selected = true;
+                        stateIdInput.value = index + 1; // Set the state ID when selected
+                    }
+                    provinceDropdown.appendChild(option);
+                });
+                
+                // If province is already selected, load cities
+                if (provinceDropdown.value) {
+                    loadCities(country, provinceDropdown.value);
+                }
+            }
+        }
+        
+        // Function to load cities based on province
+        function loadCities(country, province) {
+            cityDropdown.innerHTML = '<option value="">Select City</option>';
+            
+            // Reset city ID when province changes
+            cityIdInput.value = '';
+            
+            if (country && province && locationData[country] && 
+                locationData[country].cities && locationData[country].cities[province]) {
+                
+                locationData[country].cities[province].forEach((city, index) => {
+                    const option = document.createElement('option');
+                    option.value = city;
+                    option.textContent = city;
+                    option.dataset.id = index + 1; // Simple ID generation
+                    
+                    if (city === "{{ old('city', $activity->city) }}") {
+                        option.selected = true;
+                        cityIdInput.value = index + 1; // Set the city ID when selected
+                    }
+                    cityDropdown.appendChild(option);
+                });
+            } else {
+                // If no predefined cities, enable manual entry
+                const oldCity = "{{ old('city', $activity->city) }}";
+                if (oldCity) {
+                    const option = document.createElement('option');
+                    option.value = oldCity;
+                    option.textContent = oldCity;
+                    option.selected = true;
+                    option.dataset.id = 999; // Use a high number for custom entries
+                    cityDropdown.appendChild(option);
+                    cityIdInput.value = 999;
+                }
+                
+                // Enable direct input if city isn't in the list
+                cityDropdown.innerHTML += '<option value="other">Other (Enter manually)</option>';
+            }
+        }
+        
+        // Event listeners for dropdowns
+        countryDropdown.addEventListener('change', function() {
+            // Set country ID based on selection
+            const countryIndex = Array.from(this.options).findIndex(option => option.value === this.value);
+            if (countryIndex > 0) { // Skip the first empty option
+                countryIdInput.value = countryIndex;
+            } else {
+                countryIdInput.value = '';
+            }
+            
+            loadProvinces(this.value);
+        });
+        
+        provinceDropdown.addEventListener('change', function() {
+            // Set state ID when province is selected
+            if (this.selectedIndex > 0) {
+                const selectedOption = this.options[this.selectedIndex];
+                stateIdInput.value = selectedOption.dataset.id || '';
+            } else {
+                stateIdInput.value = '';
+            }
+            
+            if (countryDropdown.value) {
+                loadCities(countryDropdown.value, this.value);
+            }
+        });
+        
+        cityDropdown.addEventListener('change', function() {
+            // Set city ID when city is selected
+            if (this.selectedIndex > 0 && this.value !== 'other') {
+                const selectedOption = this.options[this.selectedIndex];
+                cityIdInput.value = selectedOption.dataset.id || '';
+            } else {
+                cityIdInput.value = '';
+            }
+            
+            if (this.value === 'other') {
+                const customCity = prompt('Enter city name:');
+                if (customCity) {
+                    // Add the custom city as an option and select it
+                    const option = document.createElement('option');
+                    option.value = customCity;
+                    option.textContent = customCity;
+                    option.selected = true;
+                    option.dataset.id = 999; // Use a high number for custom entries
+                    cityIdInput.value = 999;
+                    
+                    // First remove "other" option to avoid duplication
+                    this.remove(this.selectedIndex);
+                    
+                    // Then add the new option
+                    this.appendChild(option);
+                } else {
+                    // If user cancels, revert to first option
+                    this.selectedIndex = 0;
+                    cityIdInput.value = '';
+                }
+            }
+        });
+        
+        // Initialize location dropdowns on page load
+        if (countryDropdown.value) {
+            // Set initial country ID
+            const countryIndex = Array.from(countryDropdown.options).findIndex(option => option.value === countryDropdown.value);
+            if (countryIndex > 0) {
+                countryIdInput.value = countryIndex;
+            }
+            
+            loadProvinces(countryDropdown.value);
+        }
     });
 </script>
 @endpush

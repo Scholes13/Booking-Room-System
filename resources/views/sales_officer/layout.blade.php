@@ -382,6 +382,31 @@
                 });
             }
             
+            // Auto collapse sidebar on mobile devices
+            function checkWindowSize() {
+                if (window.innerWidth < 768) { // Tablet and below
+                    sidebar.classList.add('collapsed');
+                    mainContent.classList.add('expanded');
+                } else if (sidebar.classList.contains('collapsed') && !window.sessionStorage.getItem('sidebarManuallyCollapsed')) {
+                    // Only auto-expand if it wasn't manually collapsed
+                    sidebar.classList.remove('collapsed');
+                    mainContent.classList.remove('expanded');
+                }
+            }
+            
+            // Track manual sidebar toggling
+            if(sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    window.sessionStorage.setItem('sidebarManuallyCollapsed', sidebar.classList.contains('collapsed'));
+                });
+            }
+            
+            // Check on page load
+            checkWindowSize();
+            
+            // Check on window resize
+            window.addEventListener('resize', checkWindowSize);
+            
             // Initialize flatpickr on any date inputs
             flatpickr(".datepicker", {
                 locale: "id",

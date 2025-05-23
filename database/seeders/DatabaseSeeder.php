@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             SuperAdminSeeder::class, // Create superadmin user
             AdminSeeder::class,      // Create admin users
+            CountriesSeeder::class,  // Add countries
+            ProvincesSeeder::class,  // Add provinces
+            CitiesSeeder::class,     // Add cities
             ResetDataSeeder::class,  // Reset and recreate other data
             ActivityTypeSeeder::class, // Add activity types
             SalesMissionSeeder::class,

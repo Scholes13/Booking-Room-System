@@ -324,7 +324,7 @@
                     
                     <div>
                         <label for="province" class="block text-sm font-medium text-gray-700 mb-1">Province <span class="text-red-500">*</span></label>
-                        <select id="province" name="province" required class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                        <select id="province" name="province" required data-old-value="{{ old('province') }}" class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
                             <option value="">Select Country First</option>
                         </select>
                         @error('province')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
@@ -332,12 +332,16 @@
                     
                     <div>
                         <label for="city" class="block text-sm font-medium text-gray-700 mb-1">City <span class="text-red-500">*</span></label>
-                        <select id="city" name="city" required class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
+                        <select id="city" name="city" required data-old-value="{{ old('city') }}" class="w-full rounded-md border-gray-300 focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50">
                             <option value="">Select Province First</option>
                         </select>
                         @error('city')<div class="text-red-500 text-xs mt-1">{{ $message }}</div>@enderror
                     </div>
                 </div>
+                
+                <input type="hidden" id="country_id" name="country_id" value="{{ old('country_id') }}">
+                <input type="hidden" id="state_id" name="state_id" value="{{ old('state_id') }}">
+                <input type="hidden" id="city_id" name="city_id" value="{{ old('city_id') }}">
                 
                 <input type="hidden" id="contact_id" name="contact_id" value="">
                 <input type="hidden" id="division_id" name="division_id" value="">
@@ -583,6 +587,8 @@
 </div>
 
 @push('scripts')
+<script src="{{ asset('js/location-data.js') }}"></script>
+<script src="{{ asset('js/location-dropdowns.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Form script initialized');

@@ -328,6 +328,9 @@ class SalesOfficerController extends Controller
                     'country' => $request->country,
                     'province' => $request->province,
                     'city' => $request->city,
+                    'country_id' => $request->country_id,
+                    'state_id' => $request->state_id,
+                    'city_id' => $request->city_id,
                     'start_datetime' => $startDatetime,
                     'end_datetime' => $endDatetime,
                     'month_number' => $request->month_number,
@@ -463,6 +466,7 @@ class SalesOfficerController extends Controller
                 
                 // Update the activity
                 $activity->update([
+                    'title' => 'Visit to ' . $contact->company_name,
                     'activity_type' => $request->activity_type,
                     'meeting_type' => $request->meeting_type,
                     'description' => $request->general_information . ' ' . 
@@ -475,6 +479,9 @@ class SalesOfficerController extends Controller
                     'country' => $request->country,
                     'province' => $request->province,
                     'city' => $request->city,
+                    'country_id' => $request->country_id,
+                    'state_id' => $request->state_id,
+                    'city_id' => $request->city_id,
                     'start_datetime' => $request->start_datetime,
                     'end_datetime' => $request->end_datetime,
                     'month_number' => $request->month_number,

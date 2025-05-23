@@ -5,21 +5,21 @@
 @section('description', 'Detailed view of contact information')
 
 @section('content')
-<div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+<div class="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
     <!-- Company Header with Quick Actions -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div class="flex items-center gap-3">
             <h4 class="text-lg font-semibold text-gray-800">{{ $contact->company_name }}</h4>
             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-{{ $contact->sales_mission_detail_id ? 'green' : 'blue' }}-100 text-{{ $contact->sales_mission_detail_id ? 'green' : 'blue' }}-800">
                 {{ $contact->sales_mission_detail_id ? 'Sales Mission' : 'Sales Officer' }}
             </span>
         </div>
-        <div class="space-x-2">
+        <div class="w-full sm:w-auto flex flex-wrap gap-2">
             <a href="{{ route('sales_officer.contacts.edit', $contact->id) }}" class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-sm font-medium">
                 Edit Company
             </a>
             <button id="addContactBtn" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm font-medium">
-                Add Contact Person
+                Add Contact
             </button>
             <a href="{{ route('sales_officer.contacts.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
                 Back to Contacts
@@ -27,9 +27,26 @@
         </div>
     </div>
     
-    <!-- Tab Navigation -->
-    <div class="border-b border-gray-200 mb-6">
-        <nav class="flex space-x-8">
+    <!-- Mobile Hamburger Menu -->
+    <div class="sm:hidden mb-4">
+        <button id="mobileTabsToggle" class="w-full flex items-center justify-between bg-gray-100 p-3 rounded-md">
+            <span id="currentTabLabel" class="font-medium text-gray-800">Company Info</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+        <div id="mobileTabsMenu" class="hidden mt-2 bg-white border border-gray-200 rounded-md shadow-lg">
+            <button class="mobile-tab-btn w-full text-left p-3 hover:bg-gray-100 active text-primary border-l-2 border-primary" data-tab="company-info">Company Info</button>
+            <button class="mobile-tab-btn w-full text-left p-3 hover:bg-gray-100" data-tab="business-info">Business Details</button>
+            <button class="mobile-tab-btn w-full text-left p-3 hover:bg-gray-100" data-tab="divisions">Divisions ({{ $contact->divisions->count() }})</button>
+            <button class="mobile-tab-btn w-full text-left p-3 hover:bg-gray-100" data-tab="contacts">Contact People ({{ $contact->contactPeople->count() }})</button>
+            <button class="mobile-tab-btn w-full text-left p-3 hover:bg-gray-100" data-tab="communication">Communication History</button>
+        </div>
+    </div>
+    
+    <!-- Desktop Tab Navigation -->
+    <div class="hidden sm:block border-b border-gray-200 mb-6 overflow-x-auto">
+        <nav class="flex space-x-8 whitespace-nowrap">
             <button class="tab-btn py-4 px-1 border-b-2 border-primary font-medium text-sm text-primary" 
                     data-tab="company-info">Company Info</button>
             <button class="tab-btn py-4 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300" 
@@ -153,7 +170,7 @@
     
     <!-- Divisions Tab -->
     <div class="tab-content hidden" id="divisions">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <h4 class="text-base font-semibold text-gray-800">Company Divisions</h4>
             <button id="addDivisionBtn" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium">
                 Add Division
@@ -161,14 +178,14 @@
         </div>
         
         @if($contact->divisions->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($contact->divisions as $division)
                     <div class="border rounded-lg p-4 hover:bg-gray-50">
                         <div class="flex justify-between items-start">
                             <h4 class="font-semibold text-gray-800">{{ $division->name }}</h4>
                             <span class="text-sm text-gray-500">Visits: {{ $division->visit_count }}</span>
                         </div>
-                        <div class="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+                        <div class="mt-3 pt-3 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <div class="text-sm">
                                 <span class="font-medium">{{ $division->contactPeople->count() }}</span> contacts in this division
                             </div>
@@ -203,7 +220,7 @@
     
     <!-- Contact People Tab -->
     <div class="tab-content hidden" id="contacts">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
             <h4 class="text-base font-semibold text-gray-800">Contact People</h4>
             <button id="addContactHeaderBtn" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-md text-xs font-medium">
                 Add Contact
@@ -211,13 +228,13 @@
         </div>
         
         @if($contact->contactPeople->count() > 0)
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($contact->contactPeople as $pic)
                     <div class="border rounded-lg overflow-hidden hover:shadow-md transition-shadow">
                         <div class="p-4 {{ $pic->is_primary ? 'bg-green-50' : 'bg-white' }}">
-                            <div class="flex justify-between items-start mb-2">
+                            <div class="flex flex-wrap justify-between items-start gap-2 mb-2">
                                 <h4 class="font-semibold text-gray-800">{{ $pic->title }} {{ $pic->name }}</h4>
-                                <div class="flex gap-1">
+                                <div class="flex flex-wrap gap-1">
                                     @if($pic->is_primary)
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                             Primary
@@ -284,9 +301,9 @@
     
     <!-- Communication History Tab -->
     <div class="tab-content hidden" id="communication">
-        <div class="flex justify-between items-center mb-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
             <h4 class="text-base font-semibold text-gray-800">Communication History</h4>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
                 <select class="rounded-md border-gray-300 text-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" id="comm-filter">
                     <option value="all">All Types</option>
                     <option value="Meeting">Meetings</option>
@@ -319,7 +336,7 @@
                         <div class="timeline-item border-l-2 border-gray-300 pl-4 pb-6 relative ml-4 activity-item" data-type="{{ $activity->activity_type }}">
                             <div class="timeline-bullet absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-500"></div>
                             <div class="bg-white rounded-lg border p-4 shadow-sm hover:shadow transition-shadow">
-                                <div class="flex justify-between items-start">
+                                <div class="flex flex-wrap justify-between items-start gap-2">
                                     <div>
                                         <span class="text-sm font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
                                             {{ $activity->activity_type }}
@@ -508,25 +525,83 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Tab switching functionality
+        // Mobile tab menu functionality
+        const mobileTabsToggle = document.getElementById('mobileTabsToggle');
+        const mobileTabsMenu = document.getElementById('mobileTabsMenu');
+        const currentTabLabel = document.getElementById('currentTabLabel');
+        const mobileTabBtns = document.querySelectorAll('.mobile-tab-btn');
+        
+        if(mobileTabsToggle) {
+            mobileTabsToggle.addEventListener('click', function() {
+                mobileTabsMenu.classList.toggle('hidden');
+            });
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!mobileTabsToggle.contains(event.target) && 
+                    !mobileTabsMenu.contains(event.target) && 
+                    !mobileTabsMenu.classList.contains('hidden')) {
+                    mobileTabsMenu.classList.add('hidden');
+                }
+            });
+            
+            // Mobile tab switching
+            mobileTabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTabs(tabId);
+                    
+                    // Update mobile menu label and hide menu
+                    currentTabLabel.textContent = this.textContent.trim();
+                    mobileTabsMenu.classList.add('hidden');
+                    
+                    // Update active state in mobile menu
+                    mobileTabBtns.forEach(btn => {
+                        btn.classList.remove('active', 'text-primary', 'border-l-2', 'border-primary');
+                    });
+                    this.classList.add('active', 'text-primary', 'border-l-2', 'border-primary');
+                });
+            });
+        }
+        
+        // Tab switching functionality (shared between mobile and desktop)
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabContents = document.querySelectorAll('.tab-content');
+        
+        function switchTabs(tabId) {
+            // Hide all tabs and remove active class
+            tabContents.forEach(content => content.classList.add('hidden'));
+            tabBtns.forEach(btn => {
+                btn.classList.remove('border-primary', 'text-primary');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab and add active class
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.remove('border-transparent', 'text-gray-500');
+            document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('border-primary', 'text-primary');
+            
+            // Also update mobile menu active state
+            if(mobileTabBtns) {
+                mobileTabBtns.forEach(btn => {
+                    if(btn.getAttribute('data-tab') === tabId) {
+                        btn.classList.add('active', 'text-primary', 'border-l-2', 'border-primary');
+                    } else {
+                        btn.classList.remove('active', 'text-primary', 'border-l-2', 'border-primary');
+                    }
+                });
+            }
+        }
         
         tabBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 const tabId = this.getAttribute('data-tab');
+                switchTabs(tabId);
                 
-                // Hide all tabs and remove active class
-                tabContents.forEach(content => content.classList.add('hidden'));
-                tabBtns.forEach(btn => {
-                    btn.classList.remove('border-primary', 'text-primary');
-                    btn.classList.add('border-transparent', 'text-gray-500');
-                });
-                
-                // Show selected tab and add active class
-                document.getElementById(tabId).classList.remove('hidden');
-                this.classList.remove('border-transparent', 'text-gray-500');
-                this.classList.add('border-primary', 'text-primary');
+                // Update mobile menu label
+                if(currentTabLabel) {
+                    currentTabLabel.textContent = this.textContent.trim();
+                }
             });
         });
         
@@ -547,8 +622,15 @@
         }
         
         // Add Contact button functionality
+        const addContactBtn = document.getElementById('addContactBtn');
         const addContactHeaderBtn = document.getElementById('addContactHeaderBtn');
         const addFirstContactBtn = document.getElementById('addFirstContactBtn');
+        
+        if(addContactBtn) {
+            addContactBtn.addEventListener('click', function() {
+                document.getElementById('contactModal').classList.remove('hidden');
+            });
+        }
         
         if(addContactHeaderBtn) {
             addContactHeaderBtn.addEventListener('click', function() {
@@ -610,6 +692,17 @@
                 }
             });
         }
+        
+        // Touch-friendly improvements for mobile
+        const cards = document.querySelectorAll('.border.rounded-lg');
+        cards.forEach(card => {
+            card.addEventListener('touchstart', function() {
+                this.classList.add('bg-gray-50');
+            });
+            card.addEventListener('touchend', function() {
+                this.classList.remove('bg-gray-50');
+            });
+        });
     });
 </script>
 @endpush
