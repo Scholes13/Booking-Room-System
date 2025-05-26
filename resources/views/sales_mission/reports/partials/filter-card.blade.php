@@ -8,6 +8,7 @@
                 <option value="sales_missions">Sales Mission Reports</option>
                 <option value="companies">Company Visit Reports</option>
                 <option value="locations">Location Reports</option>
+                <option value="agenda">Agenda Reports</option>
             </select>
         </div>
 
@@ -36,4 +37,15 @@
             <i class="fas fa-file-export mr-2"></i>Export
         </button>
     </div>
-</div> 
+</div>
+
+@push('scripts')
+<script>
+    // Add event listener for report type change
+    document.getElementById('report_type').addEventListener('change', function() {
+        if (this.value === 'agenda') {
+            window.location.href = "{{ route('sales_mission.reports.agenda') }}";
+        }
+    });
+</script>
+@endpush 

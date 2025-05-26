@@ -255,6 +255,46 @@
                             <span class="text-sm font-medium sidebar-text">Sales Mission List</span>
                         </a>
                     </li>
+
+                    <!-- Field Management Section -->
+                    <li class="pt-3 mt-3 border-t border-gray-100">
+                        <h3 class="sidebar-text ml-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Field Management</h3>
+                    </li>
+                    <li>
+                        <a href="{{ route('sales_mission.teams.index') }}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg {{ Request::routeIs('sales_mission.teams.*') ? 'active' : '' }}">
+                            <div class="text-inherit sidebar-icon-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a36,36,0,0,1,67.84,0,87.83,87.83,0,0,1-67.84,0ZM96,136a32,32,0,1,1,32,32A32,32,0,0,1,96,136Zm82.39,47.62a52,52,0,0,0-29.84-29.18,48,48,0,1,0-41.1,0,52,52,0,0,0-29.84,29.18,88,88,0,1,1,100.78,0Z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium sidebar-text">Teams</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('sales_mission.field-visits.index') }}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg {{ Request::routeIs('sales_mission.field-visits.*') ? 'active' : '' }}">
+                            <div class="text-inherit sidebar-icon-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M240,116a36.1,36.1,0,0,0-36-36,4.1,4.1,0,0,0-3.2,1.4l-40,44a11.7,11.7,0,0,1-8.8,3.6h-4.1l-8,7.4a20,20,0,0,1-12.6,3.6H112a8,8,0,0,0,0,16h15.3a35.4,35.4,0,0,0,23.1-7.8l4.4-4c.7-.1,1.4-.1,2.1-.1h.1a28,28,0,0,0,19.8-8.2l35-38.5A20.1,20.1,0,0,1,224,116ZM128,180a12,12,0,1,1-12,12A12,12,0,0,1,128,180ZM176,96A12,12,0,1,1,164,84,12,12,0,0,1,176,96ZM208,60a12,12,0,1,1,12-12A12,12,0,0,1,208,60ZM76,160H56.3a35.4,35.4,0,0,0-23.1,7.8l-4.4,4c-.7.1-1.4.1-2.1.1h-.1a28,28,0,0,0-19.8-8.2L26.7,126.5a20.1,20.1,0,0,1-12.7-19A36.1,36.1,0,0,0,52,88a4.1,4.1,0,0,0,3.2-1.4l16-17.6a8,8,0,0,0-11.8-10.8L43.2,75.8A20,20,0,0,1,20,96a45.2,45.2,0,0,0-8,8.8V40a8,8,0,0,0-8.3-8A7.8,7.8,0,0,0,0,40V216a8,8,0,0,0,16,0V199.9a27.9,27.9,0,0,0,19.8,8.2h.1a28,28,0,0,0,8.9-1.6A36.1,36.1,0,0,0,76,240a8,8,0,0,0,0-16H51.3a20,20,0,0,1,12-36H76a8,8,0,0,0,0-16ZM80,196a12,12,0,1,1,12,12A12,12,0,0,1,80,196Z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium sidebar-text">Field Visits</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('sales_mission.surveys.index') }}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg {{ Request::routeIs('sales_mission.surveys.*') ? 'active' : '' }}">
+                            <div class="text-inherit sidebar-icon-container">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,56H96V200H40ZM216,200H112V56H216Z"></path>
+                                    <circle cx="68" cy="128" r="12"></circle>
+                                    <path d="M180,88H132a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16Z"></path>
+                                    <path d="M180,152H132a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16Z"></path>
+                                    <path d="M180,120H132a8,8,0,0,0,0,16h48a8,8,0,0,0,0-16Z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-sm font-medium sidebar-text">Feedback Surveys</span>
+                        </a>
+                    </li>
+                    
                     <li>
                         <a href="{{ route('sales_mission.reports') }}" class="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-lg {{ Request::routeIs('sales_mission.reports') ? 'active' : '' }}">
                             <div class="text-inherit sidebar-icon-container">
@@ -265,7 +305,6 @@
                             <span class="text-sm font-medium sidebar-text">Reports</span>
                         </a>
                     </li>
-                                        <!-- Activity Logs removed - only available to superadmin -->
                 </ul>
             </nav>
             

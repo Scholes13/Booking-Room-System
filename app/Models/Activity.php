@@ -131,4 +131,22 @@ class Activity extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+    
+    /**
+     * Get the teams assigned to this activity.
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_assignments', 'activity_id', 'team_id')
+            ->withPivot('assignment_date', 'notes', 'assigned_by')
+            ->withTimestamps();
+    }
+    
+    /**
+     * Get the team assignments for this activity.
+     */
+    public function teamAssignments()
+    {
+        return $this->hasMany(TeamAssignment::class);
+    }
 }

@@ -12,10 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // First, modify the enum constraint to accept the correct spelling
-        DB::statement("ALTER TABLE activities MODIFY COLUMN activity_type ENUM('Meeting', 'Invitation', 'Survey')");
-        
-        // Then update any existing records with the misspelled value
+        // Only update existing records with the misspelled value
+        // We will not change the column type to ENUM to allow for more flexible activity types
         DB::statement("UPDATE activities SET activity_type = 'Invitation' WHERE activity_type = 'Invititation'");
     }
 
@@ -24,7 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Revert back to the original enum (though this is not recommended)
-        DB::statement("ALTER TABLE activities MODIFY COLUMN activity_type ENUM('Meeting', 'Invititation', 'Survey')");
+        // If you need to revert, you might want to change 'Invitation' back to 'Invititation'
+        // However, it's generally better to keep the corrected spelling.
+        // DB::statement("UPDATE activities SET activity_type = 'Invititation' WHERE activity_type = 'Invitation'");
     }
 };

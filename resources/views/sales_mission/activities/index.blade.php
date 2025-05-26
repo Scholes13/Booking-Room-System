@@ -100,18 +100,28 @@
                 <input type="text" id="endDateFilter" class="flatpickr-date block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500" placeholder="End date">
             </div>
             
+            {{-- Filter by City --}}
+            <div class="relative flex-1 min-w-[200px]">
+                <select id="locationFilter" name="filter_location" class="block w-full p-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="">All Cities</option>
+                    @if(isset($cities) && $cities->count() > 0)
+                        @foreach($cities as $city)
+                            <option value="{{ $city }}" {{ (isset($filterLocationValue) && $filterLocationValue == $city) ? 'selected' : '' }}>
+                                {{ $city }}
+                            </option>
+                        @endforeach
+                    @else
+                        <option value="" disabled>No cities available</option>
+                    @endif
+                </select>
+            </div>
+            
             <form id="filterForm" action="{{ route('sales_mission.activities.index') }}" method="GET" class="flex items-center gap-2">
                 <input type="hidden" name="search" id="searchParam">
                 <input type="hidden" name="status" id="statusParam">
                 <input type="hidden" name="start_date" id="startDateParam">
                 <input type="hidden" name="end_date" id="endDateParam">
-                
-                <button type="submit" id="filterButton" class="flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                    </svg>
-                    Filter
-                </button>
+                <input type="hidden" name="filter_location" id="locationParam">
             </form>
             
             <a href="{{ route('sales_mission.activities.index') }}" class="flex items-center justify-center py-2.5 px-4 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-100">
@@ -179,6 +189,14 @@
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
+                                <button type="button" class="assign-team px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center"
+                                    data-id="{{ $activity->id }}"
+                                    data-company="{{ $activity->salesMissionDetail->company_name }}">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    Assign Team
+                                </button>
                                 <button type="button" class="edit-activity px-3 py-1.5 text-xs font-medium bg-amber-50 text-amber-700 rounded-md hover:bg-amber-100 transition-colors inline-flex items-center" 
                                     data-id="{{ $activity->id }}" 
                                     data-company="{{ $activity->salesMissionDetail->company_name }}"
@@ -458,7 +476,49 @@
     </div>
 </div>
 
+<!-- Assign Team Modal -->
+<div id="assignTeamModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white p-6 rounded-xl shadow-xl max-w-3xl w-full mx-4 transform transition-transform duration-300 scale-100 overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-amber-700">Assign Team</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="assignTeamForm" action="{{ route('sales_mission.field-visits.store') }}" method="POST" class="space-y-6">
+            @csrf
+            <input type="hidden" id="activity_id" name="activity_id">
+            
+            <div class="mb-4">
+                <p class="text-lg font-medium text-gray-800" id="company-name-display"></p>
+                <p class="text-sm text-gray-600">The appointment date/time shown in the table is when the sales mission is scheduled</p>
+            </div>
+            
+            <!-- Team Selection -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Select Team <span class="text-red-500">*</span></label>
+                <div id="teamsContainer" class="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                    <div class="text-center p-4 text-gray-500">Loading teams...</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" class="close-modal px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+                    Assign Team
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize flatpickr for date inputs in the filter section
@@ -468,7 +528,15 @@
             allowInput: true,
             altInput: true,
             altFormat: "d M Y",
-            disableMobile: true
+            disableMobile: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                if (instance.input.id === 'startDateFilter') {
+                    document.getElementById('startDateParam').value = dateStr;
+                } else if (instance.input.id === 'endDateFilter') {
+                    document.getElementById('endDateParam').value = dateStr;
+                }
+                submitFilterForm();
+            }
         });
         
         // Edit Activity Modal
@@ -594,6 +662,230 @@
                 deleteActivityModal.classList.remove('flex');
                 deleteActivityModal.classList.add('hidden');
                 document.body.style.overflow = '';
+            }
+        });
+
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const endDateFilter = document.getElementById('endDateFilter');
+        const locationFilter = document.getElementById('locationFilter');
+        const filterForm = document.getElementById('filterForm');
+        const searchParam = document.getElementById('searchParam');
+        const statusParam = document.getElementById('statusParam');
+        const startDateParam = document.getElementById('startDateParam');
+        const endDateParam = document.getElementById('endDateParam');
+        const locationParam = document.getElementById('locationParam');
+
+        // Set initial values from URL parameters if they exist
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('search')) {
+            searchInput.value = urlParams.get('search');
+            searchParam.value = urlParams.get('search');
+        }
+        if (urlParams.has('status')) {
+            statusFilter.value = urlParams.get('status');
+            statusParam.value = urlParams.get('status');
+        }
+        if (urlParams.has('start_date') && startDateFilter._flatpickr) {
+            startDateFilter._flatpickr.setDate(urlParams.get('start_date'));
+            startDateParam.value = urlParams.get('start_date');
+        }
+        if (urlParams.has('end_date') && endDateFilter._flatpickr) {
+            endDateFilter._flatpickr.setDate(urlParams.get('end_date'));
+            endDateParam.value = urlParams.get('end_date');
+        }
+        if (urlParams.has('filter_location')) {
+            locationFilter.value = urlParams.get('filter_location');
+            locationParam.value = urlParams.get('filter_location');
+        }
+
+        // Function to submit the form
+        const submitFilterForm = () => {
+            // Update hidden inputs with current values
+            searchParam.value = searchInput.value;
+            statusParam.value = statusFilter.value;
+            startDateParam.value = startDateFilter.value;
+            endDateParam.value = endDateFilter.value;
+            locationParam.value = locationFilter.value;
+            filterForm.submit();
+        };
+
+        // Auto submit when search input changes (with small delay for typing)
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                submitFilterForm();
+            }, 500); // 500ms delay to allow typing
+        });
+        
+        // Auto submit when status changes
+        statusFilter.addEventListener('change', function() {
+            submitFilterForm();
+        });
+
+        // Setup flatpickr date input events
+        if (startDateFilter._flatpickr) {
+            startDateFilter._flatpickr.config.onClose = function(selectedDates, dateStr) {
+                startDateParam.value = dateStr;
+                submitFilterForm();
+            };
+        } else {
+            startDateFilter.addEventListener('change', function() {
+                submitFilterForm();
+            });
+        }
+        
+        if (endDateFilter._flatpickr) {
+            endDateFilter._flatpickr.config.onClose = function(selectedDates, dateStr) {
+                endDateParam.value = dateStr;
+                submitFilterForm();
+            };
+        } else {
+            endDateFilter.addEventListener('change', function() {
+                submitFilterForm();
+            });
+        }
+
+        // Still keep the form submit handler for the filter button
+        filterForm.addEventListener('submit', function(e) {
+            // Update hidden inputs with current values
+            searchParam.value = searchInput.value;
+            statusParam.value = statusFilter.value;
+            startDateParam.value = startDateFilter.value;
+            endDateParam.value = endDateFilter.value;
+            locationParam.value = locationFilter.value;
+        });
+
+        // Allow pressing Enter in search field to submit form
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                submitFilterForm();
+            }
+        });
+
+        // Assign Team functionality
+        const assignTeamModal = document.getElementById('assignTeamModal');
+        const assignTeamButtons = document.querySelectorAll('.assign-team');
+        const closeModalButtons = document.querySelectorAll('.close-modal');
+        const assignTeamForm = document.getElementById('assignTeamForm');
+        
+        // Fetch teams data
+        async function fetchTeams() {
+            try {
+                const response = await fetch('{{ route("sales_mission.teams.json") }}');
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data.teams;
+                } else {
+                    console.error('Error fetching teams:', data.message || 'Unknown error');
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error fetching teams:', error);
+                return [];
+            }
+        }
+        
+        // Populate teams in the modal
+        async function populateTeams() {
+            const teamsContainer = document.getElementById('teamsContainer');
+            const teams = await fetchTeams();
+            
+            if (teams.length === 0) {
+                teamsContainer.innerHTML = `
+                    <div class="text-center p-4 text-gray-500">
+                        No teams available. <a href="{{ route('sales_mission.teams.create') }}" class="text-amber-600 hover:underline">Create a team</a> first.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            teams.forEach(team => {
+                html += `
+                    <div class="border border-gray-200 rounded-lg p-3 team-card hover:bg-gray-50 transition-all">
+                        <div class="flex items-start">
+                            <input type="radio" id="team_${team.id}" name="team_id" value="${team.id}" 
+                                class="mt-1 w-4 h-4 text-amber-600 focus:ring-amber-500" required>
+                            <label for="team_${team.id}" class="ml-3 flex-1 cursor-pointer">
+                                <div class="font-medium text-gray-900">${team.name}</div>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <span class="inline-flex text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                                        ${team.members} members
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            teamsContainer.innerHTML = html;
+            
+            // Add click event to team cards
+            document.querySelectorAll('.team-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    
+                    // Remove selected class from all cards
+                    document.querySelectorAll('.team-card').forEach(c => {
+                        c.classList.remove('ring-2', 'ring-amber-500', 'bg-amber-50');
+                    });
+                    
+                    // Add selected class to this card
+                    this.classList.add('ring-2', 'ring-amber-500', 'bg-amber-50');
+                });
+            });
+        }
+        
+        // Show modal when assign team button is clicked
+        assignTeamButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const activityId = this.dataset.id;
+                const companyName = this.dataset.company;
+                
+                document.getElementById('activity_id').value = activityId;
+                document.getElementById('company-name-display').textContent = companyName;
+                
+                // Populate teams
+                populateTeams();
+                
+                // Show modal
+                assignTeamModal.classList.remove('hidden');
+                assignTeamModal.classList.add('flex');
+            });
+        });
+        
+        // Close modal when close button is clicked
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                assignTeamModal.classList.remove('flex');
+                assignTeamModal.classList.add('hidden');
+            });
+        });
+        
+        // Close modal when clicking outside
+        assignTeamModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('flex');
+                this.classList.add('hidden');
+            }
+        });
+        
+        // Handle form submission
+        assignTeamForm.addEventListener('submit', function(e) {
+            const teamSelected = document.querySelector('input[name="team_id"]:checked');
+            
+            if (!teamSelected) {
+                e.preventDefault();
+                alert('Please select a team to assign.');
             }
         });
     });

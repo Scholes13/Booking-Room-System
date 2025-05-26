@@ -43,5 +43,13 @@ class Employee extends Model
         return $this->belongsTo(Department::class);
     }
 
+    /**
+     * Get the teams that this employee is a member of
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_employees', 'employee_id', 'team_id');
+    }
+
     // Look for the Employee model file and add an array/orderBy function for the numbered positions
 }

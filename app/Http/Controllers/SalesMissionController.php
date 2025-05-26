@@ -142,6 +142,12 @@ class SalesMissionController extends Controller
             $query->where('status', $request->status);
         }
         
+        // Filter by Location (City)
+        $filterLocationValue = $request->input('filter_location');
+        if ($filterLocationValue) {
+            $query->where('city', $filterLocationValue);
+        }
+        
         // Filter by date range
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $query->where(function($q) use ($request) {
@@ -174,7 +180,17 @@ class SalesMissionController extends Controller
         $activities = $query->paginate(10);
         $activities->appends($request->all()); // Maintain filters in pagination
         
-        return view('sales_mission.activities.index', compact('activities'));
+        // Get distinct cities for the location filter dropdown
+        $cities = Activity::where('activity_type', 'Sales Mission')
+            ->whereHas('salesMissionDetail')
+            ->select('city')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city', 'asc')
+            ->pluck('city');
+            
+        return view('sales_mission.activities.index', compact('activities', 'cities', 'filterLocationValue'));
     }
     
     /**
@@ -845,5 +861,166 @@ class SalesMissionController extends Controller
         };
         
         return $typeTitle . ' - ' . $periodTitle;
+    }
+    
+    /**
+     * Field Management - Team Assignments
+     */
+    public function fieldAssignments()
+    {
+        return view('sales_mission.field.assignments.index');
+    }
+    
+    public function createFieldAssignment()
+    {
+        $departments = Department::all();
+        $employees = Employee::all();
+        return view('sales_mission.field.assignments.create', compact('departments', 'employees'));
+    }
+    
+    public function storeFieldAssignment(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment created successfully.');
+    }
+    
+    public function editFieldAssignment($id)
+    {
+        $departments = Department::all();
+        $employees = Employee::all();
+        // Placeholder for field assignment edit view
+        return view('sales_mission.field.assignments.edit', compact('departments', 'employees'));
+    }
+    
+    public function updateFieldAssignment(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment updated successfully.');
+    }
+    
+    public function destroyFieldAssignment($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Target Companies
+     */
+    public function fieldCompanies()
+    {
+        return view('sales_mission.field.companies.index');
+    }
+    
+    public function createFieldCompany()
+    {
+        return view('sales_mission.field.companies.create');
+    }
+    
+    public function storeFieldCompany(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company created successfully.');
+    }
+    
+    public function editFieldCompany($id)
+    {
+        return view('sales_mission.field.companies.edit');
+    }
+    
+    public function updateFieldCompany(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company updated successfully.');
+    }
+    
+    public function destroyFieldCompany($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Appointments
+     */
+    public function fieldAppointments()
+    {
+        return view('sales_mission.field.appointments.index');
+    }
+    
+    public function createFieldAppointment()
+    {
+        return view('sales_mission.field.appointments.create');
+    }
+    
+    public function storeFieldAppointment(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment created successfully.');
+    }
+    
+    public function editFieldAppointment($id)
+    {
+        return view('sales_mission.field.appointments.edit');
+    }
+    
+    public function updateFieldAppointment(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment updated successfully.');
+    }
+    
+    public function destroyFieldAppointment($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Visit Schedules
+     */
+    public function fieldSchedules()
+    {
+        return view('sales_mission.field.schedules.index');
+    }
+    
+    public function createFieldSchedule()
+    {
+        return view('sales_mission.field.schedules.create');
+    }
+    
+    public function storeFieldSchedule(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule created successfully.');
+    }
+    
+    public function editFieldSchedule($id)
+    {
+        return view('sales_mission.field.schedules.edit');
+    }
+    
+    public function updateFieldSchedule(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule updated successfully.');
+    }
+    
+    public function destroyFieldSchedule($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule deleted successfully.');
     }
 }

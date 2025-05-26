@@ -12,7 +12,11 @@ use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
 use App\Http\Controllers\SalesMissionController;
 use App\Http\Controllers\SalesOfficerController;
+use App\Http\Controllers\FeedbackSurveyController;
+use App\Http\Controllers\TeamAssignmentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SalesMission\FeedbackSurveyController as SalesMissionFeedbackSurveyController;
+use App\Http\Controllers\SalesMission\SalesAgendaController;
 
 // -------------------------------------------------------------------
 //                      ROUTE UTAMA
@@ -325,9 +329,70 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
         Route::get('/', [SalesMissionController::class, 'reports'])->name('sales_mission.reports');
         Route::post('/data', [SalesMissionController::class, 'getReportData'])->name('sales_mission.reports.data');
         Route::post('/export', [SalesMissionController::class, 'exportReport'])->name('sales_mission.reports.export');
+        
+        // New Agenda Routes
+        Route::get('/agenda', [SalesAgendaController::class, 'index'])->name('sales_mission.reports.agenda');
+        Route::post('/agenda/generate', [SalesAgendaController::class, 'generateAgenda'])->name('sales_mission.reports.agenda.generate');
+        Route::post('/agenda/export', [SalesAgendaController::class, 'exportAgenda'])->name('sales_mission.reports.agenda.export');
     });
     
-    // Logs functionality removed - only accessible to superadmin
+    // Teams Management
+    Route::resource('teams', \App\Http\Controllers\TeamController::class)->names([
+        'index' => 'sales_mission.teams.index',
+        'create' => 'sales_mission.teams.create',
+        'store' => 'sales_mission.teams.store',
+        'show' => 'sales_mission.teams.show',
+        'edit' => 'sales_mission.teams.edit',
+        'update' => 'sales_mission.teams.update',
+        'destroy' => 'sales_mission.teams.destroy',
+    ]);
+    
+    // Get teams in JSON format for dropdowns and modals
+    Route::get('teams-json', [\App\Http\Controllers\TeamController::class, 'getTeamsJson'])
+        ->name('sales_mission.teams.json');
+    
+    // Field Visits (Team Assignments)
+    Route::resource('field-visits', \App\Http\Controllers\TeamAssignmentController::class)->parameters([
+        'field-visits' => 'fieldVisit'
+    ])->names([
+        'index' => 'sales_mission.field-visits.index',
+        'create' => 'sales_mission.field-visits.create',
+        'store' => 'sales_mission.field-visits.store',
+        'show' => 'sales_mission.field-visits.show',
+        'edit' => 'sales_mission.field-visits.edit',
+        'update' => 'sales_mission.field-visits.update',
+        'destroy' => 'sales_mission.field-visits.destroy',
+    ]);
+
+    // Feedback Survey Routes - Admin side
+    Route::prefix('surveys')->name('sales_mission.surveys.')->group(function () {
+        Route::get('/', [FeedbackSurveyController::class, 'index'])->name('index');
+        Route::get('/{survey}', [FeedbackSurveyController::class, 'show'])->name('show');
+        Route::get('/generate/{teamAssignment}', [FeedbackSurveyController::class, 'generateSurvey'])->name('generate');
+    });
+});
+
+// Public Feedback Survey Routes (no auth required)
+Route::prefix('feedback')->name('sales_mission.surveys.public.')->group(function () {
+    Route::get('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'publicSurvey'])->name('form');
+    Route::post('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'submitFeedback'])->name('submit');
+    Route::get('/thank-you', [SalesMissionFeedbackSurveyController::class, 'thankYou'])->name('thank_you');
+
+    Route::get('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'showSalesBlitzForm'])->name('sales_blitz_form');
+    Route::post('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'submitSalesBlitzForm'])->name('sales_blitz_submit');
+    Route::get('/view/{token}', [SalesMissionFeedbackSurveyController::class, 'publicViewFeedback'])->name('view_feedback');
+});
+
+// Public Field Visits Routes
+Route::prefix('field-visits')->name('public.field-visits.')->group(function () {
+    Route::get('/', [TeamAssignmentController::class, 'publicIndex'])->name('index');
+    Route::get('/calendar-data', [TeamAssignmentController::class, 'calendarData'])->name('calendar-data');
+    Route::get('/{fieldVisit}', [TeamAssignmentController::class, 'publicDetail'])->name('detail');
+});
+
+// Simple redirect for easier access to public field visits
+Route::get('/public/field-visits', function() {
+    return redirect()->route('public.field-visits.index');
 });
 
 // -------------------------------------------------------------------
@@ -393,6 +458,11 @@ Route::group(['prefix' => 'officer', 'middleware' => \App\Http\Middleware\SalesO
     Route::get('/api/company/{company_id}/follow-up-history', [SalesOfficerController::class, 'getCompanyFollowUpHistory'])
         ->name('sales_officer.api.company.follow-up-history');
 });
+
+// Fonnte WhatsApp Testing
+Route::get('/test-fonnte-page', [App\Http\Controllers\TestController::class, 'fontneTestPage']);
+Route::post('/test-fonnte', [App\Http\Controllers\TestController::class, 'testFonnte']);
+Route::post('/test-fonnte-link', [App\Http\Controllers\TestController::class, 'testFontneLink']);
 
 // Add a test route at the bottom of the file
 Route::get('/generate-test-sales-mission', function() {
