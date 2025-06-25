@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ResetDataSeeder::class,  // Reset and recreate other data
             ActivityTypeSeeder::class, // Add activity types
             SalesMissionSeeder::class,
+            LeadUserSeeder::class,
         ]);
     }
 }

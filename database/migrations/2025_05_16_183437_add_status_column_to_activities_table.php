@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('activities', function (Blueprint $table) {
-            // Add a string column for activity status with default value 'scheduled'
-            $table->string('status')->nullable()->after('end_datetime');
+            // Check if status column exists before adding it
+            if (!Schema::hasColumn('activities', 'status')) {
+                $table->string('status')->nullable()->after('end_datetime');
+            }
         });
     }
 
@@ -23,7 +25,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('activities', function (Blueprint $table) {
-            $table->dropColumn('status');
+            if (Schema::hasColumn('activities', 'status')) {
+                $table->dropColumn('status');
+            }
         });
     }
 };

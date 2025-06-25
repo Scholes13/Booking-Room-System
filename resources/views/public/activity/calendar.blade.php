@@ -887,129 +887,118 @@ document.addEventListener('DOMContentLoaded', function() {
     const calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'id',
         initialView: window.innerWidth < 768 ? 'dayGridMonth' : 'dayGridMonth',
-            headerToolbar: false, // We're using our own controls
-            slotMinTime: '06:00:00',
-            slotMaxTime: '21:00:00',
-            slotDuration: '00:30:00',
+        headerToolbar: false, // We're using our own controls
+        slotMinTime: '06:00:00',
+        slotMaxTime: '21:00:00',
+        slotDuration: '00:30:00',
         slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
         nowIndicator: true,
-            dayMaxEvents: 3, // Limit to 3 events per day
-            allDayContent: 'All day',
+        dayMaxEvents: 3, // Limit to 3 events per day
+        allDayContent: 'All day',
         height: 'auto',
-            eventTimeFormat: {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            },
-            // Configure the "more" link click behavior
-            moreLinkClick: function(info) {
-                // Get the date of the clicked "more" link
-                const clickedDate = info.date;
-                
-                // Format the date for display in modal title
-                const formattedDate = new Intl.DateTimeFormat('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                }).format(clickedDate);
-                
-                // Create event objects for the modal
-                const moreEventsForModal = info.allSegs.map(seg => {
-                    const evt = seg.event;
-                    const props = evt.extendedProps;
-                    
-                    return {
-                        id: evt.id,
-                        title: evt.title,
-                        start: evt.start,
-                        end: evt.end || evt.start,
-                        time: formatTimeRange(evt.start, evt.end || evt.start),
-                        department: props.department,
-                        activity_type: props.activity_type,
-                        description: props.description,
-                        location: props.location,
-                        isMultiDay: props.isMultiDay
-                    };
-                });
-                
-                // Show the "more" modal with the list of events
-                const modalTitleEl = document.getElementById('moreModalTitle');
-                // Update the icon and title
-                modalTitleEl.innerHTML = `
-                    <span class="bg-primary w-8 h-8 rounded-full flex items-center justify-center mr-3">
-                        <i class="fas fa-calendar-day text-white"></i>
-                    </span>
-                    <span>${formattedDate}</span>
-                `;
-                
-                showMoreModal(moreEventsForModal);
-                
-                // Return 'popover' to prevent default behavior
-                return 'popover';
-            },
-            moreLinkText: function(n) {
-                return `+${n} ${n === 1 ? 'other activity' : 'other activities'}`;
+        eventTimeFormat: {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
         },
-
+        eventOrder: 'start',
+        moreLinkClick: function(info) {
+            const clickedDate = info.date;
+            
+            const formattedDate = new Intl.DateTimeFormat('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }).format(clickedDate);
+            
+            const moreEventsForModal = info.allSegs.map(seg => {
+                const evt = seg.event;
+                const props = evt.extendedProps;
+                
+                return {
+                    id: evt.id,
+                    title: evt.title,
+                    start: evt.start,
+                    end: evt.end || evt.start,
+                    time: formatTimeRange(evt.start, evt.end || evt.start),
+                    department: props.department,
+                    activity_type: props.activity_type,
+                    description: props.description,
+                    location: props.location,
+                    isMultiDay: props.isMultiDay
+                };
+            });
+            
+            const modalTitleEl = document.getElementById('moreModalTitle');
+            modalTitleEl.innerHTML = `
+                <span class="bg-primary w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                    <i class="fas fa-calendar-day text-white"></i>
+                </span>
+                <span>${formattedDate}</span>
+            `;
+            
+            showMoreModal(moreEventsForModal);
+            
+            return 'popover';
+        },
+        moreLinkText: function(n) {
+            return `+${n} ${n === 1 ? 'other activity' : 'other activities'}`;
+        },
         events: function(info, successCallback, failureCallback) {
             let url = new URL("{{ route('activity.calendar.events') }}");
             url.searchParams.append('start', info.startStr);
             url.searchParams.append('end', info.endStr);
 
-                const selectedDept = departmentFilter.value;
-                const selectedActivityType = activityTypeFilter.value;
-                const searchTerm = searchInput.value.trim();
+            const selectedDept = departmentFilter.value;
+            const selectedActivityType = activityTypeFilter.value;
+            const searchTerm = searchInput.value.trim();
             
             if (selectedDept) url.searchParams.append('department_id', selectedDept);
             if (selectedActivityType) url.searchParams.append('activity_type', selectedActivityType);
-                if (searchTerm) url.searchParams.append('search', searchTerm);
+            if (searchTerm) url.searchParams.append('search', searchTerm);
 
             fetch(url)
                 .then(response => response.json())
                 .then(rawEvents => {
-                        // Transform events for calendar display
-                        const transformedEvents = rawEvents
-                            // Filter by search term if provided
-                            .filter(event => {
-                                if (!searchTerm) return true;
-                                return event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                       (event.extendedProps.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-                            })
-                            .map(event => {
-                        const startDate = new Date(event.start);
-                        const endDate = new Date(event.end);
-                        const startDay = startDate.toISOString().split('T')[0];
-                        const endDay = endDate.toISOString().split('T')[0];
-                        const isMultiDay = startDay !== endDay;
-                                const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 &&
-                                                endDate.getHours() === 0 && endDate.getMinutes() === 0;
+                    const transformedEvents = rawEvents
+                        .filter(event => {
+                            if (!searchTerm) return true;
+                            return event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                   (event.extendedProps.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+                        })
+                        .map(event => {
+                            const startDate = new Date(event.start);
+                            const endDate = new Date(event.end);
+                            const startDay = startDate.toISOString().split('T')[0];
+                            const endDay = endDate.toISOString().split('T')[0];
+                            const isMultiDay = startDay !== endDay;
+                            const isAllDay = startDate.getHours() === 0 && startDate.getMinutes() === 0 &&
+                                            endDate.getHours() === 0 && endDate.getMinutes() === 0;
 
-                                // Get activity type configuration
-                                const config = getActivityConfig(event.extendedProps.activity_type);
-                                
-                                const baseEvent = {
-                            id: event.id,
-                            title: event.title,
-                            start: event.start,
-                            end: event.end,
-                                    allDay: isAllDay || isMultiDay,
-                                    backgroundColor: config.color, // Use same color scheme for all events
-                                    borderColor: config.color,
-                            textColor: '#FFFFFF',
-                                    display: 'auto', // Use auto display for all events
-                                    classNames: isMultiDay ? ['multi-day-event'] : [],
-                            extendedProps: {
-                                ...event.extendedProps,
-                                        isMultiDay: isMultiDay,
-                                        iconClass: isMultiDay ? 'fa-calendar-week' : config.icon,
-                                        originalColor: config.color
-                            }
-                        };
-                                
-                                // Return a single event - FullCalendar will handle multi-day display
-                                return baseEvent;
-                    });
+                            const config = getActivityConfig(event.extendedProps.activity_type);
+                            
+                            const baseEvent = {
+                                id: event.id,
+                                title: event.title,
+                                start: event.start,
+                                end: event.end,
+                                allDay: isAllDay || isMultiDay,
+                                backgroundColor: config.color,
+                                borderColor: config.color,
+                                textColor: '#FFFFFF',
+                                display: 'auto',
+                                classNames: isMultiDay ? ['multi-day-event'] : [],
+                                extendedProps: {
+                                    ...event.extendedProps,
+                                    isMultiDay: isMultiDay,
+                                    iconClass: isMultiDay ? 'fa-calendar-week' : config.icon,
+                                    originalColor: config.color
+                                }
+                            };
+                            
+                            return baseEvent;
+                        });
 
                     successCallback(transformedEvents);
                 })
@@ -1018,193 +1007,154 @@ document.addEventListener('DOMContentLoaded', function() {
                     failureCallback(err);
                 });
         },
-
-            eventContent: function(info) {
-                const event = info.event;
-                const props = event.extendedProps;
-                const isMultiDay = props.isMultiDay;
-                
-                // Create event container
-                const container = document.createElement('div');
-                container.className = 'p-1 w-full';
-                container.style.marginBottom = '2px';
-                
-                // Create top row with time and department
-                const topRow = document.createElement('div');
-                topRow.className = 'flex justify-between items-center w-full';
-                
-                // Time element
-                const timeEl = document.createElement('div');
-                timeEl.className = 'event-time';
-                
-                // Format time
-                const start = new Date(event.start);
-                const end = event.end ? new Date(event.end) : start;
-                
-                if (isMultiDay) {
-                    // Format multi-day events with the date range
-                    timeEl.innerText = `${start.getDate()}/${start.getMonth()+1}-${end.getDate()}/${end.getMonth()+1}`;
-                } else {
-                    timeEl.innerText = `${start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}–${end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}`;
-                }
-                
-                // Department badge
-                const deptEl = document.createElement('div');
-                deptEl.className = 'event-department';
-                
-                // Get department name and abbreviate if too long
-                let deptName = props.department || '';
-                if (deptName.length > 12) {
-                    // Try to create abbreviation if possible
-                    const words = deptName.split(' ');
-                    if (words.length > 1) {
-                        deptName = words.map(word => word.charAt(0)).join('');
-                    } else {
-                        deptName = deptName.substring(0, 10) + '...';
-                    }
-                }
-                deptEl.innerText = deptName;
-                
-                topRow.appendChild(timeEl);
-                topRow.appendChild(deptEl);
-                container.appendChild(topRow);
-                
-                // Name/title row
-                const nameEl = document.createElement('div');
-                nameEl.className = 'event-title mt-1';
-                nameEl.title = event.title; // Show full name on hover
-                
-                // Abbreviate long names if needed
-                let displayName = event.title;
-                if (displayName.length > 20) {
-                    const nameParts = displayName.split(' ');
-                    if (nameParts.length >= 2) {
-                        // For names like "First Middle Last", show "First L."
-                        displayName = nameParts[0] + ' ' + nameParts[nameParts.length - 1].charAt(0) + '.';
-                    } else {
-                        displayName = displayName.substring(0, 18) + '...';
-                    }
-                }
-                nameEl.innerText = displayName;
-                
-                container.appendChild(nameEl);
-                
-                // Activity type row (if available)
-                if (props.activity_type) {
-                    const activityTypeEl = document.createElement('div');
-                    activityTypeEl.className = 'event-activity-type';
-                    
-                    // Abbreviate activity type if needed
-                    let activityType = props.activity_type;
-                    if (activityType.length > 22) {
-                        activityType = activityType.substring(0, 20) + '...';
-                    }
-                    
-                    // Get color for this activity type
-                    const activityColor = getActivityTypeColor(activityType);
-                    
-                    // Create a span with background color
-                    const coloredSpan = document.createElement('span');
-                    coloredSpan.className = 'activity-type-badge';
-                    coloredSpan.innerText = activityType;
-                    coloredSpan.style.backgroundColor = activityColor.bgColor;
-                    coloredSpan.style.color = activityColor.textColor;
-                    
-                    activityTypeEl.appendChild(coloredSpan);
-                    container.appendChild(activityTypeEl);
-                }
-                
-                return { domNodes: [container] };
-            },
-
-            // Make sure all events display properly with consistent spacing
-        eventDidMount: function(info) {
-                // Apply styling to all events for consistent spacing
-                if (info.view.type === 'dayGridMonth') {
-                    // Consistent styling for all events
-                    info.el.style.backgroundColor = 'var(--event-bg-color)';
-                    info.el.style.color = 'var(--primary-color)';
-                    info.el.style.fontWeight = 'normal';
-                    // Add padding to ensure content displays properly
-                    info.el.style.padding = '2px';
-                    // Add margin for better spacing between events
-                    info.el.style.marginBottom = '4px';
-                    info.el.style.marginTop = '1px';
-                    // Add border radius for consistency
-                    info.el.style.borderRadius = '4px';
-                    // Add shadow
-                    info.el.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
-                }
-            },
-
-        eventClick: function(info) {
-                const event = info.event;
-                const props = event.extendedProps;
-                const startStr = event.start ? new Date(event.start).toLocaleString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }) : '';
-                
-                // Use original end date if available
-                const endDate = props.original_end ? new Date(props.original_end) : event.end;
-                
-                const endStr = endDate ? new Date(endDate).toLocaleString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: false
-                }) : '';
-
-                // Prepare Sales Mission details if available
-                const salesMissionDetails = {
-                    isSalesMission: props.activity_type === 'Sales Mission',
-                    company_name: props.company_name || '',
-                    company_pic: props.company_pic || '',
-                    company_position: props.company_position || '',
-                    company_contact: props.company_contact || '',
-                    company_email: props.company_email || '',
-                    company_address: props.company_address || ''
-                };
-
-                showEventModal({
-                    title: event.title,
-                    time: `${startStr} - ${endStr}`,
-                    department: props.department,
-                    activity_type: props.activity_type,
-                    location: props.location,
-                    description: props.description,
-                    salesMissionDetails: salesMissionDetails
-                });
-            },
+        eventContent: function(info) {
+            const event = info.event;
+            const props = event.extendedProps;
+            const isMultiDay = props.isMultiDay;
             
-            // Make sure all-day and multi-day events appear at the top
-            eventOrder: function(a, b) {
-                // All-day events should appear at the top
-                if (a.allDay && !b.allDay) return -1;
-                if (!a.allDay && b.allDay) return 1;
-                
-                // If both are all-day, sort by start time
-                return 0;
+            const container = document.createElement('div');
+            container.className = 'p-1 w-full';
+            container.style.marginBottom = '2px';
+            
+            const topRow = document.createElement('div');
+            topRow.className = 'flex justify-between items-center w-full';
+            
+            const timeEl = document.createElement('div');
+            timeEl.className = 'event-time';
+            
+            const start = new Date(event.start);
+            const end = event.end ? new Date(event.end) : start;
+            
+            if (isMultiDay) {
+                timeEl.innerText = `${start.getDate()}/${start.getMonth()+1}-${end.getDate()}/${end.getMonth()+1}`;
+            } else {
+                timeEl.innerText = `${start.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}–${end.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit', hour12: false})}`;
             }
-        });
+            
+            const deptEl = document.createElement('div');
+            deptEl.className = 'event-department';
+            
+            let deptName = props.department || '';
+            if (deptName.length > 12) {
+                const words = deptName.split(' ');
+                if (words.length > 1) {
+                    deptName = words.map(word => word.charAt(0)).join('');
+                } else {
+                    deptName = deptName.substring(0, 10) + '...';
+                }
+            }
+            deptEl.innerText = deptName;
+            
+            topRow.appendChild(timeEl);
+            topRow.appendChild(deptEl);
+            container.appendChild(topRow);
+            
+            const nameEl = document.createElement('div');
+            nameEl.className = 'event-title mt-1';
+            nameEl.title = event.title;
+            
+            let displayName = event.title;
+            if (displayName.length > 20) {
+                const nameParts = displayName.split(' ');
+                if (nameParts.length >= 2) {
+                    displayName = nameParts[0] + ' ' + nameParts[nameParts.length - 1].charAt(0) + '.';
+                } else {
+                    displayName = displayName.substring(0, 18) + '...';
+                }
+            }
+            nameEl.innerText = displayName;
+            
+            container.appendChild(nameEl);
+            
+            if (props.activity_type) {
+                const activityTypeEl = document.createElement('div');
+                activityTypeEl.className = 'event-activity-type';
+                
+                let activityType = props.activity_type;
+                if (activityType.length > 22) {
+                    activityType = activityType.substring(0, 20) + '...';
+                }
+                
+                const activityColor = getActivityTypeColor(activityType);
+                
+                const coloredSpan = document.createElement('span');
+                coloredSpan.className = 'activity-type-badge';
+                coloredSpan.innerText = activityType;
+                coloredSpan.style.backgroundColor = activityColor.bgColor;
+                coloredSpan.style.color = activityColor.textColor;
+                
+                activityTypeEl.appendChild(coloredSpan);
+                container.appendChild(activityTypeEl);
+            }
+            
+            return { domNodes: [container] };
+        },
+        eventDidMount: function(info) {
+            if (info.view.type === 'dayGridMonth') {
+                info.el.style.backgroundColor = 'var(--event-bg-color)';
+                info.el.style.color = 'var(--primary-color)';
+                info.el.style.fontWeight = 'normal';
+                info.el.style.padding = '2px';
+                info.el.style.marginBottom = '4px';
+                info.el.style.marginTop = '1px';
+                info.el.style.borderRadius = '4px';
+                info.el.style.boxShadow = '0 1px 2px rgba(0, 0, 0, 0.05)';
+            }
+        },
+        eventClick: function(info) {
+            const event = info.event;
+            const props = event.extendedProps;
+            const startStr = event.start ? new Date(event.start).toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }) : '';
+            
+            const endDate = props.original_end ? new Date(props.original_end) : event.end;
+            
+            const endStr = endDate ? new Date(endDate).toLocaleString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            }) : '';
+
+            const salesMissionDetails = {
+                isSalesMission: props.activity_type === 'Sales Mission',
+                company_name: props.company_name || '',
+                company_pic: props.company_pic || '',
+                company_position: props.company_position || '',
+                company_contact: props.company_contact || '',
+                company_email: props.company_email || '',
+                company_address: props.company_address || ''
+            };
+
+            showEventModal({
+                title: event.title,
+                time: `${startStr} - ${endStr}`,
+                department: props.department,
+                activity_type: props.activity_type,
+                location: props.location,
+                description: props.description,
+                salesMissionDetails: salesMissionDetails
+            });
+        }
+    });
 
     calendar.render();
 
-        // Update current range display on initial load
-        updateCurrentRange();
-        
-        // Handle window resize
+    updateCurrentRange();
+    
     window.addEventListener('resize', function() {
-            calendar.updateSize();
-        });
+        calendar.updateSize();
+    });
 });
 </script>
 @endpush

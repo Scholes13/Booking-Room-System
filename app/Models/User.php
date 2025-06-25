@@ -18,6 +18,7 @@ class User extends Authenticatable
     const ROLE_ADMIN_BAS = 'admin_bas';
     const ROLE_SALES_MISSION = 'sales_mission';
     const ROLE_SALES_OFFICER = 'sales_officer';
+    const ROLE_LEAD = 'lead';
 
     /**
      * Field yang boleh diisi secara mass assignment.
@@ -83,6 +84,14 @@ class User extends Authenticatable
     public function isSalesOfficer()
     {
         return $this->role === self::ROLE_SALES_OFFICER;
+    }
+
+    /**
+     * Check if user is Lead
+     */
+    public function isLead()
+    {
+        return $this->role === self::ROLE_LEAD;
     }
     
     /**

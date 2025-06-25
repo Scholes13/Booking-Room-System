@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('bookings', function (Blueprint $table) {
-            $table->string('booking_type')->default('internal')->after('description');
-            $table->text('external_description')->nullable()->after('booking_type');
-        });
+        // Schema::table('bookings', function (Blueprint $table) {
+        //     $table->string('booking_type')->default('internal')->after('description');
+        //     $table->text('external_description')->nullable()->after('booking_type');
+        // });
     }
 
     /**
@@ -22,9 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('bookings', function (Blueprint $table) {
-            $table->dropColumn('booking_type');
-            $table->dropColumn('external_description');
-        });
+        // Schema::table('bookings', function (Blueprint $table) {
+        //     $table->dropColumn('booking_type');
+        //     $table->dropColumn('external_description');
+        // });
     }
 };

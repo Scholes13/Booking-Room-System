@@ -12,8 +12,10 @@ class AddRoleToUsersTable extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Menambahkan kolom 'role' dengan default 'admin'
-            $table->string('role')->default('admin');
+            // Tambahkan kolom 'role' hanya jika belum ada
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('admin');
+            }
         });
     }
 

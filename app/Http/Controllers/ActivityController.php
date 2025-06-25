@@ -7,9 +7,18 @@ use App\Models\Department;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\FontneService;
+use App\Http\Requests\StoreActivityRequest;
 
 class ActivityController extends Controller
 {
+    protected $fontneService;
+
+    public function __construct(FontneService $fontneService)
+    {
+        $this->fontneService = $fontneService;
+    }
+
     /**
      * Menampilkan form untuk menambahkan kegiatan.
      */
@@ -40,24 +49,9 @@ class ActivityController extends Controller
         // Tambahkan 'Lainnya' di akhir array
         $activityTypes[] = 'Lainnya';
 
-        // Data provinsi dan kota (contoh data)
-        $provinces = [
-            'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi', 'Sumatera Selatan',
-            'Bengkulu', 'Lampung', 'Kepulauan Bangka Belitung', 'Kepulauan Riau', 'DKI Jakarta',
-            'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
-            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat', 'Kalimantan Tengah',
-            'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara',
-            'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo',
-            'Sulawesi Barat', 'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
-        ];
-
-        $cities = [
-            // Contoh kota-kota besar di Indonesia
-            'Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur',
-            'Bandung', 'Bekasi', 'Tangerang', 'Depok', 'Bogor', 'Semarang', 'Yogyakarta',
-            'Surabaya', 'Malang', 'Medan', 'Palembang', 'Makassar', 'Balikpapan', 'Banjarmasin',
-            'Pontianak', 'Padang', 'Pekanbaru', 'Denpasar', 'Manado'
-        ];
+        // Data provinsi dan kota
+        $provinces = \App\Models\Province::orderBy('name')->get();
+        $cities = \App\Models\City::orderBy('name')->get();
 
         return view('public.activity.index', compact('departments', 'employees', 'provinces', 'cities', 'activityTypes'));
     }
@@ -65,36 +59,9 @@ class ActivityController extends Controller
     /**
      * Menyimpan data kegiatan baru.
      */
-    public function store(Request $request)
+    public function store(StoreActivityRequest $request)
     {
-        // Validasi input dasar
-        $validationRules = [
-            'name'           => 'required|exists:employees,name',
-            'department_id'  => 'required|exists:departments,id',
-            'activity_type'  => 'required|string',
-            'description'    => 'required|string',
-            'province'       => 'required|string|max:100',
-            'city'           => 'required|string|max:100',
-            'start_datetime' => 'required|date_format:Y-m-d H:i',
-            'end_datetime'   => 'required|date_format:Y-m-d H:i|after:start_datetime',
-        ];
-        
-        // Tambahkan validasi untuk tipe kegiatan "Lainnya"
-        if ($request->activity_type === 'Lainnya') {
-            $validationRules['activity_type_other'] = 'required|string|max:100';
-        }
-        
-        // Tambahkan validasi untuk tipe kegiatan "Sales Mission"
-        if ($request->activity_type === 'Sales Mission') {
-            $validationRules['company_name'] = 'required|string|max:255';
-            $validationRules['company_pic'] = 'required|string|max:255';
-            $validationRules['company_position'] = 'required|string|max:255';
-            $validationRules['company_contact'] = 'required|string|max:255';
-            $validationRules['company_email'] = 'required|email|max:255';
-            $validationRules['company_address'] = 'required|string';
-        }
-        
-        $request->validate($validationRules);
+        // Validation is handled by StoreActivityRequest
 
         // Menyiapkan data untuk disimpan
         $activityData = [
@@ -127,6 +94,12 @@ class ActivityController extends Controller
                 'company_email' => $request->input('company_email'),
                 'company_address' => $request->input('company_address'),
             ]);
+
+            // Reload the activity to get the salesMissionDetail relationship for the notification
+            $activity->load('salesMissionDetail'); 
+
+            // Kirim notifikasi WhatsApp jika Sales Mission baru berhasil dibuat
+            $this->fontneService->sendNewSalesMissionNotification($activity);
         }
 
         return redirect()->route('activity.create')->with('success', 'Kegiatan berhasil dibuat!');
@@ -308,23 +281,9 @@ class ActivityController extends Controller
         // Tambahkan 'Lainnya' di akhir array
         $activityTypes[] = 'Lainnya';
 
-        // Data provinsi dan kota (contoh data)
-        $provinces = [
-            'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi', 'Sumatera Selatan',
-            'Bengkulu', 'Lampung', 'Kepulauan Bangka Belitung', 'Kepulauan Riau', 'DKI Jakarta',
-            'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
-            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat', 'Kalimantan Tengah',
-            'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara',
-            'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo',
-            'Sulawesi Barat', 'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
-        ];
-
-        $cities = [
-            'Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur',
-            'Bandung', 'Bekasi', 'Tangerang', 'Depok', 'Bogor', 'Semarang', 'Yogyakarta',
-            'Surabaya', 'Malang', 'Medan', 'Palembang', 'Makassar', 'Balikpapan', 'Banjarmasin',
-            'Pontianak', 'Padang', 'Pekanbaru', 'Denpasar', 'Manado'
-        ];
+        // Data provinsi dan kota
+        $provinces = \App\Models\Province::orderBy('name')->get();
+        $cities = \App\Models\City::orderBy('name')->get();
 
         return view('superadmin.activities.create', compact('departments', 'employees', 'provinces', 'cities', 'activityTypes'));
     }
@@ -407,23 +366,9 @@ class ActivityController extends Controller
         // Tambahkan 'Lainnya' di akhir array
         $activityTypes[] = 'Lainnya';
 
-        // Data provinsi dan kota (contoh data)
-        $provinces = [
-            'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Jambi', 'Sumatera Selatan',
-            'Bengkulu', 'Lampung', 'Kepulauan Bangka Belitung', 'Kepulauan Riau', 'DKI Jakarta',
-            'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur', 'Banten', 'Bali',
-            'Nusa Tenggara Barat', 'Nusa Tenggara Timur', 'Kalimantan Barat', 'Kalimantan Tengah',
-            'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara', 'Sulawesi Utara',
-            'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Tenggara', 'Gorontalo',
-            'Sulawesi Barat', 'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat'
-        ];
-
-        $cities = [
-            'Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur',
-            'Bandung', 'Bekasi', 'Tangerang', 'Depok', 'Bogor', 'Semarang', 'Yogyakarta',
-            'Surabaya', 'Malang', 'Medan', 'Palembang', 'Makassar', 'Balikpapan', 'Banjarmasin',
-            'Pontianak', 'Padang', 'Pekanbaru', 'Denpasar', 'Manado'
-        ];
+        // Data provinsi dan kota
+        $provinces = \App\Models\Province::orderBy('name')->get();
+        $cities = \App\Models\City::orderBy('name')->get();
         
         // Cek apakah activity_type dimulai dengan "Lainnya:"
         $activityTypeOther = '';

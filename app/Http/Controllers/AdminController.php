@@ -65,6 +65,9 @@ class AdminController extends Controller
             } elseif ($user->role === 'sales_officer') {
                 return redirect()->route('sales_officer.dashboard')
                                ->with('success', 'Selamat datang, Sales Officer!');
+            } elseif ($user->role === 'lead') {
+                return redirect()->route('lead.dashboard')
+                               ->with('success', 'Selamat datang, Lead!');
             } else {
                 // Jika role tidak valid, logout dan kembalikan error
                 Auth::logout();

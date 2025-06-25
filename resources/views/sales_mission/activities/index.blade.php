@@ -54,10 +54,60 @@
     .badge-gray {
         @apply bg-gray-100 text-gray-800;
     }
+    .sortable-link a {
+        display: flex;
+        align-items: center;
+    }
+    .sortable-link svg {
+        margin-left: 4px;
+        width: 12px; /* Adjust size as needed */
+        height: 12px; /* Adjust size as needed */
+    }
+    .table-fixed th.description-col {
+        /* Potentially add max-width or other styles if using truncate */
+    }
+    .table-fixed td.description-col div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        /* white-space: nowrap; /* Uncomment if you want single line always */
+        /* max-width: 250px; /* Example max-width, adjust as needed */
+    }
 </style>
 @endpush
 
 @section('content')
+
+@php
+    /**
+     * Helper function to generate sorting URL and icon for table headers.
+     *
+     * @param string $currentSortBy The current column being sorted.
+     * @param string $currentSortDirection The current sort direction ('asc' or 'desc').
+     * @param string $columnKey The database column key for this header.
+     * @param string $columnName The display name for this header.
+     * @param \Illuminate\Http\Request $request The current request object.
+     * @return string HTML for the sortable link.
+     */
+    function getSortableLink($currentSortBy, $currentSortDirection, $columnKey, $columnName, $request) {
+        $newSortDirection = ($currentSortBy == $columnKey && $currentSortDirection == 'asc') ? 'desc' : 'asc';
+        // Preserve existing query parameters except for 'page' (for pagination)
+        $queryParams = array_merge($request->except('page'), ['sort_by' => $columnKey, 'sort_direction' => $newSortDirection]);
+        $url = route('sales_mission.activities.index', $queryParams);
+        
+        $icon = '';
+        if ($currentSortBy == $columnKey) {
+            if ($currentSortDirection == 'asc') {
+                // Icon for ascending sort (Up arrow)
+                $icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>';
+            } else {
+                // Icon for descending sort (Down arrow)
+                $icon = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+            }
+        }
+        return '<a href="' . e($url) . '" class="hover:text-amber-600 flex items-center">' . e($columnName) . $icon . '</a>';
+    }
+@endphp
+
 <div class="flex flex-col gap-6 h-full">
     <!-- Filter Section -->
     <div class="flex flex-col gap-6 bg-white rounded-lg p-6 shadow-sm">
@@ -73,12 +123,10 @@
             </div>
             
             <div class="relative flex-1 min-w-[200px]">
-                <select id="statusFilter" class="block w-full p-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500">
-                    <option selected value="">All Status</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="ongoing">Ongoing</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
+                <select id="assignmentStatusFilter" class="block w-full p-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500">
+                    <option selected value="">All Assignment Status</option>
+                    <option value="assigned">Assigned</option>
+                    <option value="not_assigned">Not Assigned</option>
                 </select>
             </div>
             
@@ -88,30 +136,30 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                     </svg>
                 </div>
-                <input type="text" id="startDateFilter" class="flatpickr-date block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500" placeholder="Start date">
+                <input type="text" id="startDateFilter" class="flatpickr-date block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500" placeholder="Select Date">
             </div>
             
+            {{-- Filter by City --}}
             <div class="relative flex-1 min-w-[200px]">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                    </svg>
-                </div>
-                <input type="text" id="endDateFilter" class="flatpickr-date block w-full p-2.5 pl-10 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500" placeholder="End date">
+                <select id="locationFilter" name="filter_location" class="block w-full p-2.5 text-sm text-gray-900 border border-gray-200 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500">
+                    <option value="">All Cities</option>
+                    @if(isset($cities) && $cities->count() > 0)
+                        @foreach($cities as $city)
+                            <option value="{{ $city }}" {{ (isset($filterLocationValue) && $filterLocationValue == $city) ? 'selected' : '' }}>
+                                {{ $city }}
+                            </option>
+                        @endforeach
+                    @else
+                        <option value="" disabled>No cities available</option>
+                    @endif
+                </select>
             </div>
             
             <form id="filterForm" action="{{ route('sales_mission.activities.index') }}" method="GET" class="flex items-center gap-2">
                 <input type="hidden" name="search" id="searchParam">
-                <input type="hidden" name="status" id="statusParam">
+                <input type="hidden" name="assignment_status" id="assignmentStatusParam">
                 <input type="hidden" name="start_date" id="startDateParam">
-                <input type="hidden" name="end_date" id="endDateParam">
-                
-                <button type="submit" id="filterButton" class="flex items-center justify-center py-2.5 px-4 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:ring-4 focus:outline-none focus:ring-amber-300">
-                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
-                    </svg>
-                    Filter
-                </button>
+                <input type="hidden" name="filter_location" id="locationParam">
             </form>
             
             <a href="{{ route('sales_mission.activities.index') }}" class="flex items-center justify-center py-2.5 px-4 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-100">
@@ -131,23 +179,46 @@
         </div>
         
         <div class="overflow-x-auto rounded-lg scrollbar-thin scrollbar-thumb-gray-300">
-            <table class="w-full text-sm text-left">
+            <table class="w-full text-sm text-left table-fixed">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th scope="col" class="px-5 py-3.5">Company</th>
-                        <th scope="col" class="px-5 py-3.5">PIC</th>
-                        <th scope="col" class="px-5 py-3.5">Location</th>
-                        <th scope="col" class="px-5 py-3.5">Date</th>
-                        <th scope="col" class="px-5 py-3.5">Status</th>
-                        <th scope="col" class="px-5 py-3.5">Description</th>
-                        <th scope="col" class="px-5 py-3.5 text-right">Actions</th>
+                        <th scope="col" class="px-5 py-3.5 sortable-link w-2/12">
+                            {!! getSortableLink($sortBy, $sortDirection, 'sales_mission_details.company_name', 'Company', request()) !!}
+                        </th>
+                        <th scope="col" class="px-5 py-3.5 sortable-link w-2/12">
+                            {!! getSortableLink($sortBy, $sortDirection, 'sales_mission_details.company_pic', 'PIC', request()) !!}
+                        </th>
+                        <th scope="col" class="px-5 py-3.5 sortable-link w-1/12">
+                            {!! getSortableLink($sortBy, $sortDirection, 'activities.city', 'Location', request()) !!}
+                        </th>
+                        <th scope="col" class="px-5 py-3.5 sortable-link w-1/12">
+                            {!! getSortableLink($sortBy, $sortDirection, 'activities.start_datetime', 'Date', request()) !!}
+                        </th>
+                        <th scope="col" class="px-5 py-3.5 w-2/12">Company Address</th>
+                        <th scope="col" class="px-5 py-3.5 description-col w-3/12">Description</th>
+                        <th scope="col" class="px-5 py-3.5 text-right w-1/12">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($activities as $activity)
-                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                    @php
+                        $isAssigned = $activity->teamAssignments && $activity->teamAssignments->isNotEmpty();
+                        $assignedTeamName = null;
+                        if ($isAssigned && $activity->teamAssignments->first() && $activity->teamAssignments->first()->team) {
+                            $assignedTeamName = $activity->teamAssignments->first()->team->name;
+                        }
+                    @endphp
+                    <tr class="border-b border-gray-200 hover:bg-gray-50 {{ $isAssigned ? 'bg-green-50' : '' }}">
                         <td class="px-5 py-4">
                             <div class="font-medium text-gray-900 break-words">{{ $activity->salesMissionDetail->company_name }}</div>
+                            @if($assignedTeamName)
+                                <div class="text-xs text-green-700 mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline-block mr-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                    </svg>
+                                    Assigned to: {{ $assignedTeamName }}
+                                </div>
+                            @endif
                         </td>
                         <td class="px-5 py-4">
                             <div class="font-medium text-gray-900">{{ $activity->salesMissionDetail->company_pic }}</div>
@@ -163,23 +234,26 @@
                             <div class="text-xs text-gray-500 mt-1">{{ $activity->start_datetime ? \Carbon\Carbon::parse($activity->start_datetime)->format('H:i') : '' }}</div>
                         </td>
                         <td class="px-5 py-4">
-                            @php
-                                $statusClass = 'badge-gray';
-                                if($activity->status === 'scheduled') $statusClass = 'badge-blue';
-                                elseif($activity->status === 'ongoing') $statusClass = 'badge-green';
-                                elseif($activity->status === 'completed') $statusClass = 'badge-indigo';
-                                elseif($activity->status === 'cancelled') $statusClass = 'badge-red';
-                            @endphp
-                            <span class="badge {{ $statusClass }}">
-                                {{ ucfirst($activity->status) }}
-                            </span>
+                            <div class="text-gray-500 line-clamp-2 overflow-hidden text-ellipsis" title="{{ $activity->salesMissionDetail->company_address ?? 'N/A' }}">
+                                {{ $activity->salesMissionDetail->company_address ?? 'N/A' }}
+                            </div>
                         </td>
-                        <td class="px-5 py-4">
+                        <td class="px-5 py-4 description-col">
                             <div class="text-gray-500 line-clamp-2">{{ $activity->description ?? 'No description available' }}</div>
                         </td>
                         <td class="px-5 py-4 text-right">
                             <div class="flex items-center justify-end space-x-2">
-                                <button type="button" class="edit-activity px-3 py-1.5 text-xs font-medium bg-amber-50 text-amber-700 rounded-md hover:bg-amber-100 transition-colors inline-flex items-center" 
+                                <button type="button" class="assign-team p-2 text-xs font-medium bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors inline-flex items-center" 
+                                    title="Assign Team"
+                                    data-id="{{ $activity->id }}"
+                                    data-company="{{ $activity->salesMissionDetail->company_name }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                    {{-- Assign Team --}}
+                                </button>
+                                <button type="button" class="edit-activity p-2 text-xs font-medium bg-amber-50 text-amber-700 rounded-md hover:bg-amber-100 transition-colors inline-flex items-center" 
+                                    title="Edit Activity"
                                     data-id="{{ $activity->id }}" 
                                     data-company="{{ $activity->salesMissionDetail->company_name }}"
                                     data-pic="{{ $activity->salesMissionDetail->company_pic }}"
@@ -195,25 +269,26 @@
                                     data-start="{{ \Carbon\Carbon::parse($activity->start_datetime)->format('Y-m-d H:i') }}"
                                     data-end="{{ \Carbon\Carbon::parse($activity->end_datetime)->format('Y-m-d H:i') }}"
                                     data-employee="{{ $activity->name }}">
-                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
-                                    Edit
+                                    {{-- Edit --}}
                                 </button>
-                                <button type="button" class="delete-activity px-3 py-1.5 text-xs font-medium bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors inline-flex items-center"
+                                <button type="button" class="delete-activity p-2 text-xs font-medium bg-red-50 text-red-700 rounded-md hover:bg-red-100 transition-colors inline-flex items-center"
+                                    title="Delete Activity"
                                     data-id="{{ $activity->id }}"
                                     data-company="{{ $activity->salesMissionDetail->company_name }}">
-                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
-                                    Delete
+                                    {{-- Delete --}}
                                 </button>
                             </div>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-5 py-10 text-center">
+                        <td colspan="8" class="px-5 py-10 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <svg class="w-16 h-16 text-gray-300 mb-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
@@ -230,8 +305,8 @@
         
         <!-- Pagination -->
         <div class="flex flex-col md:flex-row justify-between items-center px-6 py-4 gap-4">
-            <div class="text-sm text-gray-600 flex items-center bg-gray-50 px-4 py-2 rounded-lg">
-                <svg class="w-4 h-4 mr-2 text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <div class="text-sm text-gray-700 flex items-center">
+                <svg class="w-4 h-4 mr-2 text-gray-700" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                 </svg>
                 <span>Showing {{ $activities->firstItem() ?? 0 }} to {{ $activities->lastItem() ?? 0 }} of {{ $activities->total() }} entries</span>
@@ -458,7 +533,49 @@
     </div>
 </div>
 
+<!-- Assign Team Modal -->
+<div id="assignTeamModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
+    <div class="bg-white p-6 rounded-xl shadow-xl max-w-3xl w-full mx-4 transform transition-transform duration-300 scale-100 overflow-y-auto max-h-[90vh]">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-amber-700">Assign Team</h3>
+            <button type="button" class="close-modal text-gray-400 hover:text-gray-500">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        
+        <form id="assignTeamForm" action="{{ route('sales_mission.field-visits.store') }}" method="POST" class="space-y-6">
+            @csrf
+            <input type="hidden" id="activity_id" name="activity_id">
+            
+            <div class="mb-4">
+                <p class="text-lg font-medium text-gray-800" id="company-name-display"></p>
+                <p class="text-sm text-gray-600">The appointment date/time shown in the table is when the sales mission is scheduled</p>
+            </div>
+            
+            <!-- Team Selection -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700">Select Team <span class="text-red-500">*</span></label>
+                <div id="teamsContainer" class="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto p-2 border border-gray-200 rounded-lg">
+                    <div class="text-center p-4 text-gray-500">Loading teams...</div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button type="button" class="close-modal px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+                    Assign Team
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize flatpickr for date inputs in the filter section
@@ -468,7 +585,13 @@
             allowInput: true,
             altInput: true,
             altFormat: "d M Y",
-            disableMobile: true
+            disableMobile: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                if (instance.input.id === 'startDateFilter') {
+                    document.getElementById('startDateParam').value = dateStr;
+                    submitFilterForm();
+                }
+            }
         });
         
         // Edit Activity Modal
@@ -594,6 +717,272 @@
                 deleteActivityModal.classList.remove('flex');
                 deleteActivityModal.classList.add('hidden');
                 document.body.style.overflow = '';
+            }
+        });
+
+        // Filter functionality
+        const searchInput = document.getElementById('searchInput');
+        const assignmentStatusFilter = document.getElementById('assignmentStatusFilter');
+        const startDateFilter = document.getElementById('startDateFilter');
+        const locationFilter = document.getElementById('locationFilter');
+        const filterForm = document.getElementById('filterForm');
+        const searchParam = document.getElementById('searchParam');
+        const assignmentStatusParam = document.getElementById('assignmentStatusParam');
+        const startDateParam = document.getElementById('startDateParam');
+        const locationParam = document.getElementById('locationParam');
+
+        // Set initial values from URL parameters if they exist
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('search')) {
+            searchInput.value = urlParams.get('search');
+            searchParam.value = urlParams.get('search');
+        }
+        if (urlParams.has('assignment_status')) {
+            assignmentStatusFilter.value = urlParams.get('assignment_status');
+            assignmentStatusParam.value = urlParams.get('assignment_status');
+        }
+        if (urlParams.has('start_date')) {
+            const dateValue = urlParams.get('start_date');
+            if (startDateFilter._flatpickr) {
+                startDateFilter._flatpickr.setDate(dateValue);
+            } else {
+                startDateFilter.value = dateValue; // Fallback if flatpickr not ready
+            }
+            startDateParam.value = dateValue;
+        }
+        
+        if (urlParams.has('filter_location')) {
+            locationFilter.value = urlParams.get('filter_location');
+            locationParam.value = urlParams.get('filter_location');
+        }
+
+        // Function to submit the form
+        const submitFilterForm = () => {
+            searchParam.value = searchInput.value;
+            assignmentStatusParam.value = assignmentStatusFilter.value;
+            locationParam.value = locationFilter.value;
+            filterForm.submit();
+        };
+
+        // Auto submit when search input changes (with small delay for typing)
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                submitFilterForm();
+            }, 500); // 500ms delay to allow typing
+        });
+        
+        // Auto submit when assignment status changes
+        assignmentStatusFilter.addEventListener('change', function() {
+            submitFilterForm();
+        });
+
+        // Auto submit when location filter changes
+        locationFilter.addEventListener('change', function() {
+            locationParam.value = this.value;
+            submitFilterForm();
+        });
+
+        // Still keep the form submit handler for the filter button (if any, or manual submit)
+        filterForm.addEventListener('submit', function(e) {
+            searchParam.value = searchInput.value;
+            assignmentStatusParam.value = assignmentStatusFilter.value;
+            locationParam.value = locationFilter.value;
+        });
+
+        // Allow pressing Enter in search field to submit form
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                submitFilterForm();
+            }
+        });
+
+        // Assign Team functionality
+        const assignTeamModal = document.getElementById('assignTeamModal');
+        const assignTeamButtons = document.querySelectorAll('.assign-team');
+        const closeModalButtons = document.querySelectorAll('.close-modal');
+        const assignTeamForm = document.getElementById('assignTeamForm');
+        
+        // Fetch teams data
+        async function fetchTeams() {
+            try {
+                const response = await fetch('{{ route("sales_mission.teams.json") }}');
+                const data = await response.json();
+                
+                if (data.success) {
+                    return data.teams;
+                } else {
+                    console.error('Error fetching teams:', data.message || 'Unknown error');
+                    return [];
+                }
+            } catch (error) {
+                console.error('Error fetching teams:', error);
+                return [];
+            }
+        }
+        
+        // Populate teams in the modal
+        async function populateTeams() {
+            const teamsContainer = document.getElementById('teamsContainer');
+            const teams = await fetchTeams();
+            
+            if (teams.length === 0) {
+                teamsContainer.innerHTML = `
+                    <div class="text-center p-4 text-gray-500">
+                        No teams available. <a href="{{ route('sales_mission.teams.create') }}" class="text-amber-600 hover:underline">Create a team</a> first.
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            teams.forEach(team => {
+                const memberInfo = team.member_count > 0 
+                    ? `${team.member_names.join(', ')}` 
+                    : 'No members';
+                
+                html += `
+                    <label for="team-${team.id}" class="block p-3 border border-gray-200 rounded-lg hover:bg-amber-50 transition-colors cursor-pointer">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium text-gray-800">${team.name}</span>
+                            <input type="radio" id="team-${team.id}" name="team_id" value="${team.id}" class="form-radio h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Members: ${memberInfo}</p>
+                    </label>
+                `;
+            });
+            
+            teamsContainer.innerHTML = html;
+        }
+        
+        // Show modal when assign team button is clicked
+        assignTeamButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const activityId = this.dataset.id;
+                const companyName = this.dataset.company;
+                
+                document.getElementById('activity_id').value = activityId;
+                document.getElementById('company-name-display').textContent = companyName;
+                
+                // Populate teams
+                populateTeams();
+                
+                // Show modal
+                assignTeamModal.classList.remove('hidden');
+                assignTeamModal.classList.add('flex');
+            });
+        });
+        
+        // Close modal when close button is clicked
+        closeModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                assignTeamModal.classList.remove('flex');
+                assignTeamModal.classList.add('hidden');
+            });
+        });
+        
+        // Close modal when clicking outside
+        assignTeamModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('flex');
+                this.classList.add('hidden');
+            }
+        });
+        
+        // Handle form submission
+        assignTeamForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const teamSelected = document.querySelector('input[name="team_id"]:checked');
+            if (!teamSelected) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Please select a team to assign.',
+                        confirmButtonColor: '#f59e0b' 
+                    });
+                } else {
+                    alert('Please select a team to assign.');
+                }
+                return;
+            }
+
+            const formData = new FormData(this);
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.disabled = true;
+            submitButton.innerHTML = 
+                `<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>Loading...`;
+
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    assignTeamModal.classList.remove('flex');
+                    assignTeamModal.classList.add('hidden');
+                    
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: data.message || 'Team assigned successfully!',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    } else {
+                        alert(data.message || 'Team assigned successfully!');
+                    }
+                    submitFilterForm();
+                } else {
+                    let errorMessage = data.message || 'An error occurred.';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).flat().join('\n');
+                    }
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Assignment Failed',
+                            text: errorMessage,
+                            confirmButtonColor: '#f59e0b'
+                        });
+                    } else {
+                        alert('Assignment Failed: ' + errorMessage);
+                    }
+                }
+            } catch (error) {
+                console.error('Error assigning team:', error);
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Something went wrong. Please try again.',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                } else {
+                    alert('Something went wrong. Please try again.');
+                }
+            } finally {
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
             }
         });
     });
