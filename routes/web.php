@@ -1,7 +1,13 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\MeetingRoomController;
+use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\BookingController as AdminBookingController;
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\UserController as SuperAdminUserController;
 use App\Http\Controllers\BookingController;
-use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ReportController;
@@ -12,7 +18,12 @@ use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
 use App\Http\Controllers\SalesMissionController;
 use App\Http\Controllers\SalesOfficerController;
+use App\Http\Controllers\FeedbackSurveyController;
+use App\Http\Controllers\TeamAssignmentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SalesMission\FeedbackSurveyController as SalesMissionFeedbackSurveyController;
+use App\Http\Controllers\SalesMission\SalesAgendaController;
+use App\Http\Controllers\SalesMission\SalesReportsController;
 
 // -------------------------------------------------------------------
 //                      ROUTE UTAMA
@@ -35,34 +46,34 @@ Route::get('/activity/calendar/events', [ActivityController::class, 'calendarEve
 // -------------------------------------------------------------------
 //                   LOGIN ADMIN / LOGOUT
 // -------------------------------------------------------------------
-Route::get('/admin/login', [AdminController::class, 'showLogin'])->name('admin.login');
-Route::post('/admin/login', [AdminController::class, 'login'])->name('admin.login.submit');
-Route::get('/admin/logout', [AdminController::class, 'logout'])->name('admin.logout');
+Route::get('/admin/login', [LoginController::class, 'showLogin'])->name('admin.login');
+Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.submit');
+Route::get('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
 
 // -------------------------------------------------------------------
 //                   ROUTE AREA ADMIN
 // -------------------------------------------------------------------
 Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMiddleware::class], function () {
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/dashboard/bookings', [AdminController::class, 'getBookings'])->name('admin.dashboard.bookings');
+    Route::get('/dashboard', [AdminDashboardController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/dashboard/bookings', [AdminBookingController::class, 'getBookings'])->name('admin.dashboard.bookings');
     
     // Meeting Rooms
     Route::prefix('meeting-rooms')->group(function () {
-        Route::get('/', [AdminController::class, 'meetingRooms'])->name('admin.meeting_rooms');
-        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('admin.meeting_rooms.create');
-        Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('admin.meeting_rooms.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('admin.meeting_rooms.edit');
-        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('admin.meeting_rooms.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('admin.meeting_rooms.delete');
+        Route::get('/', [MeetingRoomController::class, 'index'])->name('admin.meeting_rooms');
+        Route::get('/create', [MeetingRoomController::class, 'create'])->name('admin.meeting_rooms.create');
+        Route::post('/', [MeetingRoomController::class, 'store'])->name('admin.meeting_rooms.store');
+        Route::get('/{id}/edit', [MeetingRoomController::class, 'edit'])->name('admin.meeting_rooms.edit');
+        Route::put('/{id}', [MeetingRoomController::class, 'update'])->name('admin.meeting_rooms.update');
+        Route::delete('/{id}', [MeetingRoomController::class, 'destroy'])->name('admin.meeting_rooms.delete');
     });
     
     // Departments
     Route::prefix('departments')->group(function () {
-        Route::get('/', [AdminController::class, 'departments'])->name('admin.departments');
-        Route::post('/', [AdminController::class, 'storeDepartment'])->name('admin.departments.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editDepartment'])->name('admin.departments.edit');
-        Route::put('/{id}', [AdminController::class, 'updateDepartment'])->name('admin.departments.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('admin.departments.delete');
+        Route::get('/', [DepartmentController::class, 'index'])->name('admin.departments');
+        Route::post('/', [DepartmentController::class, 'store'])->name('admin.departments.store');
+        Route::get('/{id}/edit', [DepartmentController::class, 'edit'])->name('admin.departments.edit');
+        Route::put('/{id}', [DepartmentController::class, 'update'])->name('admin.departments.update');
+        Route::delete('/{id}', [DepartmentController::class, 'destroy'])->name('admin.departments.delete');
     });
     
     // Bookings
@@ -73,7 +84,7 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
         Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('admin.bookings.available-times');
         Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
         Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('admin.bookings.delete');
+        Route::delete('/{id}', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
     });
 
     // Employees
@@ -100,15 +111,18 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
 //               R O U T E   A R E A   S U P E R A D M I N
 // -------------------------------------------------------------------
 Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\SuperAdminMiddleware::class], function() {
-    Route::get('/dashboard', [AdminController::class, 'superAdminDashboard'])->name('superadmin.dashboard');
+    Route::get('/dashboard', [SuperAdminDashboardController::class, 'superAdminDashboard'])->name('superadmin.dashboard');
 
     // User Management Routes
-    Route::get('/users', [AdminController::class, 'users'])->name('superadmin.users');
-    Route::get('/users/create', [AdminController::class, 'createUser'])->name('superadmin.users.create');
-    Route::post('/users', [AdminController::class, 'storeUser'])->name('superadmin.users.store');
-    Route::get('/users/{id}/edit', [AdminController::class, 'editUser'])->name('superadmin.users.edit');
-    Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('superadmin.users.update');
-    Route::delete('/users/{id}', [AdminController::class, 'deleteUser'])->name('superadmin.users.delete');
+    Route::resource('users', SuperAdminUserController::class)->names([
+        'index' => 'superadmin.users.index',
+        'create' => 'superadmin.users.create',
+        'store' => 'superadmin.users.store',
+        'show' => 'superadmin.users.show',
+        'edit' => 'superadmin.users.edit',
+        'update' => 'superadmin.users.update',
+        'destroy' => 'superadmin.users.destroy',
+    ]);
     
     // Activity Logs Routes
     Route::prefix('logs')->group(function () {
@@ -134,21 +148,21 @@ Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\Sup
     
     // Meeting Rooms Routes - mirip dengan admin routes tapi dengan prefix superadmin
     Route::prefix('meeting-rooms')->group(function () {
-        Route::get('/', [AdminController::class, 'meetingRooms'])->name('superadmin.meeting_rooms');
-        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('superadmin.meeting_rooms.create');
-        Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('superadmin.meeting_rooms.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('superadmin.meeting_rooms.edit');
-        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('superadmin.meeting_rooms.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('superadmin.meeting_rooms.delete');
+        Route::get('/', [MeetingRoomController::class, 'index'])->name('superadmin.meeting_rooms');
+        Route::get('/create', [MeetingRoomController::class, 'create'])->name('superadmin.meeting_rooms.create');
+        Route::post('/', [MeetingRoomController::class, 'store'])->name('superadmin.meeting_rooms.store');
+        Route::get('/{id}/edit', [MeetingRoomController::class, 'edit'])->name('superadmin.meeting_rooms.edit');
+        Route::put('/{id}', [MeetingRoomController::class, 'update'])->name('superadmin.meeting_rooms.update');
+        Route::delete('/{id}', [MeetingRoomController::class, 'destroy'])->name('superadmin.meeting_rooms.delete');
     });
     
     // Departments Routes
     Route::prefix('departments')->group(function () {
-        Route::get('/', [AdminController::class, 'departments'])->name('superadmin.departments');
-        Route::post('/', [AdminController::class, 'storeDepartment'])->name('superadmin.departments.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editDepartment'])->name('superadmin.departments.edit');
-        Route::put('/{id}', [AdminController::class, 'updateDepartment'])->name('superadmin.departments.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteDepartment'])->name('superadmin.departments.delete');
+        Route::get('/', [DepartmentController::class, 'index'])->name('superadmin.departments');
+        Route::post('/', [DepartmentController::class, 'store'])->name('superadmin.departments.store');
+        Route::get('/{id}/edit', [DepartmentController::class, 'edit'])->name('superadmin.departments.edit');
+        Route::put('/{id}', [DepartmentController::class, 'update'])->name('superadmin.departments.update');
+        Route::delete('/{id}', [DepartmentController::class, 'destroy'])->name('superadmin.departments.delete');
     });
     
     // Bookings Routes
@@ -159,7 +173,7 @@ Route::group(['prefix' => 'superadmin', 'middleware' => \App\Http\Middleware\Sup
         Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('superadmin.bookings.available-times');
         Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('superadmin.bookings.edit');
         Route::put('/{id}', [BookingController::class, 'update'])->name('superadmin.bookings.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('superadmin.bookings.delete');
+        Route::delete('/{id}', [AdminBookingController::class, 'deleteBooking'])->name('superadmin.bookings.delete');
     });
 
     // Employees Routes
@@ -246,11 +260,11 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
     // Meeting Rooms Routes
     Route::prefix('meeting-rooms')->group(function () {
         Route::get('/', [AdminBASController::class, 'meetingRooms'])->name('bas.meeting_rooms');
-        Route::get('/create', [AdminController::class, 'createMeetingRoom'])->name('bas.meeting_rooms.create');
-        Route::post('/', [AdminController::class, 'storeMeetingRoom'])->name('bas.meeting_rooms.store');
-        Route::get('/{id}/edit', [AdminController::class, 'editMeetingRoom'])->name('bas.meeting_rooms.edit');
-        Route::put('/{id}', [AdminController::class, 'updateMeetingRoom'])->name('bas.meeting_rooms.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteMeetingRoom'])->name('bas.meeting_rooms.delete');
+        Route::get('/create', [MeetingRoomController::class, 'create'])->name('bas.meeting_rooms.create');
+        Route::post('/', [MeetingRoomController::class, 'store'])->name('bas.meeting_rooms.store');
+        Route::get('/{id}/edit', [MeetingRoomController::class, 'edit'])->name('bas.meeting_rooms.edit');
+        Route::put('/{id}', [MeetingRoomController::class, 'update'])->name('bas.meeting_rooms.update');
+        Route::delete('/{id}', [MeetingRoomController::class, 'destroy'])->name('bas.meeting_rooms.delete');
     });
     
     // Departments Routes
@@ -280,9 +294,9 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::get('/available-times', [BookingController::class, 'getAvailableTimes'])->name('bas.bookings.available-times');
         Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('bas.bookings.edit');
         Route::put('/{id}', [BookingController::class, 'update'])->name('bas.bookings.update');
-        Route::delete('/{id}', [AdminController::class, 'deleteBooking'])->name('bas.bookings.delete');
-        Route::post('/{booking}/approve', [AdminController::class, 'approveBooking'])->name('bas.bookings.approve');
-        Route::post('/{booking}/reject', [AdminController::class, 'rejectBooking'])->name('bas.bookings.reject');
+        Route::delete('/{id}', [AdminBookingController::class, 'deleteBooking'])->name('bas.bookings.delete');
+        Route::post('/{booking}/approve', [AdminBASController::class, 'approveBooking'])->name('bas.bookings.approve');
+        Route::post('/{booking}/reject', [AdminBASController::class, 'rejectBooking'])->name('bas.bookings.reject');
     });
 
     // Employees Routes
@@ -313,6 +327,7 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
     // Activities Management Routes
     Route::prefix('activities')->group(function () {
         Route::get('/', [SalesMissionController::class, 'activitiesIndex'])->name('sales_mission.activities.index');
+        Route::get('/export', [SalesMissionController::class, 'exportActivities'])->name('sales_mission.activities.export');
         Route::get('/{activity}/edit', [SalesMissionController::class, 'editActivity'])->name('sales_mission.activities.edit');
         Route::put('/{activity}', [SalesMissionController::class, 'updateActivity'])->name('sales_mission.activities.update');
         Route::delete('/{activity}', [SalesMissionController::class, 'destroyActivity'])->name('sales_mission.activities.destroy');
@@ -325,9 +340,89 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
         Route::get('/', [SalesMissionController::class, 'reports'])->name('sales_mission.reports');
         Route::post('/data', [SalesMissionController::class, 'getReportData'])->name('sales_mission.reports.data');
         Route::post('/export', [SalesMissionController::class, 'exportReport'])->name('sales_mission.reports.export');
+        
+        // New Agenda Routes
+        Route::get('/agenda', [SalesAgendaController::class, 'index'])->name('sales_mission.reports.agenda');
+        Route::post('/agenda/generate', [SalesAgendaController::class, 'generateAgenda'])->name('sales_mission.reports.agenda.generate');
+        Route::post('/agenda/export', [SalesAgendaController::class, 'exportAgenda'])->name('sales_mission.reports.agenda.export');
+
+        // New Survey Reports Routes
+        Route::get('/surveys', [SalesReportsController::class, 'surveyReports'])->name('sales_mission.reports.surveys');
+        Route::post('/surveys/data', [SalesReportsController::class, 'getSurveyReportData'])->name('sales_mission.reports.surveys.data');
+        Route::post('/surveys/export', [SalesReportsController::class, 'exportSurveyReport'])->name('sales_mission.reports.surveys.export');
     });
     
-    // Logs functionality removed - only accessible to superadmin
+    // Teams Management
+    Route::resource('teams', \App\Http\Controllers\TeamController::class)->names([
+        'index' => 'sales_mission.teams.index',
+        'create' => 'sales_mission.teams.create',
+        'store' => 'sales_mission.teams.store',
+        'show' => 'sales_mission.teams.show',
+        'edit' => 'sales_mission.teams.edit',
+        'update' => 'sales_mission.teams.update',
+        'destroy' => 'sales_mission.teams.destroy',
+    ]);
+    
+    // Get teams in JSON format for dropdowns and modals
+    Route::get('teams-json', [\App\Http\Controllers\TeamController::class, 'getTeamsJson'])
+        ->name('sales_mission.teams.json');
+    
+    // Field Visits (Team Assignments)
+    Route::resource('field-visits', \App\Http\Controllers\TeamAssignmentController::class)->parameters([
+        'field-visits' => 'fieldVisit'
+    ])->names([
+        'index' => 'sales_mission.field-visits.index',
+        'create' => 'sales_mission.field-visits.create',
+        'store' => 'sales_mission.field-visits.store',
+        'show' => 'sales_mission.field-visits.show',
+        'edit' => 'sales_mission.field-visits.edit',
+        'update' => 'sales_mission.field-visits.update',
+        'destroy' => 'sales_mission.field-visits.destroy',
+    ]);
+
+    // Feedback Survey Routes - Admin side
+    Route::prefix('surveys')->name('sales_mission.surveys.')->group(function () {
+        Route::get('/', [FeedbackSurveyController::class, 'index'])->name('index');
+        Route::get('/{survey}', [FeedbackSurveyController::class, 'show'])->name('show');
+        Route::get('/generate/{teamAssignment}', [FeedbackSurveyController::class, 'generateSurvey'])->name('generate');
+    });
+
+    // Feedback Surveys (yang diakses dari admin area /sales)
+    Route::get('/surveys/{survey_token}', [SalesMissionFeedbackSurveyController::class, 'viewSurveyFromAdmin'])
+        ->name('surveys.view.admin'); // Contoh nama rute, sesuaikan
+
+    // Reports (Ini juga bagian dari grup prefix sales, pastikan tidak tumpang tindih dengan yang di atasnya)
+    Route::prefix('reports')->name('sales_mission.reports.')->group(function() { // Memberi nama prefix pada grup report
+        Route::get('/surveys', [SalesReportsController::class, 'surveyReports'])->name('surveys'); // menjadi sales_mission.reports.surveys
+        Route::get('/surveys/data', [SalesReportsController::class, 'getSurveyReportData'])->name('surveys.data'); // menjadi sales_mission.reports.surveys.data
+        Route::post('/surveys/export', [SalesReportsController::class, 'exportSurveyReport'])->name('surveys.export'); // menjadi sales_mission.reports.surveys.export
+    });
+
+    // Daily Schedule View for Admin
+    Route::get('/daily-schedule', [TeamAssignmentController::class, 'adminDailySchedule'])->name('sales_mission.daily_schedule'); // Nama rute yang diinginkan
+});
+
+// Public Feedback Survey Routes (no auth required)
+Route::prefix('feedback')->name('sales_mission.surveys.public.')->group(function () {
+    Route::get('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'publicSurvey'])->name('form');
+    Route::post('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'submitFeedback'])->name('submit');
+    Route::get('/thank-you', [SalesMissionFeedbackSurveyController::class, 'thankYou'])->name('thank_you');
+
+    Route::get('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'showSalesBlitzForm'])->name('sales_blitz_form');
+    Route::post('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'submitSalesBlitzForm'])->name('sales_blitz_submit');
+    Route::get('/view/{token}', [SalesMissionFeedbackSurveyController::class, 'publicViewFeedback'])->name('view_feedback');
+});
+
+// Public Field Visits Routes
+Route::prefix('field-visits')->name('public.field-visits.')->group(function () {
+    Route::get('/', [TeamAssignmentController::class, 'publicIndex'])->name('index');
+    Route::get('/calendar-data', [TeamAssignmentController::class, 'calendarData'])->name('calendar-data');
+    Route::get('/{fieldVisit}', [TeamAssignmentController::class, 'publicDetail'])->name('detail');
+});
+
+// Simple redirect for easier access to public field visits
+Route::get('/public/field-visits', function() {
+    return redirect()->route('public.field-visits.index');
 });
 
 // -------------------------------------------------------------------
@@ -393,6 +488,11 @@ Route::group(['prefix' => 'officer', 'middleware' => \App\Http\Middleware\SalesO
     Route::get('/api/company/{company_id}/follow-up-history', [SalesOfficerController::class, 'getCompanyFollowUpHistory'])
         ->name('sales_officer.api.company.follow-up-history');
 });
+
+// Fonnte WhatsApp Testing
+Route::get('/test-fonnte-page', [App\Http\Controllers\TestController::class, 'fontneTestPage']);
+Route::post('/test-fonnte', [App\Http\Controllers\TestController::class, 'testFonnte']);
+Route::post('/test-fonnte-link', [App\Http\Controllers\TestController::class, 'testFontneLink']);
 
 // Add a test route at the bottom of the file
 Route::get('/generate-test-sales-mission', function() {
@@ -470,3 +570,10 @@ Route::get('/create-officer-user', function() {
     }
     return "Sales Officer user already exists.";
 });
+
+Route::group(['prefix' => 'sm/reports', 'middleware' => 'is.sales.mission', 'as' => 'sales_mission.reports.'], function () {
+    Route::get('/', [SalesReportsController::class, 'index'])->name('index');
+    Route::post('/export', [SalesReportsController::class, 'export'])->name('export');
+});
+
+require __DIR__.'/lead.php';

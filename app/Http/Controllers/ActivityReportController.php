@@ -401,6 +401,30 @@ class ActivityReportController extends Controller
         }
     }
 
+    /**
+     * Print activity reports
+     */
+    public function printActivityReports(Request $request)
+    {
+        $reportType = $request->input('report_type', 'employee_activity');
+        $timePeriod = $request->input('time_period', 'monthly');
+        $year = $request->input('year', now()->year);
+        $month = $request->input('month', now()->month);
+        $quarter = $request->input('quarter', ceil(now()->month / 3));
+        
+        // Get data from this controller's getData method
+        $response = $this->getData($request);
+        $data = $response->getData(true);
+        
+        // Determine view based on role
+        $viewPrefix = Auth::check() && Auth::user()->role === 'admin_bas' ? 'admin_bas' : 'admin';
+        if (Auth::check() && Auth::user()->role === 'superadmin') {
+            $viewPrefix = 'superadmin';
+        }
+        
+        return view($viewPrefix . '.activity-reports.print', compact('data', 'reportType', 'timePeriod', 'year', 'month', 'quarter'));
+    }
+
     public function export(Request $request)
     {
         try {

@@ -88,7 +88,7 @@
         <div id="system-content" class="dashboard-content p-6">
             <h2 class="text-lg font-semibold mb-4">Quick Links</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <a href="{{ route('superadmin.users') }}" class="flex items-center p-4 bg-[#24448c]/10 rounded-lg hover:bg-[#24448c]/20 transition">
+                <a href="{{ route('superadmin.users.index') }}" class="flex items-center p-4 bg-[#24448c]/10 rounded-lg hover:bg-[#24448c]/20 transition">
                     <div class="mr-4 text-[#24448c]">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                             <path d="M230.14,142.6l-20.9-6.9a16,16,0,0,0-19,8.7l-3.1,6.9a16,16,0,0,0,2.9,18.1,77,77,0,0,1-13.2,13.2,16,16,0,0,0-18.1-2.9l-6.9,3.1a16,16,0,0,0-8.7,19l6.9,20.9A16,16,0,0,0,163.2,232,16.4,16.4,0,0,0,168,232a76.5,76.5,0,0,0,64-64A16,16,0,0,0,230.14,142.6Z"></path>

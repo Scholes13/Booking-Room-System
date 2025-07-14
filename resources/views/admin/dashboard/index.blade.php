@@ -11,21 +11,21 @@
         <div class="flex flex-col sm:flex-row gap-3">
             <!-- Time Period Filters -->
             <div class="flex items-center space-x-1">
-                <button id="btnToday" class="filter-btn active px-3 py-1 text-sm rounded-md bg-blue-100 text-blue-800 hover:bg-blue-200 transition">
+                <button id="filter-today" data-filter="today" class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
                     Hari Ini
                 </button>
-                <button id="btnWeek" class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200 transition">
+                <button id="filter-week" data-filter="week" class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
                     Minggu Ini
                 </button>
-                <button id="btnMonth" class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-800 hover:bg-gray-200 transition">
+                <button id="filter-month" data-filter="month" class="filter-btn px-3 py-1 text-sm rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
                     Bulan Ini
                 </button>
             </div>
             
             <!-- Date Picker -->
-            <div class="date-picker-container flex-1 min-w-[200px]">
-                <input type="text" id="datePicker" placeholder="Pilih tanggal" class="w-full pl-3 pr-8 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                <i class="fas fa-calendar-alt"></i>
+            <div id="filter-custom" data-filter="custom" class="date-picker-container filter-btn flex-1 min-w-[200px] relative">
+                <input type="text" id="date-picker" placeholder="Pilih tanggal" class="w-full pl-3 pr-8 py-1.5 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <i class="fas fa-calendar-alt absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
         </div>
     </div>
@@ -40,8 +40,9 @@
                 <i class="fas fa-calendar-check text-blue-500 text-xl"></i>
             </div>
             <div class="text-right">
-                <span id="bookingTrend" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    <i class="fas fa-arrow-up trend-up mr-1"></i> 10%
+                <span id="bookingTrend" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                    <i class="fas fa-equals trend-icon mr-1"></i>
+                    <span class="trend-text">Loading...</span>
                 </span>
             </div>
         </div>
@@ -60,8 +61,9 @@
                 <i class="fas fa-chart-line text-purple-500 text-xl"></i>
             </div>
             <div class="text-right">
-                <span id="usageTrend" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <i class="fas fa-arrow-down trend-down mr-1"></i> 5%
+                <span id="usageTrend" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium">
+                    <i class="fas fa-equals trend-icon mr-1"></i>
+                    <span class="trend-text">Loading...</span>
                 </span>
             </div>
         </div>
@@ -126,6 +128,27 @@
     </div>
 </div>
 
+<!-- Display Validation Errors -->
+@if($errors->any())
+    <div class="px-4 mb-4">
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+            <strong class="font-bold">Oops! Something went wrong.</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+@endif
+
+<!-- Export Button -->
+<div class="flex justify-end px-4 mb-4">
+    <a id="export-link" href="{{ route('admin.bookings.export') }}" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
+        <span class="truncate">Export to Excel</span>
+    </a>
+</div>
+
 <!-- Booking Table -->
 <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6 mx-4">
     <div class="flex justify-between items-center mb-6">
@@ -175,12 +198,7 @@
 <!-- Button Controls -->
 <div class="flex justify-stretch px-4 mb-6">
     <div class="flex flex-1 gap-3 flex-wrap justify-end">
-        <a href="{{ route('admin.bookings.export') }}" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em]">
-            <span class="truncate">Export to Excel</span>
-        </a>
-        <button id="btnReset" class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-4 bg-secondary text-dark text-sm font-bold leading-normal tracking-[0.015em]">
-            <span class="truncate">Reset</span>
-        </button>
+        
     </div>
 </div>
 
@@ -257,11 +275,6 @@
         background: linear-gradient(90deg, #3B82F6, #8B5CF6);
     }
     
-    .filter-btn.active {
-        background-color: #3B82F6;
-        color: white;
-    }
-    
     .date-picker-container {
         position: relative;
     }
@@ -277,492 +290,529 @@
 @endsection
 
 @push('scripts')
-<!-- Load utilities first (DashboardUtils, dsb.) -->
-<script src="{{ asset('js/dashboard/utils.js') }}"></script>
-<script src="{{ asset('js/dashboard/constants.js') }}"></script>
-<script src="{{ asset('js/dashboard/stats.js') }}"></script>
-<script src="{{ asset('js/dashboard/filters.js') }}"></script>
-<!-- Main.js yang menangani handleDelete -->
-<script src="{{ asset('js/dashboard/main.js') }}"></script>
-<!-- Date Picker -->
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize date picker
-        const datePicker = flatpickr("#datePicker", {
-            dateFormat: "Y-m-d",
-            onChange: function(selectedDates, dateStr, instance) {
-                if (dateStr) {
-                    // Remove active class from period filters
-                    document.querySelectorAll('.filter-btn').forEach(btn => {
-                        btn.classList.remove('active', 'bg-blue-100', 'text-blue-800');
-                        btn.classList.add('bg-gray-100', 'text-gray-800');
-                    });
-                    
-                    // Update UI
-                    document.getElementById('currentFilterDisplay').textContent = `Showing: Bookings on ${dateStr}`;
-                    filterBookings('custom', dateStr);
-                }
-            }
-        });
-        
-        // Filter buttons event listeners
-        document.getElementById('btnToday').addEventListener('click', function() {
-            updateActiveFilter(this, 'today');
-            filterBookings('today');
-        });
-        
-        document.getElementById('btnWeek').addEventListener('click', function() {
-            updateActiveFilter(this, 'week');
-            filterBookings('week');
-        });
-        
-        document.getElementById('btnMonth').addEventListener('click', function() {
-            updateActiveFilter(this, 'month');
-            filterBookings('month');
-        });
-        
-        // Reset button
-        document.getElementById('btnReset').addEventListener('click', function() {
-            // Reset to today's view
-            updateActiveFilter(document.getElementById('btnToday'), 'today');
-            filterBookings('today');
-            datePicker.clear();
-        });
-        
-        // Add interactive effects for cards
-        const cards = document.querySelectorAll('.card');
-        cards.forEach(card => {
-            // Add click effect
-            card.addEventListener('mousedown', function() {
-                this.style.transform = 'scale(0.98)';
-            });
-            
-            card.addEventListener('mouseup', function() {
-                this.style.transform = '';
-            });
-            
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = '';
-            });
-        });
-        
-        function updateActiveFilter(button, filterType) {
-            // Update button styles
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-blue-100', 'text-blue-800');
-                btn.classList.add('bg-gray-100', 'text-gray-800');
-            });
-            
-            button.classList.add('active', 'bg-blue-100', 'text-blue-800');
-            button.classList.remove('bg-gray-100', 'text-gray-800');
-            
-            // Clear date picker
-            datePicker.clear();
-            
-            // Update filter display
-            const displayText = {
-                'today': "Today's bookings",
-                'week': "This week's bookings",
-                'month': "This month's bookings"
-            };
-            document.getElementById('currentFilterDisplay').textContent = `Showing: ${displayText[filterType]}`;
+document.addEventListener('DOMContentLoaded', function () {
+    // --- Element References ---
+    let flatpickrInstance;
+    let editRoomSelect = null; // To hold TomSelect instance
+    let editNamaSelect = null;
+    let editDepartmentSelect = null;
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const datePickerInput = document.getElementById('date-picker');
+    const exportLink = document.getElementById('export-link');
+    const originalExportHref = exportLink.href;
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const tableBody = document.getElementById('bookingTableBody');
+    const bookingComparisonEl = document.getElementById('bookingComparison');
+
+    // --- UI Update Functions ---
+    function updateTrendIndicator(elementId, trendData) {
+        const trendEl = document.getElementById(elementId);
+        if (!trendEl || typeof trendData === 'undefined') {
+            if(trendEl) trendEl.classList.add('hidden');
+            return;
         }
         
-        // Function to fetch bookings from server
-        async function fetchBookings(filterType, customDate = null) {
-            try {
-                // Show loading overlay
-                document.getElementById('loadingOverlay').classList.remove('hidden');
-                
-                // Prepare URL with query parameters
-                let url = '/admin/dashboard/bookings';
-                const params = new URLSearchParams();
-                
-                if (filterType === 'today') {
-                    params.append('filter', 'today');
-                } else if (filterType === 'week') {
-                    params.append('filter', 'week');
-                } else if (filterType === 'month') {
-                    params.append('filter', 'month');
-                } else if (filterType === 'custom' && customDate) {
-                    params.append('filter', 'custom');
-                    params.append('date', customDate);
-                }
-                
-                if (params.toString()) {
-                    url += '?' + params.toString();
-                }
-                
-                // Fetch data from server
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                
-                const data = await response.json();
-                
-                // Update table with fetched data
-                updateBookingTableWithData(data.bookings);
-                
-                // Update stats with fetched data
-                updateStatsWithData(data.stats);
-                
-                // Remove loading state from all cards
-                document.querySelectorAll('.card').forEach(card => {
-                    card.classList.remove('is-loading');
-                });
-                
-                return data;
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-                // Show error message
-                document.getElementById('bookingTableBody').innerHTML = `
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-sm text-red-500">
-                            <div class="flex flex-col items-center py-8">
-                                <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-4"></i>
-                                <p class="text-lg font-medium">Error loading data</p>
-                                <p class="text-sm text-gray-500">Please try again later</p>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            } finally {
-                // Hide loading overlay
-                document.getElementById('loadingOverlay').classList.add('hidden');
+        trendEl.classList.remove('hidden');
+
+        const icon = trendEl.querySelector('.trend-icon');
+        const textEl = trendEl.querySelector('.trend-text');
+        
+        // Reset classes
+        trendEl.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
+        icon.classList.remove('fa-arrow-up', 'fa-arrow-down', 'fa-equals');
+
+        const change = trendData.percentage_change;
+        
+        if (change === 0) {
+            textEl.textContent = 'No Change';
+            trendEl.classList.add('bg-gray-100', 'text-gray-800');
+            icon.classList.add('fa-equals');
+        } else {
+            textEl.textContent = `${Math.abs(change)}%`;
+            if (trendData.is_increase) {
+                trendEl.classList.add('bg-green-100', 'text-green-800');
+                icon.classList.add('fa-arrow-up');
+            } else {
+                trendEl.classList.add('bg-red-100', 'text-red-800');
+                icon.classList.add('fa-arrow-down');
             }
         }
+    }
+
+    function updateStatsWithData(data, filter) {
+        document.getElementById('totalBookings').textContent = data.stats.totalBookings.count || '0';
         
-        // Function to update booking table with fetched data
-        function updateBookingTableWithData(bookings) {
-            const tbody = document.getElementById('bookingTableBody');
-            tbody.innerHTML = '';
-            
-            if (!bookings || bookings.length === 0) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
-                        <div class="flex flex-col items-center py-8">
-                            <i class="fas fa-inbox text-gray-400 text-4xl mb-4"></i>
-                            <p class="text-lg font-medium">Tidak ada data booking</p>
-                            <p class="text-sm text-gray-500">Silakan tambahkan booking baru</p>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-                
-                // Update showing text
-                document.getElementById('currentFilterDisplay').textContent = `Showing: Today's bookings`;
-                document.getElementById('showingCount').textContent = '0';
-                document.getElementById('totalCount').textContent = '0';
-                document.getElementById('totalBookingsCount').textContent = '0';
-                return;
-            }
-            
-            const now = new Date();
-            
-            // Remove duplicate bookings
-            const uniqueBookingIds = new Set();
-            const uniqueBookings = [];
-            
-            bookings.forEach(booking => {
-                if (!uniqueBookingIds.has(booking.id)) {
-                    uniqueBookingIds.add(booking.id);
-                    uniqueBookings.push(booking);
-                }
+        let comparisonText = `${data.stats.totalBookings.count} bookings `;
+        switch (filter) {
+            case 'week':
+                comparisonText += 'this week';
+                break;
+            case 'month':
+                comparisonText += 'this month';
+                break;
+            case 'custom':
+                comparisonText += 'in period';
+                break;
+            case 'today':
+            default:
+                comparisonText += 'today';
+                break;
+        }
+        bookingComparisonEl.textContent = comparisonText;
+
+        updateTrendIndicator('bookingTrend', data.stats.bookingComparison);
+        updateTrendIndicator('usageTrend', data.stats.usageRate.trend);
+
+        document.getElementById('roomUsage').textContent = `${data.stats.usageRate.percentage || 0}%`;
+        const usageBar = document.getElementById('usageBar');
+        if (usageBar) {
+            usageBar.style.width = `${data.stats.usageRate.percentage || 0}%`;
+        }
+        document.getElementById('mostUsedRoom').textContent = data.stats.mostUsedRoom.name || 'N/A';
+        document.getElementById('roomUsageHours').textContent = `${data.stats.mostUsedRoom.hours || 0} hours`;
+        
+        const topDeptsContainer = document.getElementById('topDepartments');
+        topDeptsContainer.innerHTML = '';
+        if (data.stats.topDepartments && data.stats.topDepartments.length > 0) {
+            data.stats.topDepartments.forEach(dept => {
+                const deptEl = document.createElement('span');
+                deptEl.className = 'px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded';
+                deptEl.textContent = dept.name;
+                topDeptsContainer.appendChild(deptEl);
             });
-            
-            // Create and append table rows
-            uniqueBookings.forEach(booking => {
-                // Determine booking status
-                let status, statusClass;
-                
-                // Parse booking time
-                const [startHour, startMinute] = booking.start_time.split(':').map(Number);
-                const [endHour, endMinute] = booking.end_time.split(':').map(Number);
-                
-                // Create Date objects for comparison
-                const bookingDate = new Date(booking.date);
-                const startDateTime = new Date(bookingDate);
-                startDateTime.setHours(startHour, startMinute);
-                const endDateTime = new Date(bookingDate);
-                endDateTime.setHours(endHour, endMinute);
-                
-                if (now >= startDateTime && now <= endDateTime) {
-                    status = "Ongoing";
-                    statusClass = "bg-red-100 text-red-800";
-                } else if (now < startDateTime) {
-                    status = "Scheduled";
-                    statusClass = "bg-purple-100 text-purple-800";
-                } else {
-                    status = "Completed";
-                    statusClass = "bg-green-100 text-green-800";
-                }
-                
-                // Create row HTML
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 booking-row';
-                tr.setAttribute('data-id', booking.id);
-                tr.setAttribute('data-endtime', `${booking.date} ${booking.end_time}`);
-                
-                // Get room name
-                const roomName = booking.meeting_room ? booking.meeting_room.name : 
-                               (booking.meetingRoom ? booking.meetingRoom.name : 'N/A');
-                
-                // Set row HTML content
-                tr.innerHTML = `
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${roomName}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${booking.department || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${booking.nama || 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 booking-date">${booking.date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span class="booking-time">${booking.start_time}</span> - <span class="booking-endtime">${booking.end_time}</span>
-                    </td>
+        } else {
+            topDeptsContainer.innerHTML = '<span class="text-xs text-gray-500">Tidak ada data departemen.</span>';
+        }
+    }
+
+    function updateBookingsTable(bookings) {
+        tableBody.innerHTML = '';
+        if (!bookings || bookings.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">Tidak ada data pemesanan untuk periode ini.</td></tr>`;
+            return;
+        }
+        bookings.forEach(booking => {
+            let statusClass = '';
+            switch (booking.dynamic_status) {
+                case 'Ongoing':
+                    statusClass = 'bg-yellow-100 text-yellow-800';
+                    break;
+                case 'Completed':
+                    statusClass = 'bg-green-100 text-green-800';
+                    break;
+                case 'Scheduled':
+                default:
+                    statusClass = 'bg-blue-100 text-blue-800';
+                    break;
+            }
+
+            const row = `
+                <tr class="booking-row" data-id="${booking.id}">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.meeting_room ? booking.meeting_room.name : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${(booking.user && booking.user.department) ? booking.user.department.name : (booking.department || 'N/A')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.user ? booking.user.name : (booking.nama || 'Pengguna Dihapus')}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.date}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.start_time.substring(0,5)} - ${booking.end_time.substring(0,5)}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                            ${status}
+                            ${booking.dynamic_status}
                         </span>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex gap-2">
-                            <a href="/admin/bookings/${booking.id}/edit" class="text-primary hover:text-primary/80">
-                                <i class="fas fa-edit"></i> Edit
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="/admin/bookings/${booking.id}/edit" title="Details" class="p-2 text-gray-400 hover:text-blue-500 transition-colors">
+                                <i class="fas fa-eye"></i>
                             </a>
-                            <button type="button" class="text-danger hover:text-danger/80 delete-booking" data-id="${booking.id}">
-                                <i class="fas fa-trash"></i> Hapus
+                            <button type="button" title="Edit" class="edit-booking-btn p-2 text-gray-400 hover:text-primary transition-colors"
+                                data-id="${booking.id}"
+                                data-name="${booking.nama}"
+                                data-department="${booking.department}"
+                                data-room-id="${booking.meeting_room_id}"
+                                data-date="${booking.date}"
+                                data-start-time="${booking.start_time.substring(0,5)}"
+                                data-end-time="${booking.end_time.substring(0,5)}"
+                                data-description="${booking.description || ''}"
+                                data-booking-type="${booking.booking_type}"
+                                data-external-description="${booking.external_description || ''}">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button type="button" title="Delete" class="delete-booking-btn p-2 text-gray-400 hover:text-red-500 transition-colors" data-id="${booking.id}">
+                                <i class="fas fa-trash-alt"></i>
                             </button>
                         </div>
                     </td>
-                `;
-                
-                // Add row to table
-                tbody.appendChild(tr);
-            });
-            
-            // Update counter display
-            document.getElementById('showingCount').textContent = uniqueBookings.length > 0 ? 1 : 0;
-            document.getElementById('totalCount').textContent = uniqueBookings.length;
-            document.getElementById('totalBookingsCount').textContent = uniqueBookings.length;
-            
-            // Update pagination buttons
-            document.getElementById('prevPage').disabled = true;
-            document.getElementById('nextPage').disabled = uniqueBookings.length <= 10;
-            
-            // Initialize delete buttons after table is updated
-            initializeDeleteButtons();
-        }
-        
-        // Function to initialize delete buttons
-        function initializeDeleteButtons() {
-            const deleteButtons = document.querySelectorAll('.delete-booking');
-            const deleteModal = document.getElementById('deleteModal');
-            const deleteForm = document.getElementById('deleteForm');
-            
-            deleteButtons.forEach(button => {
-                // Remove existing event listeners to prevent duplicates
-                const newButton = button.cloneNode(true);
-                button.parentNode.replaceChild(newButton, button);
-                
-                // Add new event listener
-                newButton.addEventListener('click', function() {
-                    const bookingId = this.getAttribute('data-id');
-                    deleteForm.action = `{{ route('admin.bookings.delete', '') }}/${bookingId}`;
-                    deleteModal.classList.remove('hidden');
-                    deleteModal.classList.add('flex');
-                });
-            });
-        }
-        
-        // Function to update stats with fetched data
-        function updateStatsWithData(stats) {
-            if (!stats) return;
-            
-            // Update total bookings
-            if (stats.total_bookings !== undefined) {
-                document.getElementById('totalBookings').textContent = stats.total_bookings;
-            }
-            
-            // Update booking comparison
-            if (stats.booking_comparison) {
-                // Get the comparison data
-                const comparisonData = stats.booking_comparison;
-                const percentageChange = comparisonData.percentage_change;
-                const isIncrease = comparisonData.is_increase;
-                const comparisonText = comparisonData.comparison_text;
-                
-                // Update the comparison text below the total bookings
-                let comparisonMessage = '';
-                if (percentageChange === 0) {
-                    comparisonMessage = `Tidak ada perubahan ${comparisonText}`;
-                } else if (isIncrease) {
-                    comparisonMessage = `${percentageChange}% lebih banyak ${comparisonText}`;
-                } else {
-                    comparisonMessage = `${Math.abs(percentageChange)}% lebih sedikit ${comparisonText}`;
-                }
-                document.getElementById('bookingComparison').textContent = comparisonMessage;
-                
-                // Update trend indicator
-                const bookingTrend = document.getElementById('bookingTrend');
-                
-                if (percentageChange === 0) {
-                    // No change
-                    bookingTrend.innerHTML = `<i class="fas fa-equals trend-neutral mr-1"></i> No Change`;
-                    bookingTrend.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
-                    bookingTrend.classList.add('bg-gray-100', 'text-gray-800');
-                } else if (isIncrease) {
-                    // Increase
-                    bookingTrend.innerHTML = `<i class="fas fa-arrow-up trend-up mr-1"></i> ${percentageChange}%`;
-                    bookingTrend.classList.remove('bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
-                    bookingTrend.classList.add('bg-green-100', 'text-green-800');
-                } else {
-                    // Decrease
-                    bookingTrend.innerHTML = `<i class="fas fa-arrow-down trend-down mr-1"></i> ${Math.abs(percentageChange)}%`;
-                    bookingTrend.classList.remove('bg-green-100', 'text-green-800', 'bg-gray-100', 'text-gray-800');
-                    bookingTrend.classList.add('bg-red-100', 'text-red-800');
-                }
-            }
-            
-            // Update room usage
-            if (stats.room_usage !== undefined) {
-                document.getElementById('roomUsage').textContent = `${stats.room_usage}%`;
-                document.getElementById('usageBar').style.width = `${stats.room_usage}%`;
-                
-                // Update usage info
-                if (stats.room_usage > 80) {
-                    document.getElementById('usageInfo').textContent = 'High usage';
-                    document.getElementById('usageTrend').innerHTML = `<i class="fas fa-arrow-up trend-up mr-1"></i> ${stats.room_usage - 80}%`;
-                    document.getElementById('usageTrend').classList.remove('bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
-                    document.getElementById('usageTrend').classList.add('bg-green-100', 'text-green-800');
-                } else {
-                    document.getElementById('usageInfo').textContent = 'Normal usage';
-                    document.getElementById('usageTrend').innerHTML = `<i class="fas fa-equals trend-neutral mr-1"></i> No Change`;
-                    document.getElementById('usageTrend').classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
-                    document.getElementById('usageTrend').classList.add('bg-gray-100', 'text-gray-800');
-                }
-            }
-            
-            // Update most used room
-            if (stats.most_used_room) {
-                document.getElementById('mostUsedRoom').textContent = stats.most_used_room.name || 'No data';
-                document.getElementById('roomUsageHours').textContent = `${stats.most_used_room.bookings_count || 0} bookings`;
-            }
-            
-            // Update top departments
-            if (stats.top_departments && stats.top_departments.length > 0) {
-                const topDeptsContainer = document.getElementById('topDepartments');
-                topDeptsContainer.innerHTML = '';
-                
-                const colors = ['blue', 'green', 'purple'];
-                stats.top_departments.forEach((dept, index) => {
-                    const color = colors[index % colors.length];
-                    topDeptsContainer.innerHTML += `
-                        <span class="px-2 py-1 bg-${color}-100 text-${color}-800 text-xs font-medium rounded">${dept.name}</span>
-                    `;
-                });
-            }
-        }
-        
-        // Function to show loading state for all cards
-        function showLoadingState() {
-            // Add loading class to all stat cards
-            document.querySelectorAll('.card').forEach(card => {
-                card.classList.add('is-loading');
-            });
-            
-            // Reset values to loading placeholders
-            document.getElementById('totalBookings').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('bookingComparison').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('roomUsage').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('usageBar').style.width = '0%'; // Reset usage bar width
-            document.getElementById('usageInfo').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('mostUsedRoom').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('roomUsageHours').innerHTML = '<div class="loading-placeholder"></div>';
-            document.getElementById('topDepartments').innerHTML = '<div class="loading-placeholder"></div>';
-            
-            // Reset trend indicators
-            document.getElementById('bookingTrend').innerHTML = '';
-            document.getElementById('usageTrend').innerHTML = '';
-        }
-        
-        // Function to filter bookings
-        function filterBookings(filterType, customDate = null) {
-            // Show loading state first
-            showLoadingState();
-            
-            // Fetch bookings from server
-            fetchBookings(filterType, customDate);
-        }
-        
-        // Force Hari Ini to be active when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Reset all filter buttons first
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active', 'bg-blue-100', 'text-blue-800');
-                btn.classList.add('bg-gray-100', 'text-gray-800');
-            });
-            
-            // Force Hari Ini button to be active
-            const btnToday = document.getElementById('btnToday');
-            btnToday.classList.add('active', 'bg-blue-100', 'text-blue-800');
-            btnToday.classList.remove('bg-gray-100', 'text-gray-800');
-            
-            // Load today's bookings
-            filterBookings('today');
+                </tr>
+            `;
+            tableBody.insertAdjacentHTML('beforeend', row);
         });
         
-        // Also initialize on page load (in case DOMContentLoaded already fired)
-        updateActiveFilter(document.getElementById('btnToday'), 'today');
-        filterBookings('today');
+        // Re-attach event listeners after table update
+        attachActionListeners();
+    }
+    
+    function updatePagination(paginationData) {
+        const prevPageButton = document.getElementById('prevPage');
+        const nextPageButton = document.getElementById('nextPage');
         
-        if (window.Dashboard) {
-            window.Dashboard.initialize();
+        let currentPage = paginationData.current_page;
+
+        // Previous Button
+        if (paginationData.prev_page_url) {
+            prevPageButton.disabled = false;
+            prevPageButton.onclick = () => {
+                const filter = localStorage.getItem('activeFilter') || 'today';
+                const date = localStorage.getItem('activeDate');
+                fetchBookings(filter, date, currentPage - 1);
+            };
         } else {
-            console.error('Dashboard tidak terinisialisasi dengan benar');
+            prevPageButton.disabled = true;
+            prevPageButton.onclick = null;
         }
-        
-        // Delete booking functionality
-        const deleteButtons = document.querySelectorAll('.delete-booking');
-        const deleteModal = document.getElementById('deleteModal');
-        const cancelDelete = document.getElementById('cancelDelete');
-        const deleteForm = document.getElementById('deleteForm');
-        
-        deleteButtons.forEach(button => {
+
+        // Next Button
+        if (paginationData.next_page_url) {
+            nextPageButton.disabled = false;
+            nextPageButton.onclick = () => {
+                const filter = localStorage.getItem('activeFilter') || 'today';
+                const date = localStorage.getItem('activeDate');
+                fetchBookings(filter, date, currentPage + 1);
+            };
+        } else {
+            nextPageButton.disabled = true;
+            nextPageButton.onclick = null;
+        }
+    }
+
+    function attachActionListeners() {
+        // Edit Button Listeners
+        document.querySelectorAll('.edit-booking-btn').forEach(button => {
             button.addEventListener('click', function() {
                 const bookingId = this.dataset.id;
-                deleteForm.action = `{{ route('admin.bookings.delete', '') }}/${bookingId}`;
-                deleteModal.classList.remove('hidden');
-                deleteModal.classList.add('flex');
+                const form = document.getElementById('editBookingForm');
+                
+                // Populate form
+                form.action = `/admin/bookings/${bookingId}`;
+                document.getElementById('edit_date').value = this.dataset.date;
+                document.getElementById('edit_start_time').value = this.dataset.startTime;
+                document.getElementById('edit_end_time').value = this.dataset.endTime;
+                document.getElementById('edit_description').value = this.dataset.description;
+                document.getElementById('edit_booking_type').value = this.dataset.bookingType;
+                
+                const externalDescContainer = document.getElementById('edit_external_description_container');
+                if (this.dataset.bookingType === 'external') {
+                    externalDescContainer.classList.remove('hidden');
+                    document.getElementById('edit_external_description').value = this.dataset.externalDescription;
+                } else {
+                    externalDescContainer.classList.add('hidden');
+                }
+
+                // Show modal
+                const modal = document.getElementById('editBookingModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                // Initialize or update TomSelect
+                if (!editRoomSelect) {
+                    editRoomSelect = new TomSelect("#edit_meeting_room_id",{
+                        create: false,
+                        sortField: {
+                            field: "text",
+                            direction: "asc"
+                        }
+                    });
+                }
+                if (!editNamaSelect) {
+                    editNamaSelect = new TomSelect("#edit_nama_select", {
+                        create: false,
+                        sortField: { field: "text", direction: "asc" },
+                        onChange: function(value) {
+                            const selectedOption = this.getOption(value);
+                            const departmentName = selectedOption.dataset.department;
+                            if (departmentName && editDepartmentSelect) {
+                                editDepartmentSelect.setValue(departmentName);
+                            }
+                        }
+                    });
+                }
+                if (!editDepartmentSelect) {
+                    editDepartmentSelect = new TomSelect("#edit_department_select", { create: false, sortField: { field: "text", direction: "asc" } });
+                    editDepartmentSelect.disable(); // Initially disable
+                }
+
+                // Set initial values
+                editRoomSelect.setValue(this.dataset.roomId);
+                editNamaSelect.setValue(this.dataset.name);
+                editDepartmentSelect.setValue(this.dataset.department);
             });
         });
-        
-        cancelDelete.addEventListener('click', function() {
-            deleteModal.classList.add('hidden');
-            deleteModal.classList.remove('flex');
+
+        // Delete Button Listeners
+        document.querySelectorAll('.delete-booking-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const bookingId = this.dataset.id;
+                const form = document.getElementById('deleteBookingForm');
+                form.action = `/admin/bookings/${bookingId}`;
+                const modal = document.getElementById('deleteBookingModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
         });
+    }
+
+    function setupModalClosers() {
+        // General function to close modals
+        const closeAllModals = () => {
+            document.querySelectorAll('.modal-container').forEach(modal => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+             // Also destroy TomSelect instance when modal closes to prevent issues
+            if (editRoomSelect) {
+                editRoomSelect.destroy();
+                editRoomSelect = null;
+            }
+            if (editNamaSelect) {
+                editNamaSelect.destroy();
+                editNamaSelect = null;
+            }
+            if (editDepartmentSelect) {
+                editDepartmentSelect.destroy();
+                editDepartmentSelect = null;
+            }
+        };
+
+        // Attach to all close buttons
+        document.querySelectorAll('.modal-close').forEach(button => {
+            button.addEventListener('click', closeAllModals);
+        });
+
+        // Attach to modal overlays to close on click outside
+        document.querySelectorAll('.modal-container').forEach(modal => {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeAllModals();
+                }
+            });
+        });
+
+        // External Description toggle in Edit Modal
+        document.getElementById('edit_booking_type').addEventListener('change', function() {
+            const externalDescContainer = document.getElementById('edit_external_description_container');
+            if(this.value === 'external') {
+                externalDescContainer.classList.remove('hidden');
+            } else {
+                externalDescContainer.classList.add('hidden');
+            }
+        });
+    }
+
+    function updateUI(data, filter) {
+        updateStatsWithData(data, filter);
+        updateBookingsTable(data.bookings.data);
+        document.getElementById('showingCount').textContent = data.bookings.from || 0;
+        document.getElementById('totalCount').textContent = data.bookings.to || 0;
+        document.getElementById('totalBookingsCount').textContent = data.bookings.total || 0;
+        updatePagination(data.bookings);
+    }
+
+    // --- Data Fetching ---
+    async function fetchBookings(filter, date = null, page = 1) {
+        loadingOverlay.classList.remove('hidden');
+        let url = new URL(window.location.origin + '/admin/dashboard/bookings');
+        url.searchParams.append('filter', filter);
+        url.searchParams.append('page', page);
+        if (date) {
+            url.searchParams.append('date', date);
+        }
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Network response was not ok');
+            }
+            const data = await response.json();
+            updateUI(data, filter);
+            updateExportLink(filter, date);
+        } catch (error) {
+            console.error('Failed to fetch bookings:', error);
+            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Gagal memuat data. Silakan coba lagi. Error: ${error.message}</td></tr>`;
+        } finally {
+            loadingOverlay.classList.add('hidden');
+        }
+    }
+
+    function updateExportLink(filter, date = null) {
+        const params = new URLSearchParams();
+        params.append('filter', filter);
+        if (date) {
+            params.append('date', date);
+        }
+        exportLink.href = `${originalExportHref}?${params.toString()}`;
+    }
+
+    function setActiveFilter(activeButton) {
+        filterButtons.forEach(btn => {
+            btn.classList.remove('bg-primary', 'text-white');
+            btn.classList.add('bg-gray-100', 'text-gray-700');
+        });
+        activeButton.classList.remove('bg-gray-100', 'text-gray-700');
+        activeButton.classList.add('bg-primary', 'text-white');
+    }
+
+    // --- Initializers ---
+    function initializeFlatpickr() {
+        flatpickrInstance = flatpickr(datePickerInput, {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d M Y",
+            onChange: function(selectedDates, dateStr) {
+                if (selectedDates.length === 2) {
+                    const filter = 'custom';
+                    localStorage.setItem('activeFilter', filter);
+                    localStorage.setItem('activeDate', dateStr);
+                    setActiveFilter(document.getElementById('filter-custom'));
+                    fetchBookings(filter, dateStr);
+                }
+            },
+        });
+    }
+
+    function setupEventListeners() {
+        filterButtons.forEach(button => {
+            if (button.id === 'filter-custom') return;
+            button.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                localStorage.setItem('activeFilter', filter);
+                localStorage.removeItem('activeDate');
+                setActiveFilter(this);
+                if (flatpickrInstance) flatpickrInstance.clear();
+                fetchBookings(filter);
+            });
+        });
+    }
+
+    function restoreStateAndLoad() {
+        const savedFilter = localStorage.getItem('activeFilter') || 'today';
+        const savedDate = localStorage.getItem('activeDate');
+        let filterToLoad = savedFilter;
+        let dateToLoad = savedDate;
+
+        let activeBtn;
+
+        if (savedFilter === 'custom' && savedDate) {
+            activeBtn = document.getElementById('filter-custom');
+            if (flatpickrInstance) flatpickrInstance.setDate(savedDate, false);
+        } else {
+            activeBtn = document.getElementById(`filter-${savedFilter}`) || document.getElementById('filter-today');
+            dateToLoad = null; 
+        }
+        
+        setActiveFilter(activeBtn);
+        fetchBookings(filterToLoad, dateToLoad);
+    }
+
+    // --- Main Execution ---
+    initializeFlatpickr();
+    setupEventListeners();
+    restoreStateAndLoad();
+    setupModalClosers();
     });
 </script>
 @endpush
 
-<!-- Delete Confirmation Modal (Hidden by default) -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-        <h3 class="text-lg font-bold mb-4">Confirm Deletion</h3>
+@push('modals')
+<!-- Edit Booking Modal -->
+<div id="editBookingModal" class="modal-container fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full m-4">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold">Edit Booking</h3>
+            <button class="modal-close text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
+        </div>
+        <form id="editBookingForm" method="POST">
+            @csrf
+            @method('PUT')
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="edit_nama_select" class="block text-sm font-medium text-gray-700">Booked By</label>
+                    <select id="edit_nama_select" name="nama" class="mt-1 block w-full" required>
+                        <option value="">Select an employee</option>
+                        @foreach($employees as $employee)
+                            <option value="{{ $employee->name }}" data-department="{{ $employee->department->name ?? '' }}">{{ $employee->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="edit_department_select" class="block text-sm font-medium text-gray-700">Department</label>
+                    <select id="edit_department_select" name="department" class="mt-1 block w-full" required>
+                         <option value="">Select a department</option>
+                        @foreach($departments as $department)
+                            <option value="{{ $department->name }}">{{ $department->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label for="edit_meeting_room_id" class="block text-sm font-medium text-gray-700">Meeting Room</label>
+                    <select id="edit_meeting_room_id" name="meeting_room_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        @foreach(\App\Models\MeetingRoom::all() as $room)
+                            <option value="{{ $room->id }}">{{ $room->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="edit_date" class="block text-sm font-medium text-gray-700">Date</label>
+                    <input type="date" id="edit_date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                </div>
+                <div>
+                    <label for="edit_start_time" class="block text-sm font-medium text-gray-700">Time</label>
+                    <div class="flex items-center space-x-2">
+                        <input type="time" id="edit_start_time" name="start_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                        <span>-</span>
+                        <input type="time" id="edit_end_time" name="end_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                    </div>
+                </div>
+                 <div class="col-span-2">
+                    <label for="edit_booking_type" class="block text-sm font-medium text-gray-700">Booking Type</label>
+                    <select id="edit_booking_type" name="booking_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="internal">Internal</option>
+                        <option value="external">External</option>
+                    </select>
+                </div>
+                <div id="edit_external_description_container" class="col-span-2 hidden">
+                    <label for="edit_external_description" class="block text-sm font-medium text-gray-700">External Details</label>
+                    <textarea id="edit_external_description" name="external_description" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+                <div class="col-span-2">
+                    <label for="edit_description" class="block text-sm font-medium text-gray-700">Description / Agenda</label>
+                    <textarea id="edit_description" name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" class="modal-close bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">Cancel</button>
+                <button type="submit" class="bg-primary text-white px-4 py-2 rounded-lg hover:opacity-90">Update Booking</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteBookingModal" class="modal-container fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full m-4">
+        <div class="flex justify-between items-center pb-3">
+             <h3 class="text-lg font-bold">Confirm Deletion</h3>
+             <button class="modal-close text-2xl leading-none">&times;</button>
+        </div>
         <p class="text-gray-600 mb-6">Are you sure you want to delete this booking? This action cannot be undone.</p>
         <div class="flex justify-end gap-3">
-            <button id="cancelDelete" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700">Cancel</button>
-            <form id="deleteForm" method="POST">
+            <button type="button" class="modal-close px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100">Cancel</button>
+            <form id="deleteBookingForm" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="px-4 py-2 bg-danger text-white rounded-lg">Delete</button>
+                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete</button>
             </form>
         </div>
     </div>
 </div>
+@endpush

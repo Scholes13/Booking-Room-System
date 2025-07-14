@@ -64,25 +64,25 @@
         <div class="flex flex-col lg:flex-row gap-4 items-center">
             <!-- Filter Tabs -->
             <div class="flex flex-wrap mb-0 lg:mb-4 gap-2">
-                <a href="{{ route('admin.bookings.index') }}" class="filter-btn {{ !request('filter') ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('admin.bookings.index') }}" class="filter-btn {{ !request('filter') ? 'active bg-primary text-white hover:opacity-90' : 'bg-gray-100 text-dark hover:bg-gray-200' }} px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5zM11 13a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                     </svg>
                     All
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'today']) }}" class="filter-btn {{ request('filter') == 'today' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('admin.bookings.index', ['filter' => 'today']) }}" class="filter-btn {{ request('filter') == 'today' ? 'active bg-primary text-white hover:opacity-90' : 'bg-gray-100 text-dark hover:bg-gray-200' }} px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
                     Today
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'week']) }}" class="filter-btn {{ request('filter') == 'week' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('admin.bookings.index', ['filter' => 'week']) }}" class="filter-btn {{ request('filter') == 'week' ? 'active bg-primary text-white hover:opacity-90' : 'bg-gray-100 text-dark hover:bg-gray-200' }} px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>
                     This Week
                 </a>
-                <a href="{{ route('admin.bookings.index', ['filter' => 'month']) }}" class="filter-btn {{ request('filter') == 'month' ? 'active bg-[#24448c] text-white' : 'bg-gray-100 text-dark' }} px-4 py-2 rounded-lg font-medium hover:bg-[#1c3670] transition-colors shadow-sm flex items-center">
+                <a href="{{ route('admin.bookings.index', ['filter' => 'month']) }}" class="filter-btn {{ request('filter') == 'month' ? 'active bg-primary text-white hover:opacity-90' : 'bg-gray-100 text-dark hover:bg-gray-200' }} px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-sm flex items-center">
                     <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                         <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
                     </svg>

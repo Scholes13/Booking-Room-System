@@ -1,0 +1,28 @@
+{
+  "resources/css/app.css": {
+    "file": "assets/app-EKnnrPxP.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/admin/dashboard/index.js": {
+    "file": "assets/index-f1vDG6mt.js",
+    "name": "index",
+    "src": "resources/js/admin/dashboard/index.js",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Ds-AKhiO.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app-e-Wv0bQg.css"
+    ]
+  },
+  "resources/js/lead/worksheets.js": {
+    "file": "assets/worksheets-aIteK16Y.js",
+    "name": "worksheets",
+    "src": "resources/js/lead/worksheets.js",
+    "isEntry": true
+  }
+}

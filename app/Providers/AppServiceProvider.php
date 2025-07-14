@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Models\Activity;
 use Carbon\Carbon;
+use App\Services\FontneService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Register FontneService as a singleton
+        $this->app->singleton(FontneService::class, function ($app) {
+            return new FontneService();
+        });
     }
 
     /**

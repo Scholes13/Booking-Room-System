@@ -7,9 +7,17 @@ use App\Models\Department;
 use App\Models\Employee;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\FontneService;
 
 class ActivityController extends Controller
 {
+    protected $fontneService;
+
+    public function __construct(FontneService $fontneService)
+    {
+        $this->fontneService = $fontneService;
+    }
+
     /**
      * Menampilkan form untuk menambahkan kegiatan.
      */
@@ -127,6 +135,12 @@ class ActivityController extends Controller
                 'company_email' => $request->input('company_email'),
                 'company_address' => $request->input('company_address'),
             ]);
+
+            // Reload the activity to get the salesMissionDetail relationship for the notification
+            $activity->load('salesMissionDetail'); 
+
+            // Kirim notifikasi WhatsApp jika Sales Mission baru berhasil dibuat
+            $this->fontneService->sendNewSalesMissionNotification($activity);
         }
 
         return redirect()->route('activity.create')->with('success', 'Kegiatan berhasil dibuat!');

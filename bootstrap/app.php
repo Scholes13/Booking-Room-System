@@ -11,10 +11,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up'
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Jika perlu, tambahkan middleware global di sini, misal:
-        // $middleware->global([
-        //     App\Http\Middleware\SomeGlobalMiddleware::class,
-        // ]);
+        $middleware->alias([
+            'is.admin.bas' => \App\Http\Middleware\AdminBASMiddleware::class,
+            'is.sales.mission' => \App\Http\Middleware\SalesMissionMiddleware::class,
+            'is.sales.officer' => \App\Http\Middleware\SalesOfficerMiddleware::class,
+            'is.lead' => \App\Http\Middleware\IsLead::class,
+        ]);
+
+        $middleware->redirectGuestsTo('/admin/login');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Konfigurasi exception handling, jika diperlukan.

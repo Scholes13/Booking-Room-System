@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Common\Entity\Style\Style;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\Sales\ActivityExport;
 
 class SalesMissionController extends Controller
 {
@@ -119,62 +121,91 @@ class SalesMissionController extends Controller
     {
         $query = Activity::where('activity_type', 'Sales Mission')
             ->whereHas('salesMissionDetail')
-            ->with('department', 'salesMissionDetail');
+            ->with(['department', 'salesMissionDetail', 'teamAssignments.team']);
             
+        // Join dengan sales_mission_details untuk sorting
+        $query->join('sales_mission_details', 'activities.id', '=', 'sales_mission_details.activity_id');
+
         // Filter by search
         if ($request->filled('search')) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
-                $q->whereHas('salesMissionDetail', function($sq) use ($searchTerm) {
-                    $sq->where('company_name', 'like', "%{$searchTerm}%")
-                       ->orWhere('company_pic', 'like', "%{$searchTerm}%")
-                       ->orWhere('company_contact', 'like', "%{$searchTerm}%");
+                $q->whereHas('salesMissionDetail', function($sq) use ($searchTerm) { // This whereHas will now use the joined table context
+                    $sq->where('sales_mission_details.company_name', 'like', "%{$searchTerm}%")
+                       ->orWhere('sales_mission_details.company_pic', 'like', "%{$searchTerm}%")
+                       ->orWhere('sales_mission_details.company_contact', 'like', "%{$searchTerm}%");
                 })
-                ->orWhere('description', 'like', "%{$searchTerm}%")
-                ->orWhere('name', 'like', "%{$searchTerm}%")
-                ->orWhere('city', 'like', "%{$searchTerm}%")
-                ->orWhere('province', 'like', "%{$searchTerm}%");
+                ->orWhere('activities.description', 'like', "%{$searchTerm}%") // Prefix with table name
+                ->orWhere('activities.name', 'like', "%{$searchTerm}%")       // Prefix with table name
+                ->orWhere('activities.city', 'like', "%{$searchTerm}%")         // Prefix with table name
+                ->orWhere('activities.province', 'like', "%{$searchTerm}%");  // Prefix with table name
             });
         }
         
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // Filter by assignment status (new filter)
+        if ($request->filled('assignment_status')) {
+            $assignmentStatus = $request->assignment_status;
+            if ($assignmentStatus === 'assigned') {
+                $query->whereHas('teamAssignments');
+            } elseif ($assignmentStatus === 'not_assigned') {
+                $query->whereDoesntHave('teamAssignments');
+            }
         }
         
-        // Filter by date range
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->where(function($q) use ($request) {
-                $startDate = Carbon::parse($request->start_date)->startOfDay();
-                $endDate = Carbon::parse($request->end_date)->endOfDay();
-                
-                // Activities that start within the date range
-                $q->whereBetween('start_datetime', [$startDate, $endDate])
-                  // OR activities that end within the date range
-                  ->orWhereBetween('end_datetime', [$startDate, $endDate])
-                  // OR activities that span the entire date range
-                  ->orWhere(function($subq) use ($startDate, $endDate) {
-                      $subq->where('start_datetime', '<=', $startDate)
-                           ->where('end_datetime', '>=', $endDate);
-                  });
-            });
-        } 
-        // Filter by single start date only
-        else if ($request->filled('start_date')) {
-            $query->whereDate('start_datetime', '>=', $request->start_date);
-        }
-        // Filter by single end date only
-        else if ($request->filled('end_date')) {
-            $query->whereDate('end_datetime', '<=', $request->end_date);
+        // Filter by Location (City)
+        $filterLocationValue = $request->input('filter_location');
+        if ($filterLocationValue) {
+            $query->where('activities.city', $filterLocationValue); // Prefix with table name
         }
         
-        // Order by start date descending
-        $query->orderBy('start_datetime', 'desc');
+        // Filter by a single date (start_date)
+        if ($request->filled('start_date')) {
+            $selectedDate = Carbon::parse($request->start_date)->toDateString();
+            $query->whereDate('activities.start_datetime', $selectedDate); // Prefix with table name
+        }
         
+        // Sorting logic
+        $sortBy = $request->input('sort_by', 'activities.start_datetime'); // Default sort column
+        $sortDirection = $request->input('sort_direction', 'desc');       // Default sort direction
+
+        // Validate sort_by to prevent SQL injection and ensure it's a valid column
+        $allowedSortColumns = [
+            'sales_mission_details.company_name', 
+            'sales_mission_details.company_pic', 
+            'activities.city', 
+            'activities.start_datetime'
+        ];
+        if (!in_array($sortBy, $allowedSortColumns)) {
+            $sortBy = 'activities.start_datetime'; // Fallback to default if not allowed
+        }
+        if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+            $sortDirection = 'desc'; // Fallback to default
+        }
+
+        $query->orderBy($sortBy, $sortDirection);
+        
+        // Select a_activities.* to avoid issues with join columns if names are the same
+        $query->select('activities.*');
+
         $activities = $query->paginate(10);
-        $activities->appends($request->all()); // Maintain filters in pagination
+        $activities->appends($request->all());
         
-        return view('sales_mission.activities.index', compact('activities'));
+        $cities = Activity::where('activity_type', 'Sales Mission')
+            ->whereHas('salesMissionDetail')
+            ->select('city')
+            ->whereNotNull('city')
+            ->where('city', '!=', '')
+            ->distinct()
+            ->orderBy('city', 'asc')
+            ->pluck('city');
+            
+        return view('sales_mission.activities.index', compact(
+            'activities', 
+            'cities', 
+            'filterLocationValue',
+            'sortBy',       // Pass to view
+            'sortDirection' // Pass to view
+        ));
     }
     
     /**
@@ -845,5 +876,175 @@ class SalesMissionController extends Controller
         };
         
         return $typeTitle . ' - ' . $periodTitle;
+    }
+    
+    /**
+     * Field Management - Team Assignments
+     */
+    public function fieldAssignments()
+    {
+        return view('sales_mission.field.assignments.index');
+    }
+    
+    public function createFieldAssignment()
+    {
+        $departments = Department::all();
+        $employees = Employee::all();
+        return view('sales_mission.field.assignments.create', compact('departments', 'employees'));
+    }
+    
+    public function storeFieldAssignment(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment created successfully.');
+    }
+    
+    public function editFieldAssignment($id)
+    {
+        $departments = Department::all();
+        $employees = Employee::all();
+        // Placeholder for field assignment edit view
+        return view('sales_mission.field.assignments.edit', compact('departments', 'employees'));
+    }
+    
+    public function updateFieldAssignment(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment updated successfully.');
+    }
+    
+    public function destroyFieldAssignment($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.assignments')
+            ->with('success', 'Team assignment deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Target Companies
+     */
+    public function fieldCompanies()
+    {
+        return view('sales_mission.field.companies.index');
+    }
+    
+    public function createFieldCompany()
+    {
+        return view('sales_mission.field.companies.create');
+    }
+    
+    public function storeFieldCompany(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company created successfully.');
+    }
+    
+    public function editFieldCompany($id)
+    {
+        return view('sales_mission.field.companies.edit');
+    }
+    
+    public function updateFieldCompany(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company updated successfully.');
+    }
+    
+    public function destroyFieldCompany($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.companies')
+            ->with('success', 'Target company deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Appointments
+     */
+    public function fieldAppointments()
+    {
+        return view('sales_mission.field.appointments.index');
+    }
+    
+    public function createFieldAppointment()
+    {
+        return view('sales_mission.field.appointments.create');
+    }
+    
+    public function storeFieldAppointment(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment created successfully.');
+    }
+    
+    public function editFieldAppointment($id)
+    {
+        return view('sales_mission.field.appointments.edit');
+    }
+    
+    public function updateFieldAppointment(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment updated successfully.');
+    }
+    
+    public function destroyFieldAppointment($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.appointments')
+            ->with('success', 'Appointment deleted successfully.');
+    }
+    
+    /**
+     * Field Management - Visit Schedules
+     */
+    public function fieldSchedules()
+    {
+        return view('sales_mission.field.schedules.index');
+    }
+    
+    public function createFieldSchedule()
+    {
+        return view('sales_mission.field.schedules.create');
+    }
+    
+    public function storeFieldSchedule(Request $request)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule created successfully.');
+    }
+    
+    public function editFieldSchedule($id)
+    {
+        return view('sales_mission.field.schedules.edit');
+    }
+    
+    public function updateFieldSchedule(Request $request, $id)
+    {
+        // Validation will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule updated successfully.');
+    }
+    
+    public function destroyFieldSchedule($id)
+    {
+        // Logic will be implemented when model is created
+        return redirect()->route('sales_mission.field.schedules')
+            ->with('success', 'Visit schedule deleted successfully.');
+    }
+
+    /**
+     * Export data aktivitas Sales Mission ke Excel.
+     */
+    public function exportActivities(Request $request)
+    {
+        $filename = 'sales_mission_activities_' . now()->format('Ymd_His') . '.xlsx';
+        return Excel::download(new ActivityExport($request), $filename);
     }
 }

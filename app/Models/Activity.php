@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use App\Services\FontneService;
+use Illuminate\Support\Facades\Log;
 
 class Activity extends Model
 {
@@ -104,6 +106,31 @@ class Activity extends Model
                 $activity->created_by = auth()->id();
             }
         });
+
+        static::updated(function ($activity) {
+            // Check if start_datetime or end_datetime was changed
+            if ($activity->isDirty('start_datetime') || $activity->isDirty('end_datetime')) {
+                // Load team assignments with their related data
+                $activity->loadMissing('teamAssignments.team', 'teamAssignments.feedbackSurvey');
+
+                if ($activity->teamAssignments->isNotEmpty()) {
+                    $fontneService = new FontneService();
+                    foreach ($activity->teamAssignments as $assignment) {
+                        try {
+                            // Make sure the assignment itself isn't null and has a team
+                            if ($assignment && $assignment->team) {
+                                Log::info('Sending schedule update notification for assignment ID: ' . $assignment->id);
+                                $fontneService->sendScheduleUpdateNotification($assignment);
+                            } else {
+                                Log::warning('Skipping notification for assignment due to missing team or assignment data.', ['activity_id' => $activity->id, 'assignment_id' => $assignment->id ?? null]);
+                            }
+                        } catch (\Exception $e) {
+                            Log::error('Error dispatching schedule update notification for assignment ID: ' . $assignment->id . ' - ' . $e->getMessage());
+                        }
+                    }
+                }
+            }
+        });
     }
 
     public function department()
@@ -130,5 +157,23 @@ class Activity extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    
+    /**
+     * Get the teams assigned to this activity.
+     */
+    public function teams()
+    {
+        return $this->belongsToMany(Team::class, 'team_assignments', 'activity_id', 'team_id')
+            ->withPivot('assignment_date', 'notes', 'assigned_by')
+            ->withTimestamps();
+    }
+    
+    /**
+     * Get the team assignments for this activity.
+     */
+    public function teamAssignments()
+    {
+        return $this->hasMany(TeamAssignment::class);
     }
 }

@@ -74,6 +74,10 @@
     <!-- Compact Admin Styling -->
     <link rel="stylesheet" href="{{ asset('css/compact-admin.css') }}">
 
+    <!-- Tom-Select CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
     @stack('styles')
     
     <style>
@@ -82,34 +86,25 @@
             @apply bg-gray-50;
             overflow-x: hidden;
         }
-        
-        /* Sidebar styles */
-        #sidebar {
-            height: 100vh;
-            overflow-y: visible;
-            overflow-x: hidden;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 16rem; /* w-64 = 16rem */
-            z-index: 50;
-            display: flex;
-            flex-direction: column;
+
+        /* New Sidebar/Layout Styles */
+        body.sidebar-compact #sidebar {
+            transform: translateX(-100%);
         }
 
-        #sidebar-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        body.sidebar-compact main {
+            margin-left: 0;
+        }
+
+        body.sidebar-compact #sidebarToggle {
+            transform: rotate(180deg);
+        }
+
+        #sidebarToggle {
+            transition: transform 0.3s ease;
         }
         
-        /* Main content styles */
-        main {
-            min-height: 100vh;
-            margin-left: 16rem; /* w-64 = 16rem */
-            padding: 1.5rem;
-        }
-        
+        /* Sidebar item hover effect */
         .sidebar-item {
             @apply transition-all duration-300 ease-in-out;
         }
@@ -168,7 +163,7 @@
 </head>
 <body class="bg-gray-50 text-dark">
     <!-- Sidebar -->
-    <div id="sidebar" class="w-64 bg-white shadow-md">
+    <aside id="sidebar" class="bg-white shadow-md flex flex-col fixed top-0 left-0 h-full w-64 z-40 transition-transform duration-300 ease-in-out">
         <div class="flex items-center justify-between p-4 border-b border-gray-200 sidebar-logo">
             <div class="flex items-center gap-2">
                 <div class="text-primary">
@@ -189,7 +184,7 @@
             </div>
         </div>
         
-        <div id="sidebar-content" class="py-4">
+        <div id="sidebar-content" class="flex-1 flex flex-col overflow-y-auto py-4">
             <nav class="px-4">
                 <ul class="space-y-1">
                     <li>
@@ -261,37 +256,46 @@
             </nav>
             
             <!-- Quick Stats -->
-            <div class="px-4 mt-6 quick-stats-section">
-                <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Quick Stats</h4>
-                <div class="p-3 rounded-lg bg-gray-50 space-y-2">
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm">Today's Bookings</span>
-                        <span class="font-medium text-primary">{{ \App\Models\Booking::whereDate('date', \Carbon\Carbon::today())->count() }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-sm">Active Rooms</span>
-                        <span class="font-medium text-primary">{{ \App\Models\MeetingRoom::count() }}</span>
+            <div class="px-4 mt-auto">
+                 <div class="quick-stats-section mb-4">
+                    <h4 class="text-xs font-semibold text-gray-500 uppercase mb-2">Quick Stats</h4>
+                    <div class="p-3 rounded-lg bg-gray-50 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Today's Bookings</span>
+                            <span class="font-medium text-primary">{{ \App\Models\Booking::whereDate('date', \Carbon\Carbon::today())->count() }}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm">Active Rooms</span>
+                            <span class="font-medium text-primary">{{ \App\Models\MeetingRoom::count() }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
+            
+            <div id="sidebar-footer" class="p-4 border-t border-gray-200">
+                <a href="{{ route('admin.logout') }}" 
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+                   class="logout-btn flex items-center justify-center gap-3 w-full px-3 py-2.5 rounded-lg">
+                    <div class="text-inherit sidebar-icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M112,24a8,8,0,0,1,8,8V53.81a8,8,0,0,1-16,0V32A8,8,0,0,1,112,24Zm88,56H141.15a8,8,0,0,0-5.66,2.34L94.34,123.49a8,8,0,0,1-11.32-1.63L42.06,62.34A8,8,0,0,0,36.4,56H24a8,8,0,0,0,0,16H34.89l39.5,58.07a8,8,0,0,0,12.55.87l39.51-54.85A8,8,0,0,0,132.09,72H200a8,8,0,0,0,0-16Z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-sm font-medium sidebar-text">Logout</span>
+                </a>
+                <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
+            </div>
         </div>
-        
-        <div class="mt-auto p-4 border-t border-gray-200">
-            <a href="{{ route('admin.logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-300 ease-in-out">
-                <div class="sidebar-icon-container">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                        <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L196.69,120H104a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
-                    </svg>
-                </div>
-                <span class="text-sm font-medium sidebar-text">Logout</span>
-            </a>
-        </div>
-    </div>
+    </aside>
     
     <!-- Main Content -->
-    <main>
+    <main class="ml-64 p-6 min-h-screen transition-all duration-300 ease-in-out">
         @yield('content')
     </main>
+    
+    @stack('modals')
 
     <script>
         window.Laravel = {!! json_encode([
@@ -313,19 +317,15 @@
             
             // Apply initial state
             if (sidebarCollapsed) {
-                sidebar.classList.add('collapsed');
-                mainContent.classList.add('expanded');
-                toggleBtn.classList.add('collapsed');
+                document.body.classList.add('sidebar-compact');
             }
             
             // Toggle sidebar on button click
             toggleBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('collapsed');
-                mainContent.classList.toggle('expanded');
-                toggleBtn.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-compact');
                 
                 // Save preference to localStorage
-                localStorage.setItem('admin_sidebar_collapsed', sidebar.classList.contains('collapsed'));
+                localStorage.setItem('admin_sidebar_collapsed', document.body.classList.contains('sidebar-compact'));
             });
         });
     </script>
