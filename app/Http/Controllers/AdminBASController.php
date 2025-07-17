@@ -10,6 +10,7 @@ use App\Models\Department;
 use App\Models\Employee;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ActivityLogService;
+use App\Services\ActivityParserService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -614,5 +615,32 @@ class AdminBASController extends Controller
         $departments = Department::orderBy('name')->get();
         
         return view('admin_bas.reports.index', compact('meetingRooms', 'departments'));
+    }
+    
+    /**
+     * Parse natural language input for activity creation
+     */
+    public function parseActivity(Request $request)
+    {
+        $request->validate([
+            'input' => 'required|string|max:1000'
+        ]);
+
+        try {
+            $parserService = new ActivityParserService();
+            $result = $parserService->parseActivityInput($request->input('input'));
+            
+            // Add debugging information
+            $result['debug'] = $parserService->getParsingStats($request->input('input'));
+            
+            return response()->json($result);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Parsing failed: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
+        }
     }
 }

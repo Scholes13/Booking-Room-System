@@ -283,7 +283,9 @@
         </div>
         
         <div class="mt-auto p-4 border-t border-gray-200">
-            <a href="{{ route('admin.logout') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-300 ease-in-out">
+            <a href="{{ route('admin.logout') }}"
+               onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-all duration-300 ease-in-out">
                 <div class="sidebar-icon-container">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
                         <path d="M112,216a8,8,0,0,1-8,8H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h56a8,8,0,0,1,0,16H48V208h56A8,8,0,0,1,112,216Zm109.66-93.66-40-40a8,8,0,0,0-11.32,11.32L196.69,120H104a8,8,0,0,0,0,16h92.69l-26.35,26.34a8,8,0,0,0,11.32,11.32l40-40A8,8,0,0,0,221.66,122.34Z"></path>
@@ -291,6 +293,9 @@
                 </div>
                 <span class="text-sm font-medium sidebar-text">Logout</span>
             </a>
+            <form id="logout-form" action="{{ route('admin.logout') }}" method="POST" style="display: none;">
+                @csrf
+            </form>
         </div>
     </div>
     
@@ -301,8 +306,8 @@
 
     <script>
         window.Laravel = {!! json_encode([
-            'csrfToken' => csrf_token(), 
-            'baseUrl' => url('/'), 
+            'csrfToken' => csrf_token(),
+            'baseUrl' => url('/'),
             'currentRoute' => Route::currentRouteName()
         ]) !!};
     </script>
@@ -333,8 +338,112 @@
                 // Save preference to localStorage
                 localStorage.setItem('superadmin_sidebar_collapsed', sidebar.classList.contains('collapsed'));
             });
+            
+            // Modern Toast Notification System with Brand Colors
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    timer: 4000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    iconColor: '#26458e',
+                    customClass: {
+                        popup: 'swal2-toast-custom',
+                        timerProgressBar: 'swal2-timer-progress-bar-custom'
+                    }
+                });
+            @endif
+            
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ session('error') }}",
+                    timer: 5000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    iconColor: '#dc2626',
+                    customClass: {
+                        popup: 'swal2-toast-custom',
+                        timerProgressBar: 'swal2-timer-progress-bar-custom'
+                    }
+                });
+            @endif
+            
+            @if(session('warning'))
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Warning',
+                    text: "{{ session('warning') }}",
+                    timer: 4500,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    iconColor: '#f59e0b',
+                    customClass: {
+                        popup: 'swal2-toast-custom',
+                        timerProgressBar: 'swal2-timer-progress-bar-custom'
+                    }
+                });
+            @endif
+            
+            @if(session('info'))
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Information',
+                    text: "{{ session('info') }}",
+                    timer: 4000,
+                    timerProgressBar: true,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    iconColor: '#26458e',
+                    customClass: {
+                        popup: 'swal2-toast-custom',
+                        timerProgressBar: 'swal2-timer-progress-bar-custom'
+                    }
+                });
+            @endif
         });
     </script>
+    
+    <!-- Custom Toast Styles -->
+    <style>
+        .swal2-toast-custom {
+            border-left: 4px solid #26458e !important;
+            box-shadow: 0 10px 25px rgba(38, 69, 142, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05) !important;
+            border-radius: 8px !important;
+        }
+        
+        .swal2-timer-progress-bar-custom {
+            background: #26458e !important;
+        }
+        
+        .swal2-toast .swal2-title {
+            font-weight: 600 !important;
+            font-size: 14px !important;
+        }
+        
+        .swal2-toast .swal2-html-container {
+            font-size: 13px !important;
+            line-height: 1.4 !important;
+        }
+    </style>
     
     @stack('scripts')
 </body>

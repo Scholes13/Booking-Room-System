@@ -7,6 +7,7 @@ use App\Models\Activity;
 use App\Models\TeamAssignment;
 use App\Models\FeedbackSurvey;
 use App\Services\FontneService;
+use App\Services\FeedbackSurveySlugService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -416,13 +417,13 @@ class TeamAssignmentController extends Controller
      */
     private function generateFeedbackSurvey(TeamAssignment $teamAssignment)
     {
-        // Generate a unique token
-        $token = Str::uuid();
+        $slugService = new FeedbackSurveySlugService();
         
-        // Create the survey
+        // Create the survey with both UUID token (for backward compatibility) and readable slug
         return FeedbackSurvey::create([
             'team_assignment_id' => $teamAssignment->id,
-            'survey_token' => $token,
+            'survey_token' => Str::uuid(),
+            'url_slug' => $slugService->generateSlug($teamAssignment),
             'is_completed' => false
         ]);
     }

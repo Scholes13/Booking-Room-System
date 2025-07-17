@@ -133,6 +133,15 @@
         const activityTypeSelect = document.getElementById('activity_type');
         const otherActivityTypeContainer = document.getElementById('other_activity_type_container');
         const otherActivityTypeInput = document.getElementById('other_activity_type');
+        const employeeSelect = document.getElementById('name');
+        const departmentSelect = document.getElementById('department_id');
+        
+        // Employee to department mapping
+        const employeeDepartments = {
+            @foreach($employees as $employee)
+                '{{ $employee->name }}': {{ $employee->department_id ?? 'null' }},
+            @endforeach
+        };
         
         // Function to toggle the visibility of the other activity type field
         function toggleOtherActivityType() {
@@ -145,11 +154,24 @@
             }
         }
         
-        // Initial check
+        // Function to auto-populate department when employee is selected
+        function updateDepartment() {
+            const selectedEmployee = employeeSelect.value;
+            const departmentId = employeeDepartments[selectedEmployee];
+            
+            if (departmentId && departmentId !== 'null') {
+                departmentSelect.value = departmentId;
+            } else {
+                departmentSelect.value = '';
+            }
+        }
+        
+        // Initial checks
         toggleOtherActivityType();
         
-        // Add event listener for changes
+        // Add event listeners
         activityTypeSelect.addEventListener('change', toggleOtherActivityType);
+        employeeSelect.addEventListener('change', updateDepartment);
     });
 </script>
-@endpush 
+@endpush

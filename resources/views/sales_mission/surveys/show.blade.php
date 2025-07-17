@@ -12,7 +12,7 @@
             <h2 class="text-base font-semibold text-gray-700">Activity Information</h2>
             <div>
                 @if(!$survey->is_completed)
-                <a href="{{ route('sales_mission.surveys.public.form', $survey->survey_token) }}" target="_blank" class="px-3 py-1.5 text-xs font-medium bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors inline-flex items-center">
+                <a href="{{ $survey->public_url }}" target="_blank" class="px-3 py-1.5 text-xs font-medium bg-amber-500 text-white rounded-md hover:bg-amber-600 transition-colors inline-flex items-center">
                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                     </svg>
@@ -342,7 +342,7 @@
                     <h3 class="text-xl font-medium text-gray-900 mb-2">Pending Sales Visit Report</h3>
                     <p class="text-gray-500 mb-4">The team has not yet completed the sales visit report.</p>
                     <div class="flex justify-center">
-                        <a href="{{ route('sales_mission.surveys.public.form', $survey->survey_token) }}" target="_blank" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors inline-flex items-center">
+                        <a href="{{ $survey->public_url }}" target="_blank" class="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors inline-flex items-center">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
                             </svg>

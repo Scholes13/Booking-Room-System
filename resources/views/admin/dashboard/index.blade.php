@@ -290,443 +290,14 @@
 @endsection
 
 @push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // --- Element References ---
-    let flatpickrInstance;
-    let editRoomSelect = null; // To hold TomSelect instance
-    let editNamaSelect = null;
-    let editDepartmentSelect = null;
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    const datePickerInput = document.getElementById('date-picker');
-    const exportLink = document.getElementById('export-link');
-    const originalExportHref = exportLink.href;
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const tableBody = document.getElementById('bookingTableBody');
-    const bookingComparisonEl = document.getElementById('bookingComparison');
-
-    // --- UI Update Functions ---
-    function updateTrendIndicator(elementId, trendData) {
-        const trendEl = document.getElementById(elementId);
-        if (!trendEl || typeof trendData === 'undefined') {
-            if(trendEl) trendEl.classList.add('hidden');
-            return;
-        }
-        
-        trendEl.classList.remove('hidden');
-
-        const icon = trendEl.querySelector('.trend-icon');
-        const textEl = trendEl.querySelector('.trend-text');
-        
-        // Reset classes
-        trendEl.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800', 'bg-gray-100', 'text-gray-800');
-        icon.classList.remove('fa-arrow-up', 'fa-arrow-down', 'fa-equals');
-
-        const change = trendData.percentage_change;
-        
-        if (change === 0) {
-            textEl.textContent = 'No Change';
-            trendEl.classList.add('bg-gray-100', 'text-gray-800');
-            icon.classList.add('fa-equals');
-        } else {
-            textEl.textContent = `${Math.abs(change)}%`;
-            if (trendData.is_increase) {
-                trendEl.classList.add('bg-green-100', 'text-green-800');
-                icon.classList.add('fa-arrow-up');
-            } else {
-                trendEl.classList.add('bg-red-100', 'text-red-800');
-                icon.classList.add('fa-arrow-down');
-            }
-        }
-    }
-
-    function updateStatsWithData(data, filter) {
-        document.getElementById('totalBookings').textContent = data.stats.totalBookings.count || '0';
-        
-        let comparisonText = `${data.stats.totalBookings.count} bookings `;
-        switch (filter) {
-            case 'week':
-                comparisonText += 'this week';
-                break;
-            case 'month':
-                comparisonText += 'this month';
-                break;
-            case 'custom':
-                comparisonText += 'in period';
-                break;
-            case 'today':
-            default:
-                comparisonText += 'today';
-                break;
-        }
-        bookingComparisonEl.textContent = comparisonText;
-
-        updateTrendIndicator('bookingTrend', data.stats.bookingComparison);
-        updateTrendIndicator('usageTrend', data.stats.usageRate.trend);
-
-        document.getElementById('roomUsage').textContent = `${data.stats.usageRate.percentage || 0}%`;
-        const usageBar = document.getElementById('usageBar');
-        if (usageBar) {
-            usageBar.style.width = `${data.stats.usageRate.percentage || 0}%`;
-        }
-        document.getElementById('mostUsedRoom').textContent = data.stats.mostUsedRoom.name || 'N/A';
-        document.getElementById('roomUsageHours').textContent = `${data.stats.mostUsedRoom.hours || 0} hours`;
-        
-        const topDeptsContainer = document.getElementById('topDepartments');
-        topDeptsContainer.innerHTML = '';
-        if (data.stats.topDepartments && data.stats.topDepartments.length > 0) {
-            data.stats.topDepartments.forEach(dept => {
-                const deptEl = document.createElement('span');
-                deptEl.className = 'px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded';
-                deptEl.textContent = dept.name;
-                topDeptsContainer.appendChild(deptEl);
-            });
-        } else {
-            topDeptsContainer.innerHTML = '<span class="text-xs text-gray-500">Tidak ada data departemen.</span>';
-        }
-    }
-
-    function updateBookingsTable(bookings) {
-        tableBody.innerHTML = '';
-        if (!bookings || bookings.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-gray-500">Tidak ada data pemesanan untuk periode ini.</td></tr>`;
-            return;
-        }
-        bookings.forEach(booking => {
-            let statusClass = '';
-            switch (booking.dynamic_status) {
-                case 'Ongoing':
-                    statusClass = 'bg-yellow-100 text-yellow-800';
-                    break;
-                case 'Completed':
-                    statusClass = 'bg-green-100 text-green-800';
-                    break;
-                case 'Scheduled':
-                default:
-                    statusClass = 'bg-blue-100 text-blue-800';
-                    break;
-            }
-
-            const row = `
-                <tr class="booking-row" data-id="${booking.id}">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.meeting_room ? booking.meeting_room.name : 'N/A'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${(booking.user && booking.user.department) ? booking.user.department.name : (booking.department || 'N/A')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.user ? booking.user.name : (booking.nama || 'Pengguna Dihapus')}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.date}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${booking.start_time.substring(0,5)} - ${booking.end_time.substring(0,5)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
-                            ${booking.dynamic_status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div class="flex items-center justify-center space-x-2">
-                            <a href="/admin/bookings/${booking.id}/edit" title="Details" class="p-2 text-gray-400 hover:text-blue-500 transition-colors">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <button type="button" title="Edit" class="edit-booking-btn p-2 text-gray-400 hover:text-primary transition-colors"
-                                data-id="${booking.id}"
-                                data-name="${booking.nama}"
-                                data-department="${booking.department}"
-                                data-room-id="${booking.meeting_room_id}"
-                                data-date="${booking.date}"
-                                data-start-time="${booking.start_time.substring(0,5)}"
-                                data-end-time="${booking.end_time.substring(0,5)}"
-                                data-description="${booking.description || ''}"
-                                data-booking-type="${booking.booking_type}"
-                                data-external-description="${booking.external_description || ''}">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button type="button" title="Delete" class="delete-booking-btn p-2 text-gray-400 hover:text-red-500 transition-colors" data-id="${booking.id}">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            tableBody.insertAdjacentHTML('beforeend', row);
-        });
-        
-        // Re-attach event listeners after table update
-        attachActionListeners();
-    }
-    
-    function updatePagination(paginationData) {
-        const prevPageButton = document.getElementById('prevPage');
-        const nextPageButton = document.getElementById('nextPage');
-        
-        let currentPage = paginationData.current_page;
-
-        // Previous Button
-        if (paginationData.prev_page_url) {
-            prevPageButton.disabled = false;
-            prevPageButton.onclick = () => {
-                const filter = localStorage.getItem('activeFilter') || 'today';
-                const date = localStorage.getItem('activeDate');
-                fetchBookings(filter, date, currentPage - 1);
-            };
-        } else {
-            prevPageButton.disabled = true;
-            prevPageButton.onclick = null;
-        }
-
-        // Next Button
-        if (paginationData.next_page_url) {
-            nextPageButton.disabled = false;
-            nextPageButton.onclick = () => {
-                const filter = localStorage.getItem('activeFilter') || 'today';
-                const date = localStorage.getItem('activeDate');
-                fetchBookings(filter, date, currentPage + 1);
-            };
-        } else {
-            nextPageButton.disabled = true;
-            nextPageButton.onclick = null;
-        }
-    }
-
-    function attachActionListeners() {
-        // Edit Button Listeners
-        document.querySelectorAll('.edit-booking-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const bookingId = this.dataset.id;
-                const form = document.getElementById('editBookingForm');
-                
-                // Populate form
-                form.action = `/admin/bookings/${bookingId}`;
-                document.getElementById('edit_date').value = this.dataset.date;
-                document.getElementById('edit_start_time').value = this.dataset.startTime;
-                document.getElementById('edit_end_time').value = this.dataset.endTime;
-                document.getElementById('edit_description').value = this.dataset.description;
-                document.getElementById('edit_booking_type').value = this.dataset.bookingType;
-                
-                const externalDescContainer = document.getElementById('edit_external_description_container');
-                if (this.dataset.bookingType === 'external') {
-                    externalDescContainer.classList.remove('hidden');
-                    document.getElementById('edit_external_description').value = this.dataset.externalDescription;
-                } else {
-                    externalDescContainer.classList.add('hidden');
-                }
-
-                // Show modal
-                const modal = document.getElementById('editBookingModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-
-                // Initialize or update TomSelect
-                if (!editRoomSelect) {
-                    editRoomSelect = new TomSelect("#edit_meeting_room_id",{
-                        create: false,
-                        sortField: {
-                            field: "text",
-                            direction: "asc"
-                        }
-                    });
-                }
-                if (!editNamaSelect) {
-                    editNamaSelect = new TomSelect("#edit_nama_select", {
-                        create: false,
-                        sortField: { field: "text", direction: "asc" },
-                        onChange: function(value) {
-                            const selectedOption = this.getOption(value);
-                            const departmentName = selectedOption.dataset.department;
-                            if (departmentName && editDepartmentSelect) {
-                                editDepartmentSelect.setValue(departmentName);
-                            }
-                        }
-                    });
-                }
-                if (!editDepartmentSelect) {
-                    editDepartmentSelect = new TomSelect("#edit_department_select", { create: false, sortField: { field: "text", direction: "asc" } });
-                    editDepartmentSelect.disable(); // Initially disable
-                }
-
-                // Set initial values
-                editRoomSelect.setValue(this.dataset.roomId);
-                editNamaSelect.setValue(this.dataset.name);
-                editDepartmentSelect.setValue(this.dataset.department);
-            });
-        });
-
-        // Delete Button Listeners
-        document.querySelectorAll('.delete-booking-btn').forEach(button => {
-            button.addEventListener('click', function() {
-                const bookingId = this.dataset.id;
-                const form = document.getElementById('deleteBookingForm');
-                form.action = `/admin/bookings/${bookingId}`;
-                const modal = document.getElementById('deleteBookingModal');
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            });
-        });
-    }
-
-    function setupModalClosers() {
-        // General function to close modals
-        const closeAllModals = () => {
-            document.querySelectorAll('.modal-container').forEach(modal => {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-            });
-             // Also destroy TomSelect instance when modal closes to prevent issues
-            if (editRoomSelect) {
-                editRoomSelect.destroy();
-                editRoomSelect = null;
-            }
-            if (editNamaSelect) {
-                editNamaSelect.destroy();
-                editNamaSelect = null;
-            }
-            if (editDepartmentSelect) {
-                editDepartmentSelect.destroy();
-                editDepartmentSelect = null;
-            }
-        };
-
-        // Attach to all close buttons
-        document.querySelectorAll('.modal-close').forEach(button => {
-            button.addEventListener('click', closeAllModals);
-        });
-
-        // Attach to modal overlays to close on click outside
-        document.querySelectorAll('.modal-container').forEach(modal => {
-            modal.addEventListener('click', function (e) {
-                if (e.target === this) {
-                    closeAllModals();
-                }
-            });
-        });
-
-        // External Description toggle in Edit Modal
-        document.getElementById('edit_booking_type').addEventListener('change', function() {
-            const externalDescContainer = document.getElementById('edit_external_description_container');
-            if(this.value === 'external') {
-                externalDescContainer.classList.remove('hidden');
-            } else {
-                externalDescContainer.classList.add('hidden');
-            }
-        });
-    }
-
-    function updateUI(data, filter) {
-        updateStatsWithData(data, filter);
-        updateBookingsTable(data.bookings.data);
-        document.getElementById('showingCount').textContent = data.bookings.from || 0;
-        document.getElementById('totalCount').textContent = data.bookings.to || 0;
-        document.getElementById('totalBookingsCount').textContent = data.bookings.total || 0;
-        updatePagination(data.bookings);
-    }
-
-    // --- Data Fetching ---
-    async function fetchBookings(filter, date = null, page = 1) {
-        loadingOverlay.classList.remove('hidden');
-        let url = new URL(window.location.origin + '/admin/dashboard/bookings');
-        url.searchParams.append('filter', filter);
-        url.searchParams.append('page', page);
-        if (date) {
-            url.searchParams.append('date', date);
-        }
-
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Network response was not ok');
-            }
-            const data = await response.json();
-            updateUI(data, filter);
-            updateExportLink(filter, date);
-        } catch (error) {
-            console.error('Failed to fetch bookings:', error);
-            tableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-red-500">Gagal memuat data. Silakan coba lagi. Error: ${error.message}</td></tr>`;
-        } finally {
-            loadingOverlay.classList.add('hidden');
-        }
-    }
-
-    function updateExportLink(filter, date = null) {
-        const params = new URLSearchParams();
-        params.append('filter', filter);
-        if (date) {
-            params.append('date', date);
-        }
-        exportLink.href = `${originalExportHref}?${params.toString()}`;
-    }
-
-    function setActiveFilter(activeButton) {
-        filterButtons.forEach(btn => {
-            btn.classList.remove('bg-primary', 'text-white');
-            btn.classList.add('bg-gray-100', 'text-gray-700');
-        });
-        activeButton.classList.remove('bg-gray-100', 'text-gray-700');
-        activeButton.classList.add('bg-primary', 'text-white');
-    }
-
-    // --- Initializers ---
-    function initializeFlatpickr() {
-        flatpickrInstance = flatpickr(datePickerInput, {
-            mode: "range",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d M Y",
-            onChange: function(selectedDates, dateStr) {
-                if (selectedDates.length === 2) {
-                    const filter = 'custom';
-                    localStorage.setItem('activeFilter', filter);
-                    localStorage.setItem('activeDate', dateStr);
-                    setActiveFilter(document.getElementById('filter-custom'));
-                    fetchBookings(filter, dateStr);
-                }
-            },
-        });
-    }
-
-    function setupEventListeners() {
-        filterButtons.forEach(button => {
-            if (button.id === 'filter-custom') return;
-            button.addEventListener('click', function() {
-                const filter = this.dataset.filter;
-                localStorage.setItem('activeFilter', filter);
-                localStorage.removeItem('activeDate');
-                setActiveFilter(this);
-                if (flatpickrInstance) flatpickrInstance.clear();
-                fetchBookings(filter);
-            });
-        });
-    }
-
-    function restoreStateAndLoad() {
-        const savedFilter = localStorage.getItem('activeFilter') || 'today';
-        const savedDate = localStorage.getItem('activeDate');
-        let filterToLoad = savedFilter;
-        let dateToLoad = savedDate;
-
-        let activeBtn;
-
-        if (savedFilter === 'custom' && savedDate) {
-            activeBtn = document.getElementById('filter-custom');
-            if (flatpickrInstance) flatpickrInstance.setDate(savedDate, false);
-        } else {
-            activeBtn = document.getElementById(`filter-${savedFilter}`) || document.getElementById('filter-today');
-            dateToLoad = null; 
-        }
-        
-        setActiveFilter(activeBtn);
-        fetchBookings(filterToLoad, dateToLoad);
-    }
-
-    // --- Main Execution ---
-    initializeFlatpickr();
-    setupEventListeners();
-    restoreStateAndLoad();
-    setupModalClosers();
-    });
-</script>
+<!-- Include our new dashboard booking JavaScript -->
+@vite('resources/js/dashboard-booking.js')
 @endpush
 
 @push('modals')
 <!-- Edit Booking Modal -->
-<div id="editBookingModal" class="modal-container fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full m-4">
+<div id="editBookingModal" class="modal-container fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-xl font-bold">Edit Booking</h3>
             <button class="modal-close text-gray-500 hover:text-gray-800 text-2xl leading-none">&times;</button>
@@ -737,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label for="edit_nama_select" class="block text-sm font-medium text-gray-700">Booked By</label>
-                    <select id="edit_nama_select" name="nama" class="mt-1 block w-full" required>
+                    <select id="edit_nama_select" name="nama" class="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" required>
                         <option value="">Select an employee</option>
                         @foreach($employees as $employee)
                             <option value="{{ $employee->name }}" data-department="{{ $employee->department->name ?? '' }}">{{ $employee->name }}</option>
@@ -746,7 +317,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div>
                     <label for="edit_department_select" class="block text-sm font-medium text-gray-700">Department</label>
-                    <select id="edit_department_select" name="department" class="mt-1 block w-full" required>
+                    <select id="edit_department_select" name="department" class="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" required>
                          <option value="">Select a department</option>
                         @foreach($departments as $department)
                             <option value="{{ $department->name }}">{{ $department->name }}</option>
@@ -755,8 +326,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div class="col-span-2">
                     <label for="edit_meeting_room_id" class="block text-sm font-medium text-gray-700">Meeting Room</label>
-                    <select id="edit_meeting_room_id" name="meeting_room_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        @foreach(\App\Models\MeetingRoom::all() as $room)
+                    <select id="edit_meeting_room_id" name="meeting_room_id" class="mt-1 block w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900" required>
+                        <option value="">Select a room</option>
+                        @foreach($allMeetingRooms as $room)
                             <option value="{{ $room->id }}">{{ $room->name }}</option>
                         @endforeach
                     </select>
@@ -765,12 +337,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     <label for="edit_date" class="block text-sm font-medium text-gray-700">Date</label>
                     <input type="date" id="edit_date" name="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                 </div>
-                <div>
-                    <label for="edit_start_time" class="block text-sm font-medium text-gray-700">Time</label>
-                    <div class="flex items-center space-x-2">
-                        <input type="time" id="edit_start_time" name="start_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                        <span>-</span>
-                        <input type="time" id="edit_end_time" name="end_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="edit_start_time" class="block text-xs text-gray-500 mb-1">Start Time</label>
+                            <input type="time" id="edit_start_time" name="start_time" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                        </div>
+                        <div>
+                            <label for="edit_end_time" class="block text-xs text-gray-500 mb-1">End Time</label>
+                            <input type="time" id="edit_end_time" name="end_time" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary" required>
+                        </div>
                     </div>
                 </div>
                  <div class="col-span-2">

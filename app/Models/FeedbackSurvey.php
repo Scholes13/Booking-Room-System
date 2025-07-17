@@ -13,6 +13,7 @@ class FeedbackSurvey extends Model
     protected $fillable = [
         'team_assignment_id',
         'survey_token',
+        'url_slug',
         'survey_type',
         'blitz_team_name',
         'blitz_team_id',
@@ -159,5 +160,41 @@ class FeedbackSurvey extends Model
     public function leadReviews()
     {
         return $this->hasMany(LeadReview::class);
+    }
+
+    /**
+     * Get the route key name for Laravel.
+     */
+    public function getRouteKeyName()
+    {
+        return 'url_slug';
+    }
+
+    /**
+     * Get the public URL for this survey
+     */
+    public function getPublicUrlAttribute(): string
+    {
+        $identifier = $this->url_slug ?: $this->survey_token;
+        return route('sales_mission.surveys.public.form', $identifier);
+    }
+
+    /**
+     * Get the public view feedback URL for this survey
+     */
+    public function getPublicViewUrlAttribute(): string
+    {
+        $identifier = $this->url_slug ?: $this->survey_token;
+        return route('sales_mission.surveys.public.view_feedback', $identifier);
+    }
+
+    /**
+     * Find survey by slug or token (for backward compatibility)
+     */
+    public static function findByIdentifier(string $identifier): ?self
+    {
+        return static::where('url_slug', $identifier)
+                    ->orWhere('survey_token', $identifier)
+                    ->first();
     }
 }

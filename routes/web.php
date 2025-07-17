@@ -16,14 +16,15 @@ use App\Http\Controllers\ActivityReportController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\ActivityTypeController;
 use App\Http\Controllers\AdminBASController;
-use App\Http\Controllers\SalesMissionController;
-use App\Http\Controllers\SalesOfficerController;
+use App\Domains\Sales\Controllers\SalesMissionController;
+use App\Domains\Sales\Controllers\SalesOfficerController;
 use App\Http\Controllers\FeedbackSurveyController;
 use App\Http\Controllers\TeamAssignmentController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SalesMission\FeedbackSurveyController as SalesMissionFeedbackSurveyController;
-use App\Http\Controllers\SalesMission\SalesAgendaController;
-use App\Http\Controllers\SalesMission\SalesReportsController;
+use App\Domains\Sales\Controllers\SalesMission\FeedbackSurveyController as SalesMissionFeedbackSurveyController;
+use App\Domains\Sales\Controllers\SalesMission\SalesAgendaController;
+use App\Domains\Sales\Controllers\SalesMission\SalesReportsController;
+use App\Domains\Activity\Controllers\Admin\ActivityController as AdminActivityController;
 
 // -------------------------------------------------------------------
 //                      ROUTE UTAMA
@@ -49,13 +50,14 @@ Route::get('/activity/calendar/events', [ActivityController::class, 'calendarEve
 Route::get('/admin/login', [LoginController::class, 'showLogin'])->name('admin.login');
 Route::post('/admin/login', [LoginController::class, 'login'])->name('admin.login.submit');
 Route::get('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout');
+Route::post('/admin/logout', [LoginController::class, 'logout'])->name('admin.logout.post');
 
 // -------------------------------------------------------------------
 //                   ROUTE AREA ADMIN
 // -------------------------------------------------------------------
 Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMiddleware::class], function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'dashboard'])->name('admin.dashboard');
-    Route::get('/dashboard/bookings', [AdminBookingController::class, 'getBookings'])->name('admin.dashboard.bookings');
+    Route::get('/dashboard/bookings', [AdminDashboardController::class, 'bookings'])->name('admin.dashboard.bookings');
     
     // Meeting Rooms
     Route::prefix('meeting-rooms')->group(function () {
@@ -85,6 +87,14 @@ Route::group(['prefix' => 'admin', 'middleware' => \App\Http\Middleware\AdminMid
         Route::get('/{id}/edit', [BookingController::class, 'edit'])->name('admin.bookings.edit');
         Route::put('/{id}', [BookingController::class, 'update'])->name('admin.bookings.update');
         Route::delete('/{id}', [AdminBookingController::class, 'deleteBooking'])->name('admin.bookings.delete');
+    });
+
+    // Activities with CRM Integration
+    Route::prefix('activities')->group(function () {
+        // CRM API endpoints for Sales Mission activities
+        Route::get('/company-suggestions', [AdminActivityController::class, 'getCompanySuggestions'])->name('admin.activities.company-suggestions');
+        Route::get('/search-companies', [AdminActivityController::class, 'searchCompanies'])->name('admin.activities.search-companies');
+        Route::get('/company-history/{companyId}', [AdminActivityController::class, 'getCompanyVisitHistory'])->name('admin.activities.company-history');
     });
 
     // Employees
@@ -316,6 +326,9 @@ Route::group(['prefix' => 'bas', 'middleware' => \App\Http\Middleware\AdminBASMi
         Route::post('/data', [ReportController::class, 'getData'])->name('bas.reports.data');
         Route::post('/export', [ReportController::class, 'export'])->name('bas.reports.export');
     });
+    
+    // AI Parser Routes
+    Route::post('/parse-activity', [AdminBASController::class, 'parseActivity'])->name('bas.parse-activity');
 });
 
 // -------------------------------------------------------------------
@@ -391,12 +404,6 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
     Route::get('/surveys/{survey_token}', [SalesMissionFeedbackSurveyController::class, 'viewSurveyFromAdmin'])
         ->name('surveys.view.admin'); // Contoh nama rute, sesuaikan
 
-    // Reports (Ini juga bagian dari grup prefix sales, pastikan tidak tumpang tindih dengan yang di atasnya)
-    Route::prefix('reports')->name('sales_mission.reports.')->group(function() { // Memberi nama prefix pada grup report
-        Route::get('/surveys', [SalesReportsController::class, 'surveyReports'])->name('surveys'); // menjadi sales_mission.reports.surveys
-        Route::get('/surveys/data', [SalesReportsController::class, 'getSurveyReportData'])->name('surveys.data'); // menjadi sales_mission.reports.surveys.data
-        Route::post('/surveys/export', [SalesReportsController::class, 'exportSurveyReport'])->name('surveys.export'); // menjadi sales_mission.reports.surveys.export
-    });
 
     // Daily Schedule View for Admin
     Route::get('/daily-schedule', [TeamAssignmentController::class, 'adminDailySchedule'])->name('sales_mission.daily_schedule'); // Nama rute yang diinginkan
@@ -404,13 +411,13 @@ Route::group(['prefix' => 'sales', 'middleware' => \App\Http\Middleware\SalesMis
 
 // Public Feedback Survey Routes (no auth required)
 Route::prefix('feedback')->name('sales_mission.surveys.public.')->group(function () {
-    Route::get('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'publicSurvey'])->name('form');
-    Route::post('/survey/{token}', [SalesMissionFeedbackSurveyController::class, 'submitFeedback'])->name('submit');
+    Route::get('/survey/{identifier}', [SalesMissionFeedbackSurveyController::class, 'publicSurvey'])->name('form');
+    Route::post('/survey/{identifier}', [SalesMissionFeedbackSurveyController::class, 'submitFeedback'])->name('submit');
     Route::get('/thank-you', [SalesMissionFeedbackSurveyController::class, 'thankYou'])->name('thank_you');
 
     Route::get('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'showSalesBlitzForm'])->name('sales_blitz_form');
     Route::post('/sales-blitz', [SalesMissionFeedbackSurveyController::class, 'submitSalesBlitzForm'])->name('sales_blitz_submit');
-    Route::get('/view/{token}', [SalesMissionFeedbackSurveyController::class, 'publicViewFeedback'])->name('view_feedback');
+    Route::get('/view/{identifier}', [SalesMissionFeedbackSurveyController::class, 'publicViewFeedback'])->name('view_feedback');
 });
 
 // Public Field Visits Routes
@@ -571,9 +578,125 @@ Route::get('/create-officer-user', function() {
     return "Sales Officer user already exists.";
 });
 
-Route::group(['prefix' => 'sm/reports', 'middleware' => 'is.sales.mission', 'as' => 'sales_mission.reports.'], function () {
-    Route::get('/', [SalesReportsController::class, 'index'])->name('index');
-    Route::post('/export', [SalesReportsController::class, 'export'])->name('export');
+
+// -------------------------------------------------------------------
+//                   API ROUTES FOR DASHBOARD
+// -------------------------------------------------------------------
+Route::group(['prefix' => 'api', 'middleware' => \App\Http\Middleware\AdminMiddleware::class], function() {
+    // Employee API routes
+    Route::get('/employees', [App\Http\Controllers\Api\EmployeeController::class, 'index'])->name('api.employees.index');
+    Route::get('/employees/search', [App\Http\Controllers\Api\EmployeeController::class, 'search'])->name('api.employees.search');
+    Route::get('/employees/by-name', [App\Http\Controllers\Api\EmployeeController::class, 'getByName'])->name('api.employees.by-name');
+    
+    // Dashboard API routes
+    Route::get('/dashboard/employees', [App\Http\Controllers\Admin\DashboardController::class, 'getEmployees'])->name('api.dashboard.employees');
+    Route::get('/dashboard/employees/search', [App\Http\Controllers\Admin\DashboardController::class, 'searchEmployees'])->name('api.dashboard.employees.search');
+    Route::get('/dashboard/employees/by-name', [App\Http\Controllers\Admin\DashboardController::class, 'getEmployeeByName'])->name('api.dashboard.employees.by-name');
+    Route::get('/dashboard/departments', [App\Http\Controllers\Admin\DashboardController::class, 'getDepartments'])->name('api.dashboard.departments');
+    Route::get('/dashboard/meeting-rooms', [App\Http\Controllers\Admin\DashboardController::class, 'getMeetingRooms'])->name('api.dashboard.meeting-rooms');
+    
+    // Booking API routes
+    Route::put('/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'update'])->name('api.bookings.update');
+    Route::delete('/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'destroy'])->name('api.bookings.destroy');
+    Route::get('/bookings/available-times', [App\Http\Controllers\Api\BookingController::class, 'getAvailableTimes'])->name('api.bookings.available-times');
+    Route::post('/bookings/validate-time-slot', [App\Http\Controllers\Api\BookingController::class, 'validateTimeSlot'])->name('api.bookings.validate-time-slot');
 });
+
+// SuperAdmin API routes
+Route::group(['prefix' => 'api', 'middleware' => \App\Http\Middleware\SuperAdminMiddleware::class], function() {
+    // Employee API routes for SuperAdmin
+    Route::get('/superadmin/employees', [App\Http\Controllers\Api\EmployeeController::class, 'index'])->name('api.superadmin.employees.index');
+    Route::get('/superadmin/employees/search', [App\Http\Controllers\Api\EmployeeController::class, 'search'])->name('api.superadmin.employees.search');
+    Route::get('/superadmin/employees/by-name', [App\Http\Controllers\Api\EmployeeController::class, 'getByName'])->name('api.superadmin.employees.by-name');
+    
+    // Booking API routes for SuperAdmin
+    Route::put('/superadmin/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'update'])->name('api.superadmin.bookings.update');
+    Route::delete('/superadmin/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'destroy'])->name('api.superadmin.bookings.destroy');
+    Route::get('/superadmin/bookings/available-times', [App\Http\Controllers\Api\BookingController::class, 'getAvailableTimes'])->name('api.superadmin.bookings.available-times');
+    Route::post('/superadmin/bookings/validate-time-slot', [App\Http\Controllers\Api\BookingController::class, 'validateTimeSlot'])->name('api.superadmin.bookings.validate-time-slot');
+});
+
+// AdminBAS API routes
+Route::group(['prefix' => 'api', 'middleware' => \App\Http\Middleware\AdminBASMiddleware::class], function() {
+    // Employee API routes for AdminBAS
+    Route::get('/bas/employees', [App\Http\Controllers\Api\EmployeeController::class, 'index'])->name('api.bas.employees.index');
+    Route::get('/bas/employees/search', [App\Http\Controllers\Api\EmployeeController::class, 'search'])->name('api.bas.employees.search');
+    Route::get('/bas/employees/by-name', [App\Http\Controllers\Api\EmployeeController::class, 'getByName'])->name('api.bas.employees.by-name');
+    
+    // Booking API routes for AdminBAS
+    Route::put('/bas/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'update'])->name('api.bas.bookings.update');
+    Route::delete('/bas/bookings/{id}', [App\Http\Controllers\Api\BookingController::class, 'destroy'])->name('api.bas.bookings.destroy');
+    Route::get('/bas/bookings/available-times', [App\Http\Controllers\Api\BookingController::class, 'getAvailableTimes'])->name('api.bas.bookings.available-times');
+    Route::post('/bas/bookings/validate-time-slot', [App\Http\Controllers\Api\BookingController::class, 'validateTimeSlot'])->name('api.bas.bookings.validate-time-slot');
+});
+
+// -------------------------------------------------------------------
+//                   CRM TEST ROUTES (DEVELOPMENT ONLY)
+// -------------------------------------------------------------------
+Route::get('/test-crm', [App\Http\Controllers\CrmTestController::class, 'testCrmSystem'])->name('test.crm');
+Route::post('/test-crm/create-mission', [App\Http\Controllers\CrmTestController::class, 'testCreateSalesMission'])->name('test.crm.create');
+
+// Test CRM Integration with Activity Service
+Route::get('/test-crm-integration', function() {
+    try {
+        // Test creating an activity with Sales Mission type
+        $activityService = app(\App\Domains\Activity\Services\ActivityService::class);
+        
+        $testData = [
+            'name' => 'Test CRM Integration Activity',
+            'description' => 'Testing CRM integration with activity creation',
+            'type' => 'meeting',
+            'activity_type' => 'Sales Mission',
+            'date' => now()->format('Y-m-d'),
+            'start_time' => '09:00',
+            'end_time' => '11:00',
+            'location' => 'Jakarta',
+            'city' => 'Jakarta',
+            'province' => 'DKI Jakarta',
+            'sales_mission_data' => [
+                'company_name' => 'PT Test CRM Integration',
+                'company_pic' => 'John Doe',
+                'company_position' => 'Manager',
+                'company_contact' => '081234567890',
+                'company_email' => 'john@testcrm.com',
+                'company_address' => 'Jl. Test CRM No. 123, Jakarta'
+            ]
+        ];
+        
+        $activity = $activityService->create($testData);
+        
+        // Check if CRM integration worked
+        $salesMissionDetail = \App\Models\SalesMissionDetail::where('activity_id', $activity->id)->first();
+        
+        if ($salesMissionDetail && $salesMissionDetail->company_id && $salesMissionDetail->company_contact_id) {
+            return response()->json([
+                'success' => true,
+                'message' => 'CRM Integration working successfully!',
+                'data' => [
+                    'activity_id' => $activity->id,
+                    'company_id' => $salesMissionDetail->company_id,
+                    'company_name' => $salesMissionDetail->company->name,
+                    'contact_id' => $salesMissionDetail->company_contact_id,
+                    'contact_name' => $salesMissionDetail->companyContact->name,
+                    'visit_type' => $salesMissionDetail->visit_type,
+                    'visit_sequence' => $salesMissionDetail->visit_sequence
+                ]
+            ]);
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'CRM Integration failed - fallback method used',
+                'data' => $salesMissionDetail ? $salesMissionDetail->toArray() : null
+            ]);
+        }
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Error testing CRM integration: ' . $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+})->name('test.crm.integration');
 
 require __DIR__.'/lead.php';

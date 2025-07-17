@@ -329,176 +329,188 @@
 <!-- Edit Activity Modal -->
 <div id="editActivityModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 transition-opacity duration-300">
     <div class="bg-white p-6 rounded-xl shadow-xl max-w-4xl w-full mx-4 transform transition-transform duration-300 scale-100 overflow-y-auto max-h-[90vh]">
-        <h3 class="text-xl font-bold text-center mb-4 text-amber-700">Edit Sales Mission</h3>
+        <h3 class="text-xl font-bold text-center mb-6 text-amber-700">Edit Sales Mission</h3>
         
         <form id="editActivityForm" action="" method="POST" class="space-y-6">
             @csrf
             @method('PUT')
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Employee Name field -->
-                <div class="space-y-2">
-                    <label for="edit-name" class="block text-sm font-medium text-gray-700">Employee Name</label>
-                    <select 
-                        id="edit-name" 
-                        name="name" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
-                        required
-                    >
-                        @foreach(App\Models\Employee::orderBy('name')->get() as $employee)
-                            <option value="{{ $employee->name }}">{{ $employee->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div class="space-y-2">
-                    <label for="edit-company_name" class="block text-sm font-medium text-gray-700">Company Name</label>
-                    <input 
-                        type="text" 
-                        id="edit-company_name" 
-                        name="company_name" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-                
-                <div class="space-y-2">
-                    <label for="edit-company_pic" class="block text-sm font-medium text-gray-700">Company PIC</label>
-                    <input 
-                        type="text" 
-                        id="edit-company_pic" 
-                        name="company_pic" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-company_position" class="block text-sm font-medium text-gray-700">Jabatan PIC</label>
-                    <input 
-                        type="text" 
-                        id="edit-company_position" 
-                        name="company_position" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-company_contact" class="block text-sm font-medium text-gray-700">Contact Number</label>
-                    <input 
-                        type="text" 
-                        id="edit-company_contact" 
-                        name="company_contact" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-company_email" class="block text-sm font-medium text-gray-700">Company Email</label>
-                    <input 
-                        type="email" 
-                        id="edit-company_email" 
-                        name="company_email" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-department_id" class="block text-sm font-medium text-gray-700">Department</label>
-                    <select 
-                        id="edit-department_id" 
-                        name="department_id" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
-                        required
-                    >
-                        @foreach(App\Models\Department::all() as $department)
-                            <option value="{{ $department->id }}">{{ $department->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-status" class="block text-sm font-medium text-gray-700">Status</label>
-                    <select 
-                        id="edit-status" 
-                        name="status" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
-                        required
-                    >
-                        <option value="scheduled">Scheduled</option>
-                        <option value="ongoing">Ongoing</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-province" class="block text-sm font-medium text-gray-700">Province</label>
-                    <input 
-                        type="text" 
-                        id="edit-province" 
-                        name="province" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-city" class="block text-sm font-medium text-gray-700">City</label>
-                    <input 
-                        type="text" 
-                        id="edit-city" 
-                        name="city" 
-                        class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-start_datetime" class="block text-sm font-medium text-gray-700">Start Date & Time</label>
-                    <input 
-                        type="text" 
-                        id="edit-start_datetime" 
-                        name="start_datetime" 
-                        class="flatpickr-datetime w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
-                </div>
-
-                <div class="space-y-2">
-                    <label for="edit-end_datetime" class="block text-sm font-medium text-gray-700">End Date & Time</label>
-                    <input 
-                        type="text" 
-                        id="edit-end_datetime" 
-                        name="end_datetime" 
-                        class="flatpickr-datetime w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                        required
-                    />
+            <!-- Pembuat Appointment Section -->
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Pembuat Appointment</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label for="edit-name" class="block text-sm font-medium text-gray-700">Pembuat Appointment</label>
+                        <select
+                            id="edit-name"
+                            name="name"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        >
+                            @foreach(App\Models\Employee::orderBy('name')->get() as $employee)
+                                <option value="{{ $employee->name }}" data-department="{{ $employee->department_id }}">{{ $employee->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="edit-department_id" class="block text-sm font-medium text-gray-700">Department Pembuat</label>
+                        <select
+                            id="edit-department_id"
+                            name="department_id"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-100 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                            readonly
+                        >
+                            @foreach(App\Models\Department::all() as $department)
+                                <option value="{{ $department->id }}">{{ $department->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             </div>
-            
-            <div class="space-y-2">
-                <label for="edit-company_address" class="block text-sm font-medium text-gray-700">Company Address</label>
-                <textarea 
-                    id="edit-company_address" 
-                    name="company_address" 
-                    rows="2" 
-                    class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                ></textarea>
-            </div>
 
-            <div class="space-y-2">
-                <label for="edit-description" class="block text-sm font-medium text-gray-700">Description</label>
-                <textarea 
-                    id="edit-description" 
-                    name="description" 
-                    rows="4" 
-                    class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-gray-50 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm" 
-                    required
-                ></textarea>
+            <!-- Data Appointment Section -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Data Appointment</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label for="edit-company_name" class="block text-sm font-medium text-gray-700">Company Name</label>
+                        <input
+                            type="text"
+                            id="edit-company_name"
+                            name="company_name"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="edit-company_pic" class="block text-sm font-medium text-gray-700">Company PIC</label>
+                        <input
+                            type="text"
+                            id="edit-company_pic"
+                            name="company_pic"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-company_position" class="block text-sm font-medium text-gray-700">Jabatan PIC</label>
+                        <input
+                            type="text"
+                            id="edit-company_position"
+                            name="company_position"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-company_contact" class="block text-sm font-medium text-gray-700">Contact Number</label>
+                        <input
+                            type="text"
+                            id="edit-company_contact"
+                            name="company_contact"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-company_email" class="block text-sm font-medium text-gray-700">Company Email</label>
+                        <input
+                            type="email"
+                            id="edit-company_email"
+                            name="company_email"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-status" class="block text-sm font-medium text-gray-700">Status</label>
+                        <select
+                            id="edit-status"
+                            name="status"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        >
+                            <option value="scheduled">Scheduled</option>
+                            <option value="ongoing">Ongoing</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-province" class="block text-sm font-medium text-gray-700">Province</label>
+                        <input
+                            type="text"
+                            id="edit-province"
+                            name="province"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-city" class="block text-sm font-medium text-gray-700">City</label>
+                        <input
+                            type="text"
+                            id="edit-city"
+                            name="city"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-start_datetime" class="block text-sm font-medium text-gray-700">Start Date & Time</label>
+                        <input
+                            type="text"
+                            id="edit-start_datetime"
+                            name="start_datetime"
+                            class="flatpickr-datetime w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-end_datetime" class="block text-sm font-medium text-gray-700">End Date & Time</label>
+                        <input
+                            type="text"
+                            id="edit-end_datetime"
+                            name="end_datetime"
+                            class="flatpickr-datetime w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        />
+                    </div>
+                </div>
+                
+                <div class="mt-4 space-y-4">
+                    <div class="space-y-2">
+                        <label for="edit-company_address" class="block text-sm font-medium text-gray-700">Company Address</label>
+                        <textarea
+                            id="edit-company_address"
+                            name="company_address"
+                            rows="2"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                        ></textarea>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label for="edit-description" class="block text-sm font-medium text-gray-700">Description</label>
+                        <textarea
+                            id="edit-description"
+                            name="description"
+                            rows="4"
+                            class="w-full p-3 text-sm text-gray-700 border border-gray-300 rounded-lg bg-white focus:ring-amber-500 focus:border-amber-500 transition-all shadow-sm"
+                            required
+                        ></textarea>
+                    </div>
+                </div>
             </div>
             
             <div class="flex justify-center gap-3 mt-6">
@@ -588,7 +600,6 @@
         // Initialize flatpickr for date inputs in the filter section
         flatpickr(".flatpickr-date", {
             dateFormat: "Y-m-d",
-            locale: "id",
             allowInput: true,
             altInput: true,
             altFormat: "d M Y",
@@ -614,6 +625,33 @@
         const cancelDeleteActivity = document.getElementById('cancelDeleteActivity');
         const deleteMissionText = document.getElementById('delete-mission-text');
         
+        // Employee to Department mapping for auto-population
+        const employeeToDepartment = {
+            @foreach(App\Models\Employee::with('department')->get() as $employee)
+                '{{ $employee->name }}': {{ $employee->department_id ?? 'null' }},
+            @endforeach
+        };
+
+        // Function to auto-populate department based on employee selection
+        function updateDepartmentField(employeeName, departmentSelectId) {
+            const departmentSelect = document.getElementById(departmentSelectId);
+            const departmentId = employeeToDepartment[employeeName];
+            
+            if (departmentId && departmentSelect) {
+                departmentSelect.value = departmentId;
+                // Trigger change event to ensure any listeners are notified
+                departmentSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
+        // Add event listener for employee name change in edit modal
+        const editEmployeeSelect = document.getElementById('edit-name');
+        if (editEmployeeSelect) {
+            editEmployeeSelect.addEventListener('change', function() {
+                updateDepartmentField(this.value, 'edit-department_id');
+            });
+        }
+
         // Edit Activity Button Event Listeners
         editButtons.forEach(button => {
             button.addEventListener('click', function() {
@@ -633,7 +671,7 @@
                 const employee = this.getAttribute('data-employee');
                 
                 // Set form action
-                editActivityForm.action = `{{ route('sales_mission.activities.index') }}/${id}`;
+                editActivityForm.action = `{{ route('sales_mission.activities.update', '') }}/${id}`;
                 
                 // Set form values
                 document.getElementById('edit-company_name').value = company;
@@ -659,18 +697,49 @@
                     enableTime: true,
                     dateFormat: "Y-m-d H:i",
                     time_24hr: true,
-                    locale: "id"
+                    onChange: function(selectedDates, dateStr, instance) {
+                        // Update end date minimum to be after start date
+                        if (endDateInput._flatpickr) {
+                            endDateInput._flatpickr.set('minDate', selectedDates[0]);
+                        }
+                    }
                 });
                 
                 flatpickr(endDateInput, {
                     enableTime: true,
                     dateFormat: "Y-m-d H:i",
                     time_24hr: true,
-                    locale: "id"
+                    onChange: function(selectedDates, dateStr, instance) {
+                        // Validate that end date is after start date
+                        const startDate = new Date(startDateInput.value);
+                        const endDate = selectedDates[0];
+                        
+                        if (endDate && startDate && endDate <= startDate) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    toast: true,
+                                    position: 'top-end',
+                                    icon: 'warning',
+                                    title: 'End time must be after start time',
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    background: '#26458e',
+                                    color: '#ffffff'
+                                });
+                            }
+                            // Reset to a valid time (1 hour after start)
+                            const newEndTime = new Date(startDate.getTime() + 60 * 60 * 1000);
+                            instance.setDate(newEndTime);
+                        }
+                    }
                 });
                 
                 // Set employee name
                 document.getElementById('edit-name').value = employee;
+                
+                // Auto-populate department based on selected employee
+                updateDepartmentField(employee, 'edit-department_id');
                 
                 // Show modal
                 editActivityModal.classList.remove('hidden');
@@ -693,7 +762,7 @@
                 const company = this.getAttribute('data-company');
                 
                 // Set form action
-                deleteActivityForm.action = `{{ route('sales_mission.activities.index') }}/${id}`;
+                deleteActivityForm.action = `{{ route('sales_mission.activities.destroy', '') }}/${id}`;
                 
                 // Set confirmation message
                 deleteMissionText.textContent = `Are you sure you want to delete the sales mission to "${company}"?`;
@@ -995,10 +1064,7 @@
 
         // Export functionality
         const exportButton = document.getElementById('exportButton');
-        const searchInput = document.getElementById('searchInput');
-        const assignmentStatusFilter = document.getElementById('assignmentStatusFilter');
-        const startDateFilter = document.getElementById('startDateFilter');
-        const locationFilter = document.getElementById('locationFilter');
+        // Note: searchInput, assignmentStatusFilter, startDateFilter, locationFilter already declared above
 
         function updateExportUrl() {
             const search = searchInput.value;
@@ -1033,8 +1099,7 @@
         // Initial call to set the URL on page load
         updateExportUrl();
 
-        // If you have a form submission for filters, you might want to call it there too
-        const filterForm = document.getElementById('filterForm');
+        // Filter form already declared above, no need to redeclare
         if (filterForm) {
             filterForm.addEventListener('submit', function() {
                 // The page will reload, so the URL will be correct on the next page load.

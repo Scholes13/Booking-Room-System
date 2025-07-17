@@ -855,7 +855,7 @@
                                             ? 'background-color: rgba(16, 185, 129, 0.2); color: rgb(110, 231, 183);' // Greenish
                                             : 'background-color: rgba(245, 158, 11, 0.2); color: rgb(253, 186, 116);'; // Amber
                                     @endphp
-                                    <a href="{{ route('sales_mission.surveys.public.form', $assignment->feedbackSurvey->survey_token) }}" 
+                                    <a href="{{ $assignment->feedbackSurvey->public_url }}"
                                        target="_blank" 
                                        class="btn-view btn-report" 
                                        style="{{ $reportButtonStyle }}">
@@ -942,7 +942,7 @@
                                         ? 'background-color: rgba(16, 185, 129, 0.2); color: rgb(110, 231, 183);' // Greenish
                                         : 'background-color: rgba(245, 158, 11, 0.2); color: rgb(253, 186, 116);'; // Amber
                                 @endphp
-                                <a href="{{ route('sales_mission.surveys.public.form', $assignment->feedbackSurvey->survey_token) }}" 
+                                <a href="{{ $assignment->feedbackSurvey->public_url }}"
                                    target="_blank" 
                                    class="btn-view btn-report" 
                                    style="flex-grow: 1; {{ $reportButtonStyleMobile }}">

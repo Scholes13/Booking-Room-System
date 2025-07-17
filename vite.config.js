@@ -8,7 +8,8 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/js/admin/dashboard/index.js'
+                'resources/js/admin/dashboard/index.js',
+                'resources/js/dashboard-booking.js'
             ],
             refresh: true,
         }),

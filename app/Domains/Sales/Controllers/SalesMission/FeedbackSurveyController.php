@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SalesMission;
+namespace App\Domains\Sales\Controllers\SalesMission;
 
 use App\Http\Controllers\Controller;
 use App\Models\FeedbackSurvey;
@@ -21,23 +21,33 @@ class FeedbackSurveyController extends Controller
         $this->fontneService = $fontneService;
     }
 
-    public function publicSurvey($token)
+    public function publicSurvey($identifier)
     {
-        $survey = FeedbackSurvey::where('survey_token', $token)->firstOrFail();
-
-        if ($survey->is_completed) {
-            return redirect()->route('sales_mission.surveys.public.view_feedback', ['token' => $token]);
+        // Try to find by slug first, then by UUID token for backward compatibility
+        $survey = FeedbackSurvey::findByIdentifier($identifier);
+        
+        if (!$survey) {
+            abort(404, 'Survey not found');
         }
 
-        // Track the view 
+        if ($survey->is_completed) {
+            return redirect()->route('sales_mission.surveys.public.view_feedback', ['token' => $identifier]);
+        }
+
+        // Track the view
         $survey->trackView(); // This will set viewed_at if it's the first time AND always update last_viewed_at
 
         return view('sales_mission.surveys.public-form', compact('survey'));
     }
 
-    public function submitFeedback(Request $request, $token)
+    public function submitFeedback(Request $request, $identifier)
     {
-        $survey = FeedbackSurvey::where('survey_token', $token)->firstOrFail();
+        // Try to find by slug first, then by UUID token for backward compatibility
+        $survey = FeedbackSurvey::findByIdentifier($identifier);
+        
+        if (!$survey) {
+            abort(404, 'Survey not found');
+        }
 
         if ($survey->is_completed) {
             return redirect()->route('sales_mission.surveys.public.thank_you')->with('info', 'This survey has already been submitted.');
@@ -138,8 +148,11 @@ class FeedbackSurveyController extends Controller
 
         $validated = $validator->validated();
 
+        $slugService = new \App\Services\FeedbackSurveySlugService();
+        
         $surveyData = [
             'survey_token' => Str::uuid(),
+            'url_slug' => $slugService->generateBlitzSlug($validated),
             'survey_type' => 'sales_blitz',
             'team_assignment_id' => null,
             'blitz_team_id' => $validated['blitz_team_id'],
@@ -174,9 +187,11 @@ class FeedbackSurveyController extends Controller
         return redirect()->route('sales_mission.surveys.public.thank_you')->with('success', 'Sales blitz report submitted successfully!');
     }
 
-    public function publicViewFeedback($token)
+    public function publicViewFeedback($identifier)
     {
-        $survey = FeedbackSurvey::where('survey_token', $token)
+        // Try to find by slug first, then by UUID token for backward compatibility
+        $survey = FeedbackSurvey::where('url_slug', $identifier)
+                                ->orWhere('survey_token', $identifier)
                                 ->with([
                                     'teamAssignment.activity.salesMissionDetail',
                                     'teamAssignment.team',

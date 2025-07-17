@@ -465,7 +465,7 @@
                          $reportButtonStyle .= ' color: white;';
                     }
                 @endphp
-                <a href="{{ route('sales_mission.surveys.public.form', $fieldVisit->feedbackSurvey->survey_token) }}" 
+                <a href="{{ $fieldVisit->feedbackSurvey->public_url }}"
                    target="_blank" 
                    class="btn btn-primary" 
                    style="{{ $reportButtonStyle }}">

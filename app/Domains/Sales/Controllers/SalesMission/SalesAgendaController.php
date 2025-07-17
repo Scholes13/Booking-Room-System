@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\SalesMission;
+namespace App\Domains\Sales\Controllers\SalesMission;
 
 use App\Http\Controllers\Controller;
 use App\Models\Team;

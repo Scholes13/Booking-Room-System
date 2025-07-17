@@ -86,7 +86,7 @@
 
             <p class="text-gray-600 mb-8 text-center text-xs sm:text-sm">We appreciate you taking the time to provide feedback on our recent visit.</p>
 
-            <form action="{{ route('sales_mission.surveys.public.submit', $survey->survey_token) }}" method="POST" class="space-y-10">
+            <form action="{{ route('sales_mission.surveys.public.submit', $survey->url_slug ?: $survey->survey_token) }}" method="POST" class="space-y-10">
                 @csrf
 
                 @if ($errors->any())

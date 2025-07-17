@@ -6,6 +6,7 @@
 
 @push('styles')
 <style>
+    /* Badge Styles */
     .badge {
         @apply inline-flex text-xs font-semibold px-2.5 py-0.5 rounded-full;
     }
@@ -32,6 +33,133 @@
     
     .badge-amber {
         @apply bg-amber-100 text-amber-800;
+    }
+
+    /* Professional Navigation Buttons */
+    .btn-primary {
+        @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-white rounded-lg transition-all duration-200;
+        background-color: #26458e;
+        box-shadow: 0 1px 3px rgba(38, 69, 142, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+
+    .btn-primary:hover {
+        background-color: #1e3a5f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(38, 69, 142, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 3px rgba(38, 69, 142, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    }
+
+    /* Secondary Dropdown Button */
+    .btn-secondary-dropdown {
+        @apply inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border rounded-lg transition-all duration-200;
+        color: #26458e;
+        border-color: #26458e;
+        background-color: white;
+    }
+
+    .btn-secondary-dropdown:hover {
+        background-color: #26458e;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(38, 69, 142, 0.15), 0 2px 4px rgba(0, 0, 0, 0.12);
+    }
+
+    /* Dropdown Menu */
+    .dropdown {
+        @apply relative inline-block;
+    }
+
+    .dropdown-menu {
+        @apply absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 opacity-0 invisible transform scale-95 transition-all duration-200;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .dropdown.active .dropdown-menu {
+        @apply opacity-100 visible transform scale-100;
+    }
+
+    .dropdown-item {
+        @apply flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-150;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f8fafc;
+        color: #26458e;
+    }
+
+    .dropdown-divider {
+        @apply border-t border-gray-200 my-1;
+    }
+
+    /* Enhanced Filter Inputs */
+    .filter-input {
+        @apply w-full py-2.5 px-3 border border-gray-300 rounded-lg text-sm transition-all duration-200;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #26458e;
+        box-shadow: 0 0 0 3px rgba(38, 69, 142, 0.1);
+    }
+
+    /* Filter Button Styles */
+    .btn-filter-apply {
+        @apply px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-all duration-200;
+        background-color: #26458e;
+    }
+
+    .btn-filter-apply:hover {
+        background-color: #1e3a5f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(38, 69, 142, 0.15);
+    }
+
+    .btn-filter-reset {
+        @apply px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200;
+    }
+
+    .btn-filter-reset:hover {
+        border-color: #26458e;
+        color: #26458e;
+    }
+
+    /* Dropdown Arrow Animation */
+    .dropdown-arrow {
+        @apply transition-transform duration-200;
+    }
+
+    .dropdown.active .dropdown-arrow {
+        @apply transform rotate-180;
+    }
+
+    /* Professional Table Actions */
+    .table-action-btn {
+        @apply px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 inline-flex items-center;
+    }
+
+    .table-action-view {
+        @apply bg-blue-50 text-blue-700 hover:bg-blue-100;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .table-action-edit {
+        background-color: rgba(38, 69, 142, 0.1);
+        color: #26458e;
+        border: 1px solid rgba(38, 69, 142, 0.2);
+    }
+
+    .table-action-edit:hover {
+        background-color: rgba(38, 69, 142, 0.15);
+        color: #1e3a5f;
+    }
+
+    .table-action-delete {
+        @apply bg-red-50 text-red-700 hover:bg-red-100;
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
 </style>
 @endpush

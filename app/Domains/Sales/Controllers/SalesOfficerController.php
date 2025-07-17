@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Domains\Sales\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Models\Activity;
 use App\Models\SalesMissionDetail;
 use App\Models\Department;
